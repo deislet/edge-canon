@@ -291,11 +291,50 @@ interface Queue {
 
 ---
 
-## 8. WebAssembly (Wasm) Support
+## 8. WebSocket Support
+
+Edge Canon provides standard support for both WebSocket clients and servers (handling upgrade requests).
+
+### 8.1 WebSocket Client
+
+Use the standard `WebSocket` API to connect to external services.
+
+```typescript
+const socket = new WebSocket("wss://echo.websocket.org");
+socket.onmessage = (event) => console.log(event.data);
+socket.send("Hello");
+```
+
+### 8.2 WebSocket Server (Upgrade)
+
+To accept a WebSocket connection, respond with a `101 Switching Protocols` status and a `webSocket` option. We recommend using the `WebSocketPair` pattern for better platform compatibility (similar to Cloudflare).
+
+```typescript
+export default async function handler(context: Context) {
+  if (context.request.headers.get("Upgrade") === "websocket") {
+    const { 0: client, 1: server } = new WebSocketPair();
+    
+    server.accept();
+    server.addEventListener("message", (event) => {
+      server.send(`Echo: ${event.data}`);
+    });
+
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    });
+  }
+  return new Response("Expected WebSocket", { status: 426 });
+}
+```
+
+---
+
+## 9. WebAssembly (Wasm) Support
 
 Edge Canon treats WebAssembly as a first-class citizen for high-performance compute tasks.
 
-### 8.1 Import & Instantiation
+### 9.1 Import & Instantiation
 
 `.wasm` files are imported as ES modules. The import exports a `WebAssembly.Module` object (not an instance), allowing developers to control instantiation.
 
@@ -320,7 +359,7 @@ export default async function handler(context: Context) {
 }
 ```
 
-### 8.2 Constraints & Guidelines
+### 9.2 Constraints & Guidelines
 
 *   **Size Limit**: Wasm binaries should be kept under **1MB** to ensure fast cold starts.
 *   **WASI Support**: Currently **Experimental**. It is recommended to use `wasm32-unknown-unknown` target (pure computation without system calls).
@@ -329,7 +368,7 @@ export default async function handler(context: Context) {
 
 ---
 
-## 9. Local Development & Testing
+## 10. Local Development & Testing
 
 ```bash
 denictl dev
@@ -338,7 +377,7 @@ denictl test
 
 ---
 
-## 10. Build & Deploy
+## 11. Build & Deploy
 
 ```bash
 denictl build
@@ -348,9 +387,9 @@ denictl deploy
 
 ---
 
-## 11. Error Handling
+## 12. Error Handling
 
-### 11.1 Standard JSON Error Format
+### 12.1 Standard JSON Error Format
 
 All APIs SHOULD return errors in a consistent JSON format to allow clients to handle them programmatically.
 
@@ -365,7 +404,7 @@ interface ErrorResponse {
 }
 ```
 
-### 11.2 Standard Error Codes
+### 12.2 Standard Error Codes
 
 Common error codes used by the platform and recommended for applications:
 
@@ -379,7 +418,7 @@ Common error codes used by the platform and recommended for applications:
 | `INTERNAL_ERROR` | 500 | Unhandled exception or internal platform error. |
 | `TIMEOUT` | 504 | Execution time exceeded limit. |
 
-### 11.3 Uncaught Exceptions
+### 12.3 Uncaught Exceptions
 
 If a handler throws an uncaught exception:
 1. The platform catches it.
@@ -389,14 +428,14 @@ If a handler throws an uncaught exception:
 
 ---
 
-## 12. Performance & Limits
+## 13. Performance & Limits
 
-### 12.1 General Limits
+### 13.1 General Limits
 
 - **Max Execution**: 30s
 - **Max Payload**: 50MB
 
-### 12.2 Metrics & Logging
+### 13.2 Metrics & Logging
 
 Edge Canon adopts a **"Log-based Metrics"** strategy. Developers emit structured JSON logs via `context.log`, and the platform automatically extracts metrics from them. No external metrics SDK is required.
 
@@ -462,20 +501,20 @@ context.log.info({
 
 ---
 
-## 13. CLI Reference
+## 14. CLI Reference
 
 Refer to `denictl --help`.
 
 ---
 
-## 14. Versioning
+## 15. Versioning
 
 - **Spec Version**: 0.1.0
 - **Release Date**: TBD
 
 ---
 
-## 15. Appendix: Core Guarantees
+## 16. Appendix: Core Guarantees
 
 1. **Universal Code**
 2. **Write Once, Deploy Anywhere**

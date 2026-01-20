@@ -290,11 +290,50 @@ interface Queue {
 
 ---
 
-## 8. WebAssembly (Wasm) 支持
+## 8. WebSocket 支持
+
+Edge Canon 为 WebSocket 客户端和服务端（Upgrade 请求处理）提供标准支持。
+
+### 8.1 WebSocket 客户端
+
+使用标准的 `WebSocket` API 连接外部服务。
+
+```typescript
+const socket = new WebSocket("wss://echo.websocket.org");
+socket.onmessage = (event) => console.log(event.data);
+socket.send("Hello");
+```
+
+### 8.2 WebSocket 服务端 (Upgrade)
+
+要接受 WebSocket 连接，需返回 `101 Switching Protocols` 状态码和 `webSocket` 选项。我们推荐使用 `WebSocketPair` 模式以获得更好的平台兼容性（类似于 Cloudflare 风格）。
+
+```typescript
+export default async function handler(context: Context) {
+  if (context.request.headers.get("Upgrade") === "websocket") {
+    const { 0: client, 1: server } = new WebSocketPair();
+    
+    server.accept();
+    server.addEventListener("message", (event) => {
+      server.send(`Echo: ${event.data}`);
+    });
+
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    });
+  }
+  return new Response("Expected WebSocket", { status: 426 });
+}
+```
+
+---
+
+## 9. WebAssembly (Wasm) 支持
 
 Edge Canon 将 WebAssembly 视为高性能计算的一等公民。
 
-### 8.1 导入与实例化
+### 9.1 导入与实例化
 
 `.wasm` 文件作为 ES 模块导入。导入对象是一个 `WebAssembly.Module`（而非实例），允许开发者控制实例化过程。
 
@@ -319,7 +358,7 @@ export default async function handler(context: Context) {
 }
 ```
 
-### 8.2 限制与指南
+### 9.2 限制与指南
 
 *   **体积限制**: Wasm 二进制文件建议控制在 **1MB** 以内，以确保冷启动速度。
 *   **WASI 支持**: 目前为 **实验性支持**。建议使用 `wasm32-unknown-unknown` 编译目标（纯计算，无系统调用）。
@@ -328,7 +367,7 @@ export default async function handler(context: Context) {
 
 ---
 
-## 9. 本地开发与测试
+## 10. 本地开发与测试
 
 ```bash
 denictl dev
@@ -337,7 +376,7 @@ denictl test
 
 ---
 
-## 10. 构建和发布
+## 11. 构建和发布
 
 ```bash
 denictl build
@@ -347,9 +386,9 @@ denictl deploy
 
 ---
 
-## 11. 错误处理标准
+## 12. 错误处理标准
 
-### 11.1 标准 JSON 错误格式
+### 12.1 标准 JSON 错误格式
 
 所有 API **应该**返回一致的 JSON 格式错误，以便客户端进行程序化处理。
 
@@ -364,7 +403,7 @@ interface ErrorResponse {
 }
 ```
 
-### 11.2 标准错误码
+### 12.2 标准错误码
 
 平台保留并推荐应用使用的通用错误码：
 
@@ -378,7 +417,7 @@ interface ErrorResponse {
 | `INTERNAL_ERROR` | 500 | 未捕获异常或平台内部错误 |
 | `TIMEOUT` | 504 | 执行时间超过限制 |
 
-### 11.3 未捕获异常
+### 12.3 未捕获异常
 
 当 Handler 抛出未捕获异常时：
 1. 平台会捕获该异常。
@@ -388,14 +427,14 @@ interface ErrorResponse {
 
 ---
 
-## 12. 性能与限制
+## 13. 性能与限制
 
-### 12.1 通用限制
+### 13.1 通用限制
 
 - **最大执行时间**: 30s
 - **最大请求/响应**: 50MB
 
-### 12.2 结构化日志与指标 (Metrics)
+### 13.2 结构化日志与指标 (Metrics)
 
 Edge Canon 采用 **"Log-based Metrics"** (基于日志的指标) 策略。开发者通过 `context.log` 输出结构化 JSON 日志，平台会自动从中提取监控指标。无需引入额外的监控 SDK。
 
@@ -465,20 +504,20 @@ context.log.info({
 
 ---
 
-## 13. CLI 工具命令参考
+## 14. CLI 工具命令参考
 
 参见 `denictl --help`。
 
 ---
 
-## 14. 版本控制和兼容性
+## 15. 版本控制和兼容性
 
 - **规范版本**: 0.1.0
 - **发布日期**: TBD
 
 ---
 
-## 15. 附录：规范的核心保证
+## 16. 附录：规范的核心保证
 
 1. **代码完全通用**
 2. **一次编写、随处部署**
