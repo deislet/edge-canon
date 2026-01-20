@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Edge Canon Configuration",
+  "description": "Configuration schema for Edge Canon projects (.config.json)",
+  "type": "object",
+  "required": [
+    "version",
+    "name",
+    "runtime",
+    "entryPoint"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "enum": ["0.1.0"],
+      "description": "Spec version"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Project name (kebab-case)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Project description"
+    },
+    "runtime": {
+      "type": "string",
+      "enum": ["standard-v1"],
+      "default": "standard-v1"
+    },
+    "language": {
+      "type": "string",
+      "enum": ["typescript", "javascript"],
+      "default": "typescript"
+    },
+    "entryPoint": {
+      "type": "string",
+      "description": "Path to the main entry point (e.g., functions/index.ts)"
+    },
+    "functionRoot": {
+      "type": "string",
+      "default": "./functions"
+    },
+    "routing": {
+      "type": "object",
+      "properties": {
+        "caseSensitive": { "type": "boolean", "default": false },
+        "dynamicParamPattern": { "type": "string", "default": "[param]" },
+        "catchAllPattern": { "type": "string", "default": "[[catchall]]" }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "variables": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "secrets": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "services": {
+      "type": "object",
+      "properties": {
+        "kv": { "$ref": "#/definitions/ServiceConfig" },
+        "database": { "$ref": "#/definitions/ServiceConfig" },
+        "cache": { "$ref": "#/definitions/ServiceConfig" },
+        "blob": { "$ref": "#/definitions/ServiceConfig" },
+        "queue": {
+          "allOf": [
+            { "$ref": "#/definitions/ServiceConfig" },
+            {
+              "properties": {
+                "consumer": { "type": "string" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "build": {
+      "type": "object",
+      "properties": {
+        "outDir": { "type": "string", "default": "./dist" },
+        "minify": { "type": "boolean", "default": true },
+        "sourceMap": { "type": "boolean", "default": false }
+      }
+    },
+    "vendors": {
+      "type": "object",
+      "properties": {
+        "cloudflare": { "$ref": "#/definitions/VendorConfig" },
+        "deno": { "$ref": "#/definitions/VendorConfig" },
+        "tencent": { "$ref": "#/definitions/VendorConfig" }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "maxExecutionTime": { "type": "number" },
+        "maxPayloadSize": { "type": "number" },
+        "maxConcurrency": { "type": "number" }
+      }
+    }
+  },
+  "definitions": {
+    "ServiceConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "binding": { "type": "string" }
+      },
+      "required": ["enabled"]
+    },
+    "VendorConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" }
+      },
+      "required": ["enabled"]
+    }
+  }
+}

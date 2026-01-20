@@ -1,0 +1,16 @@
+{
+  "version": "0.1.0",
+  "name": "hello-world",
+  "description": "A canonical Hello World example",
+  "runtime": "standard-v1",
+  "entryPoint": "functions/index.ts",
+  "services": {
+    "kv": { "enabled": false },
+    "database": { "enabled": false }
+  },
+  "vendors": {
+    "cloudflare": { "enabled": true },
+    "deno": { "enabled": true },
+    "tencent": { "enabled": true }
+  }
+}
