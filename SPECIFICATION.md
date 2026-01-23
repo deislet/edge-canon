@@ -148,7 +148,7 @@ export async function onRequestGet(context: Context): Promise<Response> {
 
 To avoid ambiguity, it is recommended to use **Strict Mode**, which forbids mixing export styles in a single file.
 
-If both `default export` and `onRequest` are detected, the compiler will prioritize **`default export`** and ignore other named exports. Developers should explicitly choose one style.
+If both `default export` and `onRequest` are detected, the compiler will prioritize **`default export`** for HTTP handling. Named exports `scheduled` and `queue` are permitted alongside the default export.
 
 ### 3.3 The Context Object
 
@@ -171,6 +171,56 @@ interface Context {
   
   // Lifecycle
   waitUntil(promise: Promise<any>): void;
+}
+```
+
+### 3.4 Trigger Handlers (Async Events)
+
+In addition to the HTTP handler, functions may export handlers for asynchronous triggers.
+
+#### Scheduled Handler (Cron)
+
+```typescript
+export async function scheduled(
+  event: ScheduledEvent,
+  env: Record<string, string>,
+  context: Context
+): Promise<void> {
+  console.log("Cron triggered:", event.cron);
+}
+
+interface ScheduledEvent {
+  scheduledTime: number; // Unix timestamp
+  cron: string;          // Cron expression
+}
+```
+
+#### Queue Handler
+
+```typescript
+export async function queue(
+  batch: MessageBatch,
+  env: Record<string, string>,
+  context: Context
+): Promise<void> {
+  for (const msg of batch.messages) {
+    console.log("Received:", msg.body);
+    msg.ack();
+  }
+}
+
+interface MessageBatch {
+  queue: string;
+  messages: Message[];
+  ackAll(): void;
+}
+
+interface Message {
+  id: string;
+  body: any; // JSON object or string
+  timestamp: number;
+  ack(): void;
+  retry(): void;
 }
 ```
 
@@ -278,15 +328,25 @@ interface BlobStore {
 interface Queue {
   send(message: any): Promise<void>;
 }
+
+### 7.6 Cache Interface (Subset)
+
+```typescript
+interface Cache {
+  put(request: Request | string, response: Response): Promise<void>;
+  match(request: Request | string): Promise<Response | undefined>;
+  delete(request: Request | string): Promise<boolean>;
+}
 ```
 
-### 7.6 Compatibility Matrix
+### 7.7 Compatibility Matrix
+
 
 | Feature | Cloudflare | Deno Deploy | Tencent EdgeOne | Deislet (Self-Hosted) |
 |---------|------------|-------------|-----------------|-----------------------|
 | KV | ✅ Native | ✅ Native | ✅ Native | ✅ Native (Denix) |
-| DB (SQL) | ✅ D1 | ✅ SQLite | ✅ DSQL | ✅ Native (SQLite) |
-| Blob | ✅ R2 | ⚠️ S3 Compat | ✅ EOS | ✅ Native (FS/S3) |
+| DB (SQL) | ✅ D1 | ✅ SQLite | ✅ DSQL | ✅ Remote (gRPC) |
+| Blob | ✅ R2 | ⚠️ S3 Compat | ✅ EOS | ✅ Remote (gRPC) |
 | Queue | ✅ Queues | ✅ KV Queue | ✅ CMQ | ✅ Native (Memory) |
 
 ---

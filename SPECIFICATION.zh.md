@@ -44,7 +44,8 @@ my-edge-app/
   "entryPoint": "functions/index.ts",
   "services": {
     "kv": { "enabled": true, "binding": "KV_STORE" },
-    "database": { "enabled": true, "binding": "DB" }
+    "database": { "enabled": true, "binding": "DB" },
+    "cache": { "enabled": true, "binding": "CACHE" }
   },
   "vendors": {
     "cloudflare": { "enabled": true },
@@ -164,6 +165,7 @@ interface Context {
   services: {
     kv?: KVStore;
     database?: Database;
+    cache?: Cache;
     blob?: BlobStore;
     queue?: Queue;
   };
@@ -261,7 +263,17 @@ interface Database {
 }
 ```
 
-### 7.4 BlobStore 对象存储接口
+### 7.4 Cache 缓存接口
+
+```typescript
+interface Cache {
+  put(request: Request | string, response: Response): Promise<undefined>;
+  match(request: Request | string): Promise<Response | undefined>;
+  delete(request: Request | string): Promise<boolean>;
+}
+```
+
+### 7.5 BlobStore 对象存储接口
 
 ```typescript
 interface BlobStore {
@@ -279,7 +291,7 @@ interface Queue {
 }
 ```
 
-### 7.6 平台能力兼容性矩阵
+### 7.7 平台能力兼容性矩阵
 
 | 功能 | Cloudflare | Deno Deploy | Tencent EdgeOne | Deislet (Self-Hosted) |
 |---|---|---|---|---|
@@ -287,10 +299,36 @@ interface Queue {
 | 数据库事务 | ✅ D1 | ✅ 自实现 | ✅ 支持 | ✅ Native (SQLite) |
 | Blob 存储 | ✅ R2 | ⚠️ S3 Compat | ✅ EOS | ✅ Native (FS/S3) |
 | 消息队列 | ✅ Queues | ✅ Kv Queue | ✅ CMQ | ✅ Native (Memory) |
+| 缓存 | ✅ Cache API | ✅ Cache API | ✅ Cache API | ✅ Native (LRU) |
 
 ---
 
-## 8. WebSocket 支持
+## 8. 调试与观测 (Debugging & Observability)
+
+### 8.1 远程调试协议 (Inspector Protocol)
+
+Deislet 平台支持基于 WebSocket 的远程调试（兼容 Chrome DevTools Protocol）。
+
+- **连接方式**: `ws://<host>:<port>/`
+- **必需 Headers**:
+  - `x-deis-app-id`: `_inspect:<app_id>` (调试路由标识)
+  - `x-denix-inspect-token`: `<token>` (由 `StartInspect` 接口返回的临时令牌)
+  - `Upgrade`: `websocket`
+
+> **注意**: 调试会话具有时间限制（默认 300秒），超时后会自动断开。
+
+### 8.2 路由标识规范
+
+在生产环境部署中，路由标识分为两个层面：
+
+1.  **用户层面 (Public)**: 用户通过域名访问（如 `app.example.com`），**无需**感知内部 ID。
+2.  **系统层面 (Internal)**: 负载均衡器 (LB) 负责将域名映射为 `x-deis-app-id`。
+    - **安全清洗**: LB 必须清除用户请求中可能携带的 `x-deis-app-id`，防止越权。
+    - **可信传递**: 仅 LB 到 Runtime 之间的链路信任此 Header。
+
+---
+
+## 9. WebSocket 支持
 
 Edge Canon 为 WebSocket 客户端和服务端（Upgrade 请求处理）提供标准支持。
 
@@ -427,14 +465,16 @@ interface ErrorResponse {
 
 ---
 
-## 13. 性能与限制
+## 14. 性能与限制
 
-### 13.1 通用限制
+### 14.1 通用限制
 
-- **最大执行时间**: 30s
+- **最大执行时间 (CPU Time)**: **30s** (硬限制，超时强制终止)
+- **内存限制 (Memory)**: **128MB** (默认)，超限将触发 OOM 终止而非崩溃。
+- **速率限制 (Rate Limit)**: 默认为 **1000 ops/sec** (IOPS)，防止资源滥用。
 - **最大请求/响应**: 50MB
 
-### 13.2 结构化日志与指标 (Metrics)
+### 14.2 结构化日志与指标 (Metrics)
 
 Edge Canon 采用 **"Log-based Metrics"** (基于日志的指标) 策略。开发者通过 `context.log` 输出结构化 JSON 日志，平台会自动从中提取监控指标。无需引入额外的监控 SDK。
 
