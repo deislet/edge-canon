@@ -36,89 +36,9 @@ Alternatives:
 
 ## 2. 存储与持久化 (Storage & Persistence)
 
-### 2.1 KV Storage
+> **注意**: KV Storage 和 Cache API 已移至[基础规范](./SPECIFICATION_BASIC.md)，所有平台必须支持。
 
-**支持平台**: ✅ Cloudflare, ✅ Deno, ✅ Tencent, ✅ Deislet
-
-#### 接口定义
-
-```typescript
-interface KVStore {
-  get(key: string): Promise<string | null>;
-  getJSON<T>(key: string): Promise<T | null>;
-  put(key: string, value: string, options?: KVPutOptions): Promise<void>;
-  putJSON<T>(key: string, value: T, options?: KVPutOptions): Promise<void>;
-  delete(key: string): Promise<void>;
-  list(prefix?: string): Promise<KVListResult>;
-}
-
-interface KVPutOptions {
-  expirationTtl?: number;  // 过期时间（秒）
-  metadata?: Record<string, any>;
-}
-
-interface KVListResult {
-  keys: Array<{ name: string; metadata?: any }>;
-  cursor?: string;
-  list_complete: boolean;
-}
-```
-
-#### 配置
-
-```json
-{
-  "services": {
-    "kv": {
-      "enabled": true,
-      "namespace": "MY_KV_STORE"
-    }
-  }
-}
-```
-
-#### 使用示例
-
-```typescript
-export default async function handler(context: Context) {
-  const kv = context.services.kv;
-
-  // 获取值
-  const value = await kv.get('user:123');
-
-  // 获取 JSON
-  const user = await kv.getJSON<User>('user:123');
-
-  // 存储值（带过期时间）
-  await kv.put('session:abc', 'data', {
-    expirationTtl: 3600  // 1 小时后过期
-  });
-
-  // 存储 JSON
-  await kv.putJSON('user:123', { name: 'Alice', age: 30 });
-
-  // 删除
-  await kv.delete('user:123');
-
-  // 列出键
-  const result = await kv.list('user:');
-
-  return new Response(JSON.stringify(result));
-}
-```
-
-#### 平台实现
-
-| 平台 | 实现方式 | 限制 |
-|------|---------|------|
-| Cloudflare | KV Namespaces | 值大小 ≤ 25MB |
-| Deno | Deno KV | 值大小 ≤ 64KB |
-| Tencent | EdgeKV | 值大小 ≤ 2MB |
-| Deislet | Denix KV | 值大小 ≤ 10MB |
-
----
-
-### 2.2 SQL Database
+### 2.1 SQL Database
 
 **支持平台**: ✅ Cloudflare, ✅ Deno, ❌ Tencent, ✅ Deislet
 
@@ -195,7 +115,7 @@ export default async function handler(context: Context) {
 
 ---
 
-### 2.3 Object Storage (Blob)
+### 2.2 Object Storage (Blob)
 
 **支持平台**: ✅ Cloudflare, ❌ Deno, ❌ Tencent, ✅ Deislet
 
@@ -268,122 +188,6 @@ export default async function handler(context: Context) {
 | Deno | ❌ 不支持 | - |
 | Tencent | ❌ 不支持 | - |
 | Deislet | Remote gRPC | 对象大小 ≤ 5GB |
-
----
-
-### 2.4 Cache API
-
-**支持平台**: ✅ Cloudflare, ✅ Deno, ✅ Tencent, ✅ Deislet
-
-#### 接口定义
-
-```typescript
-interface Cache {
-  put(request: Request | string, response: Response): Promise<void>;
-  match(request: Request | string): Promise<Response | undefined>;
-  delete(request: Request | string): Promise<boolean>;
-}
-```
-
-#### 配置
-
-```json
-{
-  "services": {
-    "cache": {
-      "enabled": true
-    }
-  }
-}
-```
-
-#### 使用示例
-
-```typescript
-export default async function handler(context: Context) {
-  const cache = context.services.cache;
-  const cacheKey = new URL(context.request.url);
-
-  // 尝试从缓存获取
-  const cached = await cache.match(cacheKey);
-  if (cached) {
-    return cached;
-  }
-
-  // 生成响应
-  const response = new Response('Hello World', {
-    headers: {
-      'Content-Type': 'text/plain',
-      'Cache-Control': 'public, max-age=3600'
-    }
-  });
-
-  // 存入缓存
-  await cache.put(cacheKey, response.clone());
-
-  return response;
-}
-```
-
-#### 缓存策略示例
-
-**1. Cache-First 策略**:
-```typescript
-export default async function handler(context: Context) {
-  const cache = context.services.cache;
-  const url = new URL(context.request.url);
-
-  // 1. 检查缓存
-  const cached = await cache.match(url);
-  if (cached) {
-    return cached;
-  }
-
-  // 2. 请求源站
-  const response = await fetch(url);
-
-  // 3. 缓存响应
-  if (response.ok) {
-    await cache.put(url, response.clone());
-  }
-
-  return response;
-}
-```
-
-**2. Stale-While-Revalidate 策略**:
-```typescript
-export default async function handler(context: Context) {
-  const cache = context.services.cache;
-  const url = new URL(context.request.url);
-
-  const cached = await cache.match(url);
-
-  // 后台更新缓存
-  context.waitUntil(
-    fetch(url).then(res => cache.put(url, res))
-  );
-
-  // 立即返回缓存（即使过期）
-  return cached || fetch(url);
-}
-```
-
-#### 平台实现
-
-| 平台 | 实现方式 | 缓存空间 |
-|------|---------|---------|
-| Cloudflare | Cache API (caches.default) | 共享全局缓存 |
-| Deno | Cache API | 基于区域的缓存 |
-| Tencent | Cache API | EdgeOne 全局缓存 |
-| Deislet | Cache API | 配置化缓存后端 |
-
-#### 最佳实践
-
-1. **使用有意义的缓存键**: URL、查询参数、请求头
-2. **设置合适的 TTL**: 通过 `Cache-Control` 头控制
-3. **克隆响应**: `response.clone()` 避免流消耗
-4. **处理缓存失效**: 使用 `cache.delete()` 主动清除
 
 ---
 
@@ -733,10 +537,6 @@ export default async function handler(context: Context) {
   "functionRoot": "./functions",
 
   "services": {
-    "kv": {
-      "enabled": true,
-      "namespace": "MY_KV"
-    },
     "database": {
       "enabled": true,
       "binding": "DB"
@@ -744,9 +544,6 @@ export default async function handler(context: Context) {
     "blob": {
       "enabled": true,
       "binding": "MY_BUCKET"
-    },
-    "cache": {
-      "enabled": true
     },
     "queue": {
       "enabled": true,

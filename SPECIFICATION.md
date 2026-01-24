@@ -10,12 +10,13 @@
 
 为了更清晰地区分必需特性和可选特性，本规范已拆分为三个文档：
 
-- **[核心规范 (Core)](./SPECIFICATION_CORE.md)**: 所有平台必须支持的基础能力
-  - HTTP Handler、Request/Response、环境变量、路由、日志等
-  - 保证：遵循核心规范的代码可在任何 Edge Canon 兼容平台运行
+- **[基础规范 (Basic)](./SPECIFICATION_BASIC.md)**: 所有平台必须支持的基础能力
+  - HTTP Handler、Request/Response、环境变量、路由、日志
+  - **KV 存储、Cache API**（基础持久化能力）
+  - 保证：遵循基础规范的代码可在任何 Edge Canon 兼容平台运行
 
 - **[扩展规范 (Extended)](./SPECIFICATION_EXT.md)**: 可选的增强特性
-  - KV 存储、SQL 数据库、对象存储、消息队列、WebSocket、Cron 任务等
+  - SQL 数据库、对象存储、消息队列、WebSocket、Cron 任务、SSR、ISR 等
   - 编译时验证：编译器会检查目标平台是否支持使用的扩展特性
 
 - **[平台支持矩阵 (Platform Matrix)](./PLATFORM_MATRIX.md)**: 各平台的详细兼容性信息
@@ -23,7 +24,7 @@
   - 平台限制说明
   - 替代方案建议
 
-**本文档**作为完整参考保留，但推荐优先阅读核心规范和扩展规范。
+**本文档**作为完整参考保留，但推荐优先阅读基础规范和扩展规范。
 
 ---
 

@@ -9,7 +9,7 @@
 
 Edge Canon 将所有特性分为两类：
 
-### Core Features (核心特性)
+### Basic Features (基础特性)
 
 **必须全平台支持**的基础能力。任何声称支持 Edge Canon 的平台都必须实现这些特性。
 
@@ -19,7 +19,7 @@ Edge Canon 将所有特性分为两类：
 
 ---
 
-## Core Features (✅ 全平台支持)
+## Basic Features (✅ 全平台支持)
 
 | 特性 | 说明 | 标准接口 |
 |------|------|---------|
@@ -27,6 +27,8 @@ Edge Canon 将所有特性分为两类：
 | **Request/Response** | 标准 Fetch API | `Request`, `Response`, `Headers` |
 | **Environment Variables** | 环境变量访问 | `context.env` |
 | **Route Parameters** | 动态路由参数 | `context.params` |
+| **KV Storage** | 键值存储 | `context.services.kv` |
+| **Cache API** | HTTP 响应缓存 | `context.services.cache` |
 | **Lifecycle Hooks** | 后台任务延迟 | `context.waitUntil()` |
 | **Structured Logging** | 日志记录 | `context.log.info/warn/error()` |
 | **Web Standards** | Fetch, URL, Crypto | `fetch()`, `URL`, `crypto` |
@@ -39,10 +41,8 @@ Edge Canon 将所有特性分为两类：
 
 | Feature | Cloudflare | Deno | Tencent | Deislet | 实现方式 |
 |---------|-----------|------|---------|---------|---------|
-| **KV Storage** | ✅ | ✅ | ✅ | ✅ | KV Namespaces / Deno KV / EdgeKV / Denix KV |
 | **SQL Database** | ✅ | ✅ | ❌ | ✅ | D1 / Postgres / - / Remote gRPC |
 | **Object Storage** | ✅ | ❌ | ❌ | ✅ | R2 / - / - / Remote gRPC |
-| **Cache API** | ✅ | ✅ | ✅ | ✅ | Cache API / Cache API / Cache API / Cache API |
 
 **替代方案（无 SQL 数据库）**:
 - 使用 KV 存储简单数据
@@ -111,11 +111,15 @@ Edge Canon 将所有特性分为两类：
 
 ### Cloudflare Workers
 
-**✅ 支持**:
+**✅ 基础特性**: 全部支持
+- HTTP Handler, Request/Response, 环境变量, 路由参数
 - KV Storage (KV Namespaces)
+- Cache API
+- 生命周期, 日志, Web 标准
+
+**✅ 扩展特性**:
 - SQL Database (D1)
 - Object Storage (R2)
-- Cache API
 - Cron Jobs (Cron Triggers)
 - WebSockets (WebSocket API)
 - Durable Objects
@@ -133,10 +137,14 @@ Edge Canon 将所有特性分为两类：
 
 ### Deno Deploy
 
-**✅ 支持**:
+**✅ 基础特性**: 全部支持
+- HTTP Handler, Request/Response, 环境变量, 路由参数
 - KV Storage (Deno KV)
-- SQL Database (Postgres via integration)
 - Cache API
+- 生命周期, 日志, Web 标准
+
+**✅ 扩展特性**:
+- SQL Database (Postgres via integration)
 - Node.js Runtime (Compatibility layer)
 - Server-Side Rendering (Native)
 - Incremental Static Regeneration
@@ -153,9 +161,13 @@ Edge Canon 将所有特性分为两类：
 
 ### Tencent EdgeOne Pages
 
-**✅ 支持**:
+**✅ 基础特性**: 全部支持
+- HTTP Handler, Request/Response, 环境变量, 路由参数
 - KV Storage (EdgeKV)
 - Cache API
+- 生命周期, 日志, Web 标准
+
+**✅ 扩展特性**:
 - Node.js Runtime (Node Functions)
 - Server-Side Rendering (Framework SSR)
 - Incremental Static Regeneration (Framework ISR)
@@ -173,11 +185,15 @@ Edge Canon 将所有特性分为两类：
 
 ### Deislet (Self-Hosted)
 
-**✅ 支持**:
+**✅ 基础特性**: 全部支持
+- HTTP Handler, Request/Response, 环境变量, 路由参数
 - KV Storage (Denix KV)
+- Cache API
+- 生命周期, 日志, Web 标准
+
+**✅ 扩展特性**:
 - SQL Database (Remote gRPC)
 - Object Storage (Remote gRPC)
-- Cache API
 - Node.js Runtime (Native)
 - Server-Side Rendering (Native)
 - Cron Jobs (Native)

@@ -1,6 +1,6 @@
-# Edge Canon Core Specification v0.1.0
+# Edge Canon Basic Specification v0.1.0
 
-> **核心规范**：所有平台必须支持的基础能力
+> **基础规范**：所有平台必须支持的基础能力
 > **保证**: 遵循此规范的代码可在任何 Edge Canon 兼容平台运行
 
 ---
@@ -120,11 +120,11 @@ export async function onRequest(context: Context): Promise<Response> {
 }
 ```
 
-### 3.2 核心 Context 对象
+### 3.2 基础 Context 对象
 
 ```typescript
 /**
- * 核心 Context 接口
+ * 基础 Context 接口
  * 所有平台必须实现的基础能力
  */
 interface Context {
@@ -140,6 +140,17 @@ interface Context {
 
   /** 路由参数 (e.g., /users/:id → { id: "123" }) */
   params: Record<string, string>;
+
+  // ============ 基础服务 ============
+
+  /** 基础存储服务（所有平台必须支持） */
+  services: {
+    /** KV 键值存储 */
+    kv: KVStore;
+
+    /** HTTP 缓存 */
+    cache: Cache;
+  };
 
   // ============ 可观测性 ============
 
@@ -234,9 +245,187 @@ export default async function handler(context: Context) {
 
 ---
 
-## 6. Web 标准 API (Core)
+## 6. KV Storage (Basic)
 
-### 6.1 必须支持的 Web APIs
+**所有平台必须支持 KV 存储**，这是边缘计算中最基础的数据持久化能力。
+
+```typescript
+interface KVStore {
+  get(key: string): Promise<string | null>;
+  getJSON<T>(key: string): Promise<T | null>;
+  put(key: string, value: string, options?: KVPutOptions): Promise<void>;
+  putJSON<T>(key: string, value: T, options?: KVPutOptions): Promise<void>;
+  delete(key: string): Promise<void>;
+  list(prefix?: string): Promise<KVListResult>;
+}
+
+interface KVPutOptions {
+  expirationTtl?: number;  // 过期时间（秒）
+  metadata?: Record<string, any>;
+}
+
+interface KVListResult {
+  keys: Array<{ name: string; metadata?: any }>;
+  cursor?: string;
+  list_complete: boolean;
+}
+```
+
+**使用示例**:
+
+```typescript
+export default async function handler(context: Context) {
+  const kv = context.services.kv;
+
+  // 获取值
+  const value = await kv.get('user:123');
+
+  // 获取 JSON
+  const user = await kv.getJSON<{ name: string }>('user:123');
+
+  // 存储值（带过期时间）
+  await kv.put('session:abc', 'data', {
+    expirationTtl: 3600  // 1 小时后过期
+  });
+
+  // 存储 JSON
+  await kv.putJSON('user:123', { name: 'Alice', age: 30 });
+
+  // 删除
+  await kv.delete('user:123');
+
+  // 列出键
+  const result = await kv.list('user:');
+
+  return new Response(JSON.stringify(result));
+}
+```
+
+**配置**:
+
+```json
+{
+  "services": {
+    "kv": {
+      "enabled": true,
+      "namespace": "MY_KV_STORE"
+    }
+  }
+}
+```
+
+**平台实现**:
+
+| 平台 | 实现方式 | 值大小限制 |
+|------|---------|-----------|
+| Cloudflare | KV Namespaces | ≤ 25MB |
+| Deno | Deno KV | ≤ 64KB |
+| Tencent | EdgeKV | ≤ 2MB |
+| Deislet | Denix KV | ≤ 10MB |
+
+---
+
+## 7. Cache API (Basic)
+
+**所有平台必须支持 Cache API**，用于 HTTP 响应缓存（非持久化存储）。
+
+```typescript
+interface Cache {
+  put(request: Request | string, response: Response): Promise<void>;
+  match(request: Request | string): Promise<Response | undefined>;
+  delete(request: Request | string): Promise<boolean>;
+}
+```
+
+**使用示例**:
+
+```typescript
+export default async function handler(context: Context) {
+  const cache = context.services.cache;
+  const cacheKey = new URL(context.request.url);
+
+  // 1. 尝试从缓存获取
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  // 2. 生成响应
+  const response = new Response('Hello World', {
+    headers: {
+      'Content-Type': 'text/plain',
+      'Cache-Control': 'public, max-age=3600'
+    }
+  });
+
+  // 3. 存入缓存
+  await cache.put(cacheKey, response.clone());
+
+  return response;
+}
+```
+
+**缓存策略**:
+
+**Cache-First 策略**:
+```typescript
+export default async function handler(context: Context) {
+  const cache = context.services.cache;
+  const url = new URL(context.request.url);
+
+  // 检查缓存
+  const cached = await cache.match(url);
+  if (cached) return cached;
+
+  // 请求源站并缓存
+  const response = await fetch(url);
+  if (response.ok) {
+    await cache.put(url, response.clone());
+  }
+
+  return response;
+}
+```
+
+**Stale-While-Revalidate 策略**:
+```typescript
+export default async function handler(context: Context) {
+  const cache = context.services.cache;
+  const url = new URL(context.request.url);
+
+  const cached = await cache.match(url);
+
+  // 后台更新缓存
+  context.waitUntil(
+    fetch(url).then(res => cache.put(url, res))
+  );
+
+  // 立即返回缓存（即使过期）
+  return cached || fetch(url);
+}
+```
+
+**配置**:
+
+```json
+{
+  "services": {
+    "cache": {
+      "enabled": true
+    }
+  }
+}
+```
+
+**平台实现**:
+
+所有平台均支持标准 Cache API。
+
+---
+
+## 8. Web 标准 API (Basic)
+
+### 8.1 必须支持的 Web APIs
 
 所有平台必须支持以下标准 Web APIs：
 
@@ -263,7 +452,7 @@ export default async function handler(context: Context) {
 **JSON**:
 - `JSON.parse()`, `JSON.stringify()`
 
-### 6.2 示例
+### 8.2 示例
 
 ```typescript
 export default async function handler(context: Context) {
@@ -293,9 +482,9 @@ export default async function handler(context: Context) {
 
 ---
 
-## 7. 错误处理 (Core)
+## 9. 错误处理 (Basic)
 
-### 7.1 标准 JSON 错误格式
+### 9.1 标准 JSON 错误格式
 
 ```typescript
 interface ErrorResponse {
@@ -308,7 +497,7 @@ interface ErrorResponse {
 }
 ```
 
-### 7.2 标准错误代码
+### 9.2 标准错误代码
 
 | 代码 | HTTP 状态 | 说明 |
 |------|----------|------|
@@ -320,7 +509,7 @@ interface ErrorResponse {
 | `INTERNAL_ERROR` | 500 | 未处理异常或内部错误 |
 | `TIMEOUT` | 504 | 执行时间超过限制 |
 
-### 7.3 未捕获异常
+### 9.3 未捕获异常
 
 handler 抛出未捕获异常时：
 1. 平台捕获异常
@@ -330,9 +519,9 @@ handler 抛出未捕获异常时：
 
 ---
 
-## 8. 性能与限制 (Core)
+## 10. 性能与限制 (Basic)
 
-### 8.1 一般限制
+### 10.1 一般限制
 
 - **最大执行时间**: 30s (建议)
 - **最大请求体**: 10MB (建议)
@@ -342,9 +531,9 @@ handler 抛出未捕获异常时：
 
 ---
 
-## 9. 示例
+## 11. 示例
 
-### 9.1 最小 Hello World
+### 11.1 最小 Hello World
 
 ```typescript
 // functions/index.ts
@@ -353,7 +542,7 @@ export default async function handler(context: Context) {
 }
 ```
 
-### 9.2 带环境变量和参数
+### 11.2 带环境变量和参数
 
 ```typescript
 // functions/api/users/[id].ts
@@ -390,7 +579,7 @@ export default async function handler(context: Context) {
 }
 ```
 
-### 9.3 后台任务
+### 11.3 后台任务
 
 ```typescript
 export default async function handler(context: Context) {
@@ -413,17 +602,17 @@ export default async function handler(context: Context) {
 
 ---
 
-## 10. 编译与部署
+## 12. 编译与部署
 
-### 10.1 验证
+### 12.1 验证
 
 ```bash
 deforge validate
 ```
 
-检查代码是否符合核心规范（无平台特定代码）。
+检查代码是否符合基础规范（无平台特定代码）。
 
-### 10.2 构建
+### 12.2 构建
 
 ```bash
 deforge build
@@ -431,7 +620,7 @@ deforge build
 
 为所有启用的平台生成构建产物。
 
-### 10.3 部署
+### 12.3 部署
 
 ```bash
 # 方式 1: 使用平台原生工具
@@ -445,20 +634,21 @@ denictl deploy --vendor cloudflare
 
 ---
 
-## 11. 核心保证
+## 13. 基础保证
 
-遵循此核心规范的项目具有以下保证：
+遵循此基础规范的项目具有以下保证：
 
 1. ✅ **通用性**: 代码可在任何 Edge Canon 兼容平台运行
 2. ✅ **零平台泄露**: 无需修改即可切换平台
 3. ✅ **类型安全**: 完整的 TypeScript 类型定义
 4. ✅ **可预测性**: 行为在所有平台上一致
+5. ✅ **持久化能力**: KV 存储和 Cache 作为基础服务保证可用
 
 ---
 
-## 12. 扩展特性
+## 14. 扩展特性
 
-核心规范之外的扩展特性（KV、Database、WebSocket 等）请参阅：
+基础规范之外的扩展特性（SQL Database、Object Storage、WebSocket 等）请参阅：
 - [SPECIFICATION_EXT.md](./SPECIFICATION_EXT.md) - 扩展特性规范
 - [PLATFORM_MATRIX.md](./PLATFORM_MATRIX.md) - 平台支持矩阵
 
