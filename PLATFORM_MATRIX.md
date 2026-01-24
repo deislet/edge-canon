@@ -42,6 +42,7 @@ Edge Canon 将所有特性分为两类：
 | **KV Storage** | ✅ | ✅ | ✅ | ✅ | KV Namespaces / Deno KV / EdgeKV / Denix KV |
 | **SQL Database** | ✅ | ✅ | ❌ | ✅ | D1 / Postgres / - / Remote gRPC |
 | **Object Storage** | ✅ | ❌ | ❌ | ✅ | R2 / - / - / Remote gRPC |
+| **Cache API** | ✅ | ✅ | ✅ | ✅ | Cache API / Cache API / Cache API / Cache API |
 
 **替代方案（无 SQL 数据库）**:
 - 使用 KV 存储简单数据
@@ -114,6 +115,7 @@ Edge Canon 将所有特性分为两类：
 - KV Storage (KV Namespaces)
 - SQL Database (D1)
 - Object Storage (R2)
+- Cache API
 - Cron Jobs (Cron Triggers)
 - WebSockets (WebSocket API)
 - Durable Objects
@@ -134,6 +136,7 @@ Edge Canon 将所有特性分为两类：
 **✅ 支持**:
 - KV Storage (Deno KV)
 - SQL Database (Postgres via integration)
+- Cache API
 - Node.js Runtime (Compatibility layer)
 - Server-Side Rendering (Native)
 - Incremental Static Regeneration
@@ -152,6 +155,7 @@ Edge Canon 将所有特性分为两类：
 
 **✅ 支持**:
 - KV Storage (EdgeKV)
+- Cache API
 - Node.js Runtime (Node Functions)
 - Server-Side Rendering (Framework SSR)
 - Incremental Static Regeneration (Framework ISR)
@@ -173,6 +177,7 @@ Edge Canon 将所有特性分为两类：
 - KV Storage (Denix KV)
 - SQL Database (Remote gRPC)
 - Object Storage (Remote gRPC)
+- Cache API
 - Node.js Runtime (Native)
 - Server-Side Rendering (Native)
 - Cron Jobs (Native)

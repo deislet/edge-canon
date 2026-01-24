@@ -271,6 +271,122 @@ export default async function handler(context: Context) {
 
 ---
 
+### 2.4 Cache API
+
+**支持平台**: ✅ Cloudflare, ✅ Deno, ✅ Tencent, ✅ Deislet
+
+#### 接口定义
+
+```typescript
+interface Cache {
+  put(request: Request | string, response: Response): Promise<void>;
+  match(request: Request | string): Promise<Response | undefined>;
+  delete(request: Request | string): Promise<boolean>;
+}
+```
+
+#### 配置
+
+```json
+{
+  "services": {
+    "cache": {
+      "enabled": true
+    }
+  }
+}
+```
+
+#### 使用示例
+
+```typescript
+export default async function handler(context: Context) {
+  const cache = context.services.cache;
+  const cacheKey = new URL(context.request.url);
+
+  // 尝试从缓存获取
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  // 生成响应
+  const response = new Response('Hello World', {
+    headers: {
+      'Content-Type': 'text/plain',
+      'Cache-Control': 'public, max-age=3600'
+    }
+  });
+
+  // 存入缓存
+  await cache.put(cacheKey, response.clone());
+
+  return response;
+}
+```
+
+#### 缓存策略示例
+
+**1. Cache-First 策略**:
+```typescript
+export default async function handler(context: Context) {
+  const cache = context.services.cache;
+  const url = new URL(context.request.url);
+
+  // 1. 检查缓存
+  const cached = await cache.match(url);
+  if (cached) {
+    return cached;
+  }
+
+  // 2. 请求源站
+  const response = await fetch(url);
+
+  // 3. 缓存响应
+  if (response.ok) {
+    await cache.put(url, response.clone());
+  }
+
+  return response;
+}
+```
+
+**2. Stale-While-Revalidate 策略**:
+```typescript
+export default async function handler(context: Context) {
+  const cache = context.services.cache;
+  const url = new URL(context.request.url);
+
+  const cached = await cache.match(url);
+
+  // 后台更新缓存
+  context.waitUntil(
+    fetch(url).then(res => cache.put(url, res))
+  );
+
+  // 立即返回缓存（即使过期）
+  return cached || fetch(url);
+}
+```
+
+#### 平台实现
+
+| 平台 | 实现方式 | 缓存空间 |
+|------|---------|---------|
+| Cloudflare | Cache API (caches.default) | 共享全局缓存 |
+| Deno | Cache API | 基于区域的缓存 |
+| Tencent | Cache API | EdgeOne 全局缓存 |
+| Deislet | Cache API | 配置化缓存后端 |
+
+#### 最佳实践
+
+1. **使用有意义的缓存键**: URL、查询参数、请求头
+2. **设置合适的 TTL**: 通过 `Cache-Control` 头控制
+3. **克隆响应**: `response.clone()` 避免流消耗
+4. **处理缓存失效**: 使用 `cache.delete()` 主动清除
+
+---
+
 ## 3. 调度与消息 (Scheduling & Messaging)
 
 ### 3.1 Cron Jobs (定时任务)
@@ -628,6 +744,9 @@ export default async function handler(context: Context) {
     "blob": {
       "enabled": true,
       "binding": "MY_BUCKET"
+    },
+    "cache": {
+      "enabled": true
     },
     "queue": {
       "enabled": true,

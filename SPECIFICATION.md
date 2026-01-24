@@ -376,6 +376,7 @@ interface Cache {
 | KV Storage | ✅ | ✅ | ✅ | ✅ |
 | SQL Database | ✅ D1 | ✅ Postgres | ❌ | ✅ Remote |
 | Object Storage | ✅ R2 | ❌ | ❌ | ✅ Remote |
+| Cache API | ✅ | ✅ | ✅ | ✅ |
 | Cron Jobs | ✅ | ✅ | ❌ | ✅ |
 | WebSockets | ✅ | ✅ | ❌ | ✅ |
 | Message Queues | ✅ | ❌ | ❌ | ✅ |
