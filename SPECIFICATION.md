@@ -1,8 +1,29 @@
 # Edge Canon Specification v0.1.0
 
-> The authoritative specification for universal edge functions.  
-> **Write Once, Run Anywhere**: Cloudflare Workers, Deno Deploy, Tencent EdgeOne, **Deislet**.  
+> The authoritative specification for universal edge functions.
+> **Write Once, Run Anywhere**: Cloudflare Workers, Deno Deploy, Tencent EdgeOne, **Deislet**.
 > [中文版](./SPECIFICATION.zh.md)
+
+---
+
+## 📚 规范文档组织
+
+为了更清晰地区分必需特性和可选特性，本规范已拆分为三个文档：
+
+- **[核心规范 (Core)](./SPECIFICATION_CORE.md)**: 所有平台必须支持的基础能力
+  - HTTP Handler、Request/Response、环境变量、路由、日志等
+  - 保证：遵循核心规范的代码可在任何 Edge Canon 兼容平台运行
+
+- **[扩展规范 (Extended)](./SPECIFICATION_EXT.md)**: 可选的增强特性
+  - KV 存储、SQL 数据库、对象存储、消息队列、WebSocket、Cron 任务等
+  - 编译时验证：编译器会检查目标平台是否支持使用的扩展特性
+
+- **[平台支持矩阵 (Platform Matrix)](./PLATFORM_MATRIX.md)**: 各平台的详细兼容性信息
+  - 完整的特性支持表
+  - 平台限制说明
+  - 替代方案建议
+
+**本文档**作为完整参考保留，但推荐优先阅读核心规范和扩展规范。
 
 ---
 
@@ -341,13 +362,25 @@ interface Cache {
 
 ### 7.7 Compatibility Matrix
 
+**重要**: 完整的平台兼容性信息已移至 **[PLATFORM_MATRIX.md](./PLATFORM_MATRIX.md)**
 
-| Feature | Cloudflare | Deno Deploy | Tencent EdgeOne | Deislet (Self-Hosted) |
-|---------|------------|-------------|-----------------|-----------------------|
-| KV | ✅ Native | ✅ Native | ✅ Native | ✅ Native (Denix) |
-| DB (SQL) | ✅ D1 | ✅ SQLite | ✅ DSQL | ✅ Remote (gRPC) |
-| Blob | ✅ R2 | ⚠️ S3 Compat | ✅ EOS | ✅ Remote (gRPC) |
-| Queue | ✅ Queues | ✅ KV Queue | ✅ CMQ | ✅ Native (Memory) |
+下表为快速参考：
+
+| Feature | Cloudflare | Deno Deploy | Tencent EdgeOne | Deislet |
+|---------|-----------|-------------|-----------------|---------|
+| **核心特性** | | | | |
+| HTTP Handler | ✅ | ✅ | ✅ | ✅ |
+| Request/Response | ✅ | ✅ | ✅ | ✅ |
+| Environment Variables | ✅ | ✅ | ✅ | ✅ |
+| **扩展特性** | | | | |
+| KV Storage | ✅ | ✅ | ✅ | ✅ |
+| SQL Database | ✅ D1 | ✅ Postgres | ❌ | ✅ Remote |
+| Object Storage | ✅ R2 | ❌ | ❌ | ✅ Remote |
+| Cron Jobs | ✅ | ✅ | ❌ | ✅ |
+| WebSockets | ✅ | ✅ | ❌ | ✅ |
+| Message Queues | ✅ | ❌ | ❌ | ✅ |
+
+详细信息和替代方案请参阅 [平台支持矩阵](./PLATFORM_MATRIX.md)
 
 ---
 
