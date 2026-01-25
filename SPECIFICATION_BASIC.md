@@ -303,12 +303,24 @@ export default async function handler(context: Context) {
 
 **配置**:
 
+KV Storage 是基础服务，**无需在配置中启用**，所有平台自动提供。
+
+```typescript
+// 直接使用，无需配置
+export default async function handler(context: Context) {
+  const kv = context.services.kv;  // 总是可用
+  await kv.put('key', 'value');
+  return new Response('OK');
+}
+```
+
+可选：某些平台可能需要指定 namespace（命名空间）：
+
 ```json
 {
   "services": {
     "kv": {
-      "enabled": true,
-      "namespace": "MY_KV_STORE"
+      "namespace": "MY_KV_STORE"  // 平台特定配置（可选）
     }
   }
 }
@@ -407,19 +419,20 @@ export default async function handler(context: Context) {
 
 **配置**:
 
-```json
-{
-  "services": {
-    "cache": {
-      "enabled": true
-    }
-  }
+Cache API 是基础服务，**无需在配置中启用**，所有平台自动提供。
+
+```typescript
+// 直接使用，无需配置
+export default async function handler(context: Context) {
+  const cache = context.services.cache;  // 总是可用
+  await cache.put(request, response);
+  return new Response('OK');
 }
 ```
 
 **平台实现**:
 
-所有平台均支持标准 Cache API。
+所有平台均支持标准 Cache API，无需额外配置。
 
 ---
 
