@@ -1,13 +1,24 @@
 # Edge Canon Specification v0.1.0
 
-> 统一边缘函数部署标准规范  
-> 支持多平台兼容发布（Cloudflare Workers/Pages、Deno Deploy、Tencent EdgeOne、**Deislet**）  
-> **核心原则**：一次编写，随处部署；禁止平台特定代码  
+> 统一边缘函数部署标准规范
+> 支持多平台兼容发布（Cloudflare Workers/Pages、Deno Deploy、Tencent EdgeOne、**Deislet**）
+> **核心原则**：一次编写,随处部署;禁止平台特定代码
 > [English](./SPECIFICATION.md)
+
+## 📚 规范文档组织
+
+本文档包含 **Basic (基础)** 和 **Extended (扩展)** 两类特性：
+
+- **Basic**：所有平台必须支持的基础能力（第 1-10 章）
+- **Extended**：平台可选支持的增强特性（第 11-16 章），编译时验证
+
+详细分类参见：
+- [SPECIFICATION_BASIC.md](./SPECIFICATION_BASIC.md) - 仅基础特性
+- [SPECIFICATION_EXT.md](./SPECIFICATION_EXT.md) - 仅扩展特性
 
 ---
 
-## 1. 项目结构规范
+## 1. 项目结构规范 (Basic)
 
 ### 1.1 目录结构
 
@@ -74,7 +85,7 @@ my-edge-app/
 
 ---
 
-## 2. 核心原则
+## 2. 核心原则 (Basic)
 
 ### 2.1 强制要求
 
@@ -117,7 +128,7 @@ export default async function handler(context: Context): Promise<Response> {
 
 ---
 
-## 3. Handler 函数标准
+## 3. Handler 函数标准 (Basic)
 
 ### 3.1 通用 Handler 接口
 
@@ -177,7 +188,7 @@ interface Context {
 
 ---
 
-## 4. 基础 Handler 示例
+## 4. 基础 Handler 示例 (Basic)
 
 ### 示例 1：最小化 Hello World
 
@@ -189,7 +200,7 @@ export default async function handler(context: Context) {
 
 ---
 
-## 5. 路由规范
+## 5. 路由规范 (Basic)
 
 ### 5.1 自动路由生成
 
@@ -209,7 +220,7 @@ export default async function handler(context: Context) {
 
 ---
 
-## 6. 环境变量和密钥管理
+## 6. 环境变量和密钥管理 (Basic)
 
 ### 6.1 定义方式
 
@@ -237,13 +248,9 @@ const apiKey = context.env.API_KEY;
 
 ---
 
-## 7. 存储与集成服务 (KV, DB, Cache, Blob, Queue)
+## 7. KV Store (Basic)
 
-### 7.1 统一服务层架构
-
-本规范为增值服务提供**完全统一的接口**。
-
-### 7.2 KV Store 通用接口
+### 7.1 接口定义
 
 ```typescript
 interface KVStore {
@@ -253,17 +260,11 @@ interface KVStore {
 }
 ```
 
-### 7.3 Database 通用接口
+---
 
-```typescript
-interface Database {
-  query<T>(sql: string, params?: any[]): Promise<T[]>;
-  execute(sql: string, params?: any[]): Promise<ExecuteResult>;
-  transaction<T>(callback: (tx: Database) => Promise<T>): Promise<T>;
-}
-```
+## 8. Cache API (Basic)
 
-### 7.4 Cache 缓存接口
+### 8.1 接口定义
 
 ```typescript
 interface Cache {
@@ -273,162 +274,13 @@ interface Cache {
 }
 ```
 
-### 7.5 BlobStore 对象存储接口
-
-```typescript
-interface BlobStore {
-  get(key: string): Promise<BlobObject | null>;
-  put(key: string, data: ReadableStream | string): Promise<BlobObject>;
-  delete(key: string): Promise<void>;
-}
-```
-
-### 7.5 Queue 消息队列接口
-
-```typescript
-interface Queue {
-  send(message: any): Promise<void>;
-}
-```
-
-### 7.7 平台能力兼容性矩阵
-
-| 功能 | Cloudflare | Deno Deploy | Tencent EdgeOne | Deislet (Self-Hosted) |
-|---|---|---|---|---|
-| KV Store | ✅ KV | ✅ KV | ✅ KV | ✅ Native (Denix) |
-| 数据库事务 | ✅ D1 | ✅ 自实现 | ✅ 支持 | ✅ Native (SQLite) |
-| Blob 存储 | ✅ R2 | ⚠️ S3 Compat | ✅ EOS | ✅ Native (FS/S3) |
-| 消息队列 | ✅ Queues | ✅ Kv Queue | ✅ CMQ | ✅ Native (Memory) |
-| 缓存 | ✅ Cache API | ✅ Cache API | ✅ Cache API | ✅ Native (LRU) |
-
 ---
 
-## 8. 调试与观测 (Debugging & Observability)
+## 9. 错误处理标准 (Basic)
 
-### 8.1 远程调试协议 (Inspector Protocol)
+### 9.1 标准 JSON 错误格式
 
-Deislet 平台支持基于 WebSocket 的远程调试（兼容 Chrome DevTools Protocol）。
-
-- **连接方式**: `ws://<host>:<port>/`
-- **必需 Headers**:
-  - `x-deis-app-id`: `_inspect:<app_id>` (调试路由标识)
-  - `x-denix-inspect-token`: `<token>` (由 `StartInspect` 接口返回的临时令牌)
-  - `Upgrade`: `websocket`
-
-> **注意**: 调试会话具有时间限制（默认 300秒），超时后会自动断开。
-
-### 8.2 路由标识规范
-
-在生产环境部署中，路由标识分为两个层面：
-
-1.  **用户层面 (Public)**: 用户通过域名访问（如 `app.example.com`），**无需**感知内部 ID。
-2.  **系统层面 (Internal)**: 负载均衡器 (LB) 负责将域名映射为 `x-deis-app-id`。
-    - **安全清洗**: LB 必须清除用户请求中可能携带的 `x-deis-app-id`，防止越权。
-    - **可信传递**: 仅 LB 到 Runtime 之间的链路信任此 Header。
-
----
-
-## 9. WebSocket 支持
-
-Edge Canon 为 WebSocket 客户端和服务端（Upgrade 请求处理）提供标准支持。
-
-### 8.1 WebSocket 客户端
-
-使用标准的 `WebSocket` API 连接外部服务。
-
-```typescript
-const socket = new WebSocket("wss://echo.websocket.org");
-socket.onmessage = (event) => console.log(event.data);
-socket.send("Hello");
-```
-
-### 8.2 WebSocket 服务端 (Upgrade)
-
-要接受 WebSocket 连接，需返回 `101 Switching Protocols` 状态码和 `webSocket` 选项。我们推荐使用 `WebSocketPair` 模式以获得更好的平台兼容性（类似于 Cloudflare 风格）。
-
-```typescript
-export default async function handler(context: Context) {
-  if (context.request.headers.get("Upgrade") === "websocket") {
-    const { 0: client, 1: server } = new WebSocketPair();
-    
-    server.accept();
-    server.addEventListener("message", (event) => {
-      server.send(`Echo: ${event.data}`);
-    });
-
-    return new Response(null, {
-      status: 101,
-      webSocket: client,
-    });
-  }
-  return new Response("Expected WebSocket", { status: 426 });
-}
-```
-
----
-
-## 9. WebAssembly (Wasm) 支持
-
-Edge Canon 将 WebAssembly 视为高性能计算的一等公民。
-
-### 9.1 导入与实例化
-
-`.wasm` 文件作为 ES 模块导入。导入对象是一个 `WebAssembly.Module`（而非实例），允许开发者控制实例化过程。
-
-```typescript
-// functions/utils/math.wasm
-import mathModule from './math.wasm';
-
-export default async function handler(context: Context) {
-  // 1. 定义导入对象 (如果 Wasm 模块需要)
-  const importObject = {
-    env: {
-      log: (arg) => console.log(arg)
-    }
-  };
-
-  // 2. 实例化
-  const instance = await WebAssembly.instantiate(mathModule, importObject);
-  
-  // 3. 调用导出函数
-  const result = instance.exports.add(10, 20);
-  return new Response(`Result: ${result}`);
-}
-```
-
-### 9.2 限制与指南
-
-*   **体积限制**: Wasm 二进制文件建议控制在 **1MB** 以内，以确保冷启动速度。
-*   **WASI 支持**: 目前为 **实验性支持**。建议使用 `wasm32-unknown-unknown` 编译目标（纯计算，无系统调用）。
-*   **内存使用**: Wasm 内存计入 Isolate 总内存限制（通常为 128MB）。
-*   **同步执行**: Wasm 函数在主线程同步执行，会阻塞事件循环。避免运行耗时过长的循环。
-
----
-
-## 10. 本地开发与测试
-
-```bash
-denictl dev
-denictl test
-```
-
----
-
-## 11. 构建和发布
-
-```bash
-denictl build
-denictl validate
-denictl deploy
-```
-
----
-
-## 12. 错误处理标准
-
-### 12.1 标准 JSON 错误格式
-
-所有 API **应该**返回一致的 JSON 格式错误，以便客户端进行程序化处理。
+所有 API **应该**返回一致的 JSON 格式错误,以便客户端进行程序化处理。
 
 ```typescript
 interface ErrorResponse {
@@ -441,7 +293,7 @@ interface ErrorResponse {
 }
 ```
 
-### 12.2 标准错误码
+### 9.2 标准错误码
 
 平台保留并推荐应用使用的通用错误码：
 
@@ -455,7 +307,7 @@ interface ErrorResponse {
 | `INTERNAL_ERROR` | 500 | 未捕获异常或平台内部错误 |
 | `TIMEOUT` | 504 | 执行时间超过限制 |
 
-### 12.3 未捕获异常
+### 9.3 未捕获异常
 
 当 Handler 抛出未捕获异常时：
 1. 平台会捕获该异常。
@@ -465,18 +317,18 @@ interface ErrorResponse {
 
 ---
 
-## 14. 性能与限制
+## 10. 性能与限制 (Basic)
 
-### 14.1 通用限制
+### 10.1 通用限制
 
-- **最大执行时间 (CPU Time)**: **30s** (硬限制，超时强制终止)
-- **内存限制 (Memory)**: **128MB** (默认)，超限将触发 OOM 终止而非崩溃。
-- **速率限制 (Rate Limit)**: 默认为 **1000 ops/sec** (IOPS)，防止资源滥用。
-- **最大请求/响应**: 50MB
+- **最大执行时间 (CPU Time)**: **30s** (硬限制,超时强制终止)
+- **内存限制 (Memory)**: **128MB** (默认),超限将触发 OOM 终止而非崩溃。
+- **速率限制 (Rate Limit)**: 默认为 **1000 ops/sec** (IOPS),防止资源滥用。
+- **最大请求 / 响应**: 50MB
 
-### 14.2 结构化日志与指标 (Metrics)
+### 10.2 结构化日志与指标 (Metrics)
 
-Edge Canon 采用 **"Log-based Metrics"** (基于日志的指标) 策略。开发者通过 `context.log` 输出结构化 JSON 日志，平台会自动从中提取监控指标。无需引入额外的监控 SDK。
+Edge Canon 采用 **"Log-based Metrics"** (基于日志的指标) 策略。开发者通过 `context.log` 输出结构化 JSON 日志,平台会自动从中提取监控指标。无需引入额外的监控 SDK。
 
 #### 接口定义
 
@@ -491,7 +343,7 @@ interface Logger {
 interface LogEvent {
   message: string;             // 人类可读的日志消息
   [key: string]: any;          // 任意业务上下文 (如 user_id)
-  
+
   // 可选：嵌入式指标定义
   metric?: {
     name: string;              // 指标名称 (如 'payment_success')
@@ -544,20 +396,193 @@ context.log.info({
 
 ---
 
-## 14. CLI 工具命令参考
+## 11. Database 存储 (Extended)
+
+> **扩展特性**：平台可选支持,编译时验证
+
+### 11.1 接口定义
+
+```typescript
+interface Database {
+  query<T>(sql: string, params?: any[]): Promise<T[]>;
+  execute(sql: string, params?: any[]): Promise<ExecuteResult>;
+  transaction<T>(callback: (tx: Database) => Promise<T>): Promise<T>;
+}
+```
+
+---
+
+## 12. Blob Store (Extended)
+
+> **扩展特性**：平台可选支持,编译时验证
+
+### 12.1 接口定义
+
+```typescript
+interface BlobStore {
+  get(key: string): Promise<BlobObject | null>;
+  put(key: string, data: ReadableStream | string): Promise<BlobObject>;
+  delete(key: string): Promise<void>;
+}
+```
+
+---
+
+## 13. Queue 消息队列 (Extended)
+
+> **扩展特性**：平台可选支持,编译时验证
+
+### 13.1 接口定义
+
+```typescript
+interface Queue {
+  send(message: any): Promise<void>;
+}
+```
+
+---
+
+## 14. 调试协议 Inspector (Extended)
+
+> **扩展特性**：平台可选支持,编译时验证
+
+### 14.1 远程调试协议 (Inspector Protocol)
+
+Deislet 平台支持基于 WebSocket 的远程调试（兼容 Chrome DevTools Protocol）。
+
+- **连接方式**: `ws://<host>:<port>/`
+- **必需 Headers**:
+  - `x-deis-app-id`: `_inspect:<app_id>` (调试路由标识)
+  - `x-denix-inspect-token`: `<token>` (由 `StartInspect` 接口返回的临时令牌)
+  - `Upgrade`: `websocket`
+
+> **注意**: 调试会话具有时间限制（默认 300秒），超时后会自动断开。
+
+### 14.2 路由标识规范
+
+在生产环境部署中，路由标识分为两个层面：
+
+1.  **用户层面 (Public)**: 用户通过域名访问（如 `app.example.com`），**无需**感知内部 ID。
+2.  **系统层面 (Internal)**: 负载均衡器 (LB) 负责将域名映射为 `x-deis-app-id`。
+    - **安全清洗**: LB 必须清除用户请求中可能携带的 `x-deis-app-id`，防止越权。
+    - **可信传递**: 仅 LB 到 Runtime 之间的链路信任此 Header。
+
+---
+
+## 15. WebSocket 支持 (Extended)
+
+> **扩展特性**：平台可选支持,编译时验证
+
+Edge Canon 为 WebSocket 客户端和服务端（Upgrade 请求处理）提供标准支持。
+
+### 15.1 WebSocket 客户端
+
+使用标准的 `WebSocket` API 连接外部服务。
+
+```typescript
+const socket = new WebSocket("wss://echo.websocket.org");
+socket.onmessage = (event) => console.log(event.data);
+socket.send("Hello");
+```
+
+### 15.2 WebSocket 服务端 (Upgrade)
+
+要接受 WebSocket 连接，需返回 `101 Switching Protocols` 状态码和 `webSocket` 选项。我们推荐使用 `WebSocketPair` 模式以获得更好的平台兼容性（类似于 Cloudflare 风格）。
+
+```typescript
+export default async function handler(context: Context) {
+  if (context.request.headers.get("Upgrade") === "websocket") {
+    const { 0: client, 1: server } = new WebSocketPair();
+    
+    server.accept();
+    server.addEventListener("message", (event) => {
+      server.send(`Echo: ${event.data}`);
+    });
+
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    });
+  }
+  return new Response("Expected WebSocket", { status: 426 });
+}
+```
+
+---
+
+## 16. WebAssembly 支持 (Extended)
+
+> **扩展特性**：平台可选支持,编译时验证
+
+Edge Canon 将 WebAssembly 视为高性能计算的一等公民。
+
+### 16.1 导入与实例化
+
+`.wasm` 文件作为 ES 模块导入。导入对象是一个 `WebAssembly.Module`（而非实例），允许开发者控制实例化过程。
+
+```typescript
+// functions/utils/math.wasm
+import mathModule from './math.wasm';
+
+export default async function handler(context: Context) {
+  // 1. 定义导入对象 (如果 Wasm 模块需要)
+  const importObject = {
+    env: {
+      log: (arg) => console.log(arg)
+    }
+  };
+
+  // 2. 实例化
+  const instance = await WebAssembly.instantiate(mathModule, importObject);
+  
+  // 3. 调用导出函数
+  const result = instance.exports.add(10, 20);
+  return new Response(`Result: ${result}`);
+}
+```
+
+### 16.2 限制与指南
+
+*   **体积限制**: Wasm 二进制文件建议控制在 **1MB** 以内，以确保冷启动速度。
+*   **WASI 支持**: 目前为 **实验性支持**。建议使用 `wasm32-unknown-unknown` 编译目标（纯计算，无系统调用）。
+*   **内存使用**: Wasm 内存计入 Isolate 总内存限制（通常为 128MB）。
+*   **同步执行**: Wasm 函数在主线程同步执行，会阻塞事件循环。避免运行耗时过长的循环。
+
+---
+
+## 17. 本地开发与测试
+
+```bash
+denictl dev
+denictl test
+```
+
+---
+
+## 18. 构建和发布
+
+```bash
+denictl build
+denictl validate
+denictl deploy
+```
+
+---
+
+## 19. CLI 工具命令参考
 
 参见 `denictl --help`。
 
 ---
 
-## 15. 版本控制和兼容性
+## 20. 版本控制和兼容性
 
 - **规范版本**: 0.1.0
 - **发布日期**: TBD
 
 ---
 
-## 16. 附录：规范的核心保证
+## 21. 附录：规范的核心保证
 
 1. **代码完全通用**
 2. **一次编写、随处部署**

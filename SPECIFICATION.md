@@ -6,29 +6,20 @@
 
 ---
 
-## 📚 规范文档组织
+## 📚 Specification Organization
 
-为了更清晰地区分必需特性和可选特性，本规范已拆分为三个文档：
+This document contains both **Basic** and **Extended** features:
 
-- **[基础规范 (Basic)](./SPECIFICATION_BASIC.md)**: 所有平台必须支持的基础能力
-  - HTTP Handler、Request/Response、环境变量、路由、日志
-  - **KV 存储、Cache API**（基础持久化能力）
-  - 保证：遵循基础规范的代码可在任何 Edge Canon 兼容平台运行
+- **Basic**: Required baseline capabilities that all platforms must support (Chapters 1-10)
+- **Extended**: Optional enhanced features validated at compile-time (Chapters 11-15)
 
-- **[扩展规范 (Extended)](./SPECIFICATION_EXT.md)**: 可选的增强特性
-  - SQL 数据库、对象存储、消息队列、WebSocket、Cron 任务、SSR、ISR 等
-  - 编译时验证：编译器会检查目标平台是否支持使用的扩展特性
-
-- **[平台支持矩阵 (Platform Matrix)](./PLATFORM_MATRIX.md)**: 各平台的详细兼容性信息
-  - 完整的特性支持表
-  - 平台限制说明
-  - 替代方案建议
-
-**本文档**作为完整参考保留，但推荐优先阅读基础规范和扩展规范。
+For detailed categorization, see:
+- [SPECIFICATION_BASIC.md](./SPECIFICATION_BASIC.md) - Basic features only
+- [SPECIFICATION_EXT.md](./SPECIFICATION_EXT.md) - Extended features only
 
 ---
 
-## 1. Project Structure
+## 1. Project Structure (Basic)
 
 ### 1.1 Directory Layout
 
@@ -93,7 +84,7 @@ See [schemas/config.schema.json](../schemas/config.schema.json) for formal defin
 
 ---
 
-## 2. Core Principles
+## 2. Core Principles (Basic)
 
 ### 2.1 Mandatory Rules
 
@@ -135,7 +126,7 @@ export default async function handler(context: Context): Promise<Response> {
 
 ---
 
-## 3. Handler Interface
+## 3. Handler Interface (Basic)
 
 ### 3.1 Standard Export
 
@@ -248,7 +239,7 @@ interface Message {
 
 ---
 
-## 4. Basic Examples
+## 4. Basic Examples (Basic)
 
 ### Example 1: Minimal Hello World
 
@@ -260,7 +251,7 @@ export default async function handler(context: Context) {
 
 ---
 
-## 5. Routing
+## 5. Routing (Basic)
 
 ### 5.1 Automatic Routing
 
@@ -280,7 +271,7 @@ The directory structure maps directly to HTTP routes:
 
 ---
 
-## 6. Environment Variables
+## 6. Environment Variables (Basic)
 
 ### 6.1 Definition
 
@@ -308,13 +299,9 @@ const apiKey = context.env.API_KEY;
 
 ---
 
-## 7. Storage & Integration Services (KV, DB, Cache, Blob, Queue)
+## 7. KV Store (Basic)
 
-### 7.1 Unified Service Layer
-
-The spec provides **fully unified interfaces** for value-added services.
-
-### 7.2 KV Store Interface
+### 7.1 Interface Definition
 
 ```typescript
 interface KVStore {
@@ -324,34 +311,11 @@ interface KVStore {
 }
 ```
 
-### 7.3 Database Interface
+---
 
-```typescript
-interface Database {
-  query<T>(sql: string, params?: any[]): Promise<T[]>;
-  execute(sql: string, params?: any[]): Promise<ExecuteResult>;
-  transaction<T>(callback: (tx: Database) => Promise<T>): Promise<T>;
-}
-```
+## 8. Cache API (Basic)
 
-### 7.4 BlobStore Interface
-
-```typescript
-interface BlobStore {
-  get(key: string): Promise<BlobObject | null>;
-  put(key: string, data: ReadableStream | string): Promise<BlobObject>;
-  delete(key: string): Promise<void>;
-}
-```
-
-### 7.5 Queue Interface
-
-```typescript
-interface Queue {
-  send(message: any): Promise<void>;
-}
-
-### 7.6 Cache Interface (Subset)
+### 8.1 Interface Definition
 
 ```typescript
 interface Cache {
@@ -361,130 +325,11 @@ interface Cache {
 }
 ```
 
-### 7.7 Compatibility Matrix
-
-**重要**: 完整的平台兼容性信息已移至 **[PLATFORM_MATRIX.md](./PLATFORM_MATRIX.md)**
-
-下表为快速参考：
-
-| Feature | Cloudflare | Deno Deploy | Tencent EdgeOne | Deislet |
-|---------|-----------|-------------|-----------------|---------|
-| **核心特性** | | | | |
-| HTTP Handler | ✅ | ✅ | ✅ | ✅ |
-| Request/Response | ✅ | ✅ | ✅ | ✅ |
-| Environment Variables | ✅ | ✅ | ✅ | ✅ |
-| **扩展特性** | | | | |
-| KV Storage | ✅ | ✅ | ✅ | ✅ |
-| SQL Database | ✅ D1 | ✅ Postgres | ❌ | ✅ Remote |
-| Object Storage | ✅ R2 | ❌ | ❌ | ✅ Remote |
-| Cache API | ✅ | ✅ | ✅ | ✅ |
-| Cron Jobs | ✅ | ✅ | ❌ | ✅ |
-| WebSockets | ✅ | ✅ | ❌ | ✅ |
-| Message Queues | ✅ | ❌ | ❌ | ✅ |
-
-详细信息和替代方案请参阅 [平台支持矩阵](./PLATFORM_MATRIX.md)
-
 ---
 
-## 8. WebSocket Support
+## 9. Error Handling (Basic)
 
-Edge Canon provides standard support for both WebSocket clients and servers (handling upgrade requests).
-
-### 8.1 WebSocket Client
-
-Use the standard `WebSocket` API to connect to external services.
-
-```typescript
-const socket = new WebSocket("wss://echo.websocket.org");
-socket.onmessage = (event) => console.log(event.data);
-socket.send("Hello");
-```
-
-### 8.2 WebSocket Server (Upgrade)
-
-To accept a WebSocket connection, respond with a `101 Switching Protocols` status and a `webSocket` option. We recommend using the `WebSocketPair` pattern for better platform compatibility (similar to Cloudflare).
-
-```typescript
-export default async function handler(context: Context) {
-  if (context.request.headers.get("Upgrade") === "websocket") {
-    const { 0: client, 1: server } = new WebSocketPair();
-    
-    server.accept();
-    server.addEventListener("message", (event) => {
-      server.send(`Echo: ${event.data}`);
-    });
-
-    return new Response(null, {
-      status: 101,
-      webSocket: client,
-    });
-  }
-  return new Response("Expected WebSocket", { status: 426 });
-}
-```
-
----
-
-## 9. WebAssembly (Wasm) Support
-
-Edge Canon treats WebAssembly as a first-class citizen for high-performance compute tasks.
-
-### 9.1 Import & Instantiation
-
-`.wasm` files are imported as ES modules. The import exports a `WebAssembly.Module` object (not an instance), allowing developers to control instantiation.
-
-```typescript
-// functions/utils/math.wasm
-import mathModule from './math.wasm';
-
-export default async function handler(context: Context) {
-  // 1. Define imports (if the Wasm module needs them)
-  const importObject = {
-    env: {
-      log: (arg) => console.log(arg)
-    }
-  };
-
-  // 2. Instantiate
-  const instance = await WebAssembly.instantiate(mathModule, importObject);
-  
-  // 3. Call exports
-  const result = instance.exports.add(10, 20);
-  return new Response(`Result: ${result}`);
-}
-```
-
-### 9.2 Constraints & Guidelines
-
-*   **Size Limit**: Wasm binaries should be kept under **1MB** to ensure fast cold starts.
-*   **WASI Support**: Currently **Experimental**. It is recommended to use `wasm32-unknown-unknown` target (pure computation without system calls).
-*   **Memory**: Wasm memory is part of the isolate's total memory limit (128MB).
-*   **Synchronous Execution**: Wasm functions are executed synchronously and will block the main thread. Avoid long-running loops.
-
----
-
-## 10. Local Development & Testing
-
-```bash
-denictl dev
-denictl test
-```
-
----
-
-## 11. Build & Deploy
-
-```bash
-denictl build
-denictl validate
-denictl deploy
-```
-
----
-
-## 12. Error Handling
-
-### 12.1 Standard JSON Error Format
+### 9.1 Standard JSON Error Format
 
 All APIs SHOULD return errors in a consistent JSON format to allow clients to handle them programmatically.
 
@@ -499,7 +344,7 @@ interface ErrorResponse {
 }
 ```
 
-### 12.2 Standard Error Codes
+### 9.2 Standard Error Codes
 
 Common error codes used by the platform and recommended for applications:
 
@@ -513,7 +358,7 @@ Common error codes used by the platform and recommended for applications:
 | `INTERNAL_ERROR` | 500 | Unhandled exception or internal platform error. |
 | `TIMEOUT` | 504 | Execution time exceeded limit. |
 
-### 12.3 Uncaught Exceptions
+### 9.3 Uncaught Exceptions
 
 If a handler throws an uncaught exception:
 1. The platform catches it.
@@ -523,14 +368,14 @@ If a handler throws an uncaught exception:
 
 ---
 
-## 13. Performance & Limits
+## 10. Performance & Limits (Basic)
 
-### 13.1 General Limits
+### 10.1 General Limits
 
 - **Max Execution**: 30s
 - **Max Payload**: 50MB
 
-### 13.2 Metrics & Logging
+### 10.2 Metrics & Logging
 
 Edge Canon adopts a **"Log-based Metrics"** strategy. Developers emit structured JSON logs via `context.log`, and the platform automatically extracts metrics from them. No external metrics SDK is required.
 
@@ -547,7 +392,7 @@ interface Logger {
 interface LogEvent {
   message: string;             // Human-readable message
   [key: string]: any;          // Arbitrary context (e.g., user_id)
-  
+
   // Optional: Embedded Metric Definition
   metric?: {
     name: string;              // Metric name (e.g., 'payment_success')
@@ -596,20 +441,165 @@ context.log.info({
 
 ---
 
-## 14. CLI Reference
+## 11. Database Storage (Extended)
+
+> **Extended Feature**: Optional platform support, validated at compile-time
+
+### 11.1 Interface Definition
+
+```typescript
+interface Database {
+  query<T>(sql: string, params?: any[]): Promise<T[]>;
+  execute(sql: string, params?: any[]): Promise<ExecuteResult>;
+  transaction<T>(callback: (tx: Database) => Promise<T>): Promise<T>;
+}
+```
+
+---
+
+## 12. Blob Store (Extended)
+
+> **Extended Feature**: Optional platform support, validated at compile-time
+
+### 12.1 Interface Definition
+
+```typescript
+interface BlobStore {
+  get(key: string): Promise<BlobObject | null>;
+  put(key: string, data: ReadableStream | string): Promise<BlobObject>;
+  delete(key: string): Promise<void>;
+}
+```
+
+---
+
+## 13. Queue (Extended)
+
+> **Extended Feature**: Optional platform support, validated at compile-time
+
+### 13.1 Interface Definition
+
+```typescript
+interface Queue {
+  send(message: any): Promise<void>;
+}
+
+---
+
+## 14. WebSocket Support (Extended)
+
+> **Extended Feature**: Optional platform support, validated at compile-time
+
+Edge Canon provides standard support for both WebSocket clients and servers (handling upgrade requests).
+
+### 14.1 WebSocket Client
+
+Use the standard `WebSocket` API to connect to external services.
+
+```typescript
+const socket = new WebSocket("wss://echo.websocket.org");
+socket.onmessage = (event) => console.log(event.data);
+socket.send("Hello");
+```
+
+### 14.2 WebSocket Server (Upgrade)
+
+To accept a WebSocket connection, respond with a `101 Switching Protocols` status and a `webSocket` option. We recommend using the `WebSocketPair` pattern for better platform compatibility (similar to Cloudflare).
+
+```typescript
+export default async function handler(context: Context) {
+  if (context.request.headers.get("Upgrade") === "websocket") {
+    const { 0: client, 1: server } = new WebSocketPair();
+    
+    server.accept();
+    server.addEventListener("message", (event) => {
+      server.send(`Echo: ${event.data}`);
+    });
+
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    });
+  }
+  return new Response("Expected WebSocket", { status: 426 });
+}
+```
+
+---
+
+## 15. WebAssembly Support (Extended)
+
+> **Extended Feature**: Optional platform support, validated at compile-time
+
+Edge Canon treats WebAssembly as a first-class citizen for high-performance compute tasks.
+
+### 15.1 Import & Instantiation
+
+`.wasm` files are imported as ES modules. The import exports a `WebAssembly.Module` object (not an instance), allowing developers to control instantiation.
+
+```typescript
+// functions/utils/math.wasm
+import mathModule from './math.wasm';
+
+export default async function handler(context: Context) {
+  // 1. Define imports (if the Wasm module needs them)
+  const importObject = {
+    env: {
+      log: (arg) => console.log(arg)
+    }
+  };
+
+  // 2. Instantiate
+  const instance = await WebAssembly.instantiate(mathModule, importObject);
+  
+  // 3. Call exports
+  const result = instance.exports.add(10, 20);
+  return new Response(`Result: ${result}`);
+}
+```
+
+### 15.2 Constraints & Guidelines
+
+*   **Size Limit**: Wasm binaries should be kept under **1MB** to ensure fast cold starts.
+*   **WASI Support**: Currently **Experimental**. It is recommended to use `wasm32-unknown-unknown` target (pure computation without system calls).
+*   **Memory**: Wasm memory is part of the isolate's total memory limit (128MB).
+*   **Synchronous Execution**: Wasm functions are executed synchronously and will block the main thread. Avoid long-running loops.
+
+---
+
+## 16. Local Development & Testing
+
+```bash
+denictl dev
+denictl test
+```
+
+---
+
+## 17. Build & Deploy
+
+```bash
+denictl build
+denictl validate
+denictl deploy
+```
+
+---
+
+## 18. CLI Reference
 
 Refer to `denictl --help`.
 
 ---
 
-## 15. Versioning
+## 19. Versioning
 
 - **Spec Version**: 0.1.0
 - **Release Date**: TBD
 
 ---
 
-## 16. Appendix: Core Guarantees
+## 20. Appendix: Core Guarantees
 
 1. **Universal Code**
 2. **Write Once, Deploy Anywhere**
