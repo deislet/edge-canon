@@ -41,8 +41,8 @@ Edge Canon 将所有特性分为两类：
 
 | Feature | Cloudflare | Deno | Tencent | Deislet | 实现方式 |
 |---------|-----------|------|---------|---------|---------|
-| **SQL Database** | ✅ | ✅ | ❌ | ✅ | D1 / Postgres / - / Remote gRPC |
-| **Object Storage** | ✅ | ❌ | ❌ | ✅ | R2 / - / - / Remote gRPC |
+| **SQL Database** | ✅ | ✅ | ❌ | ⚠️ | D1 / Postgres / - / Planned (Remote gRPC) |
+| **Object Storage** | ✅ | ❌ | ❌ | ⚠️ | R2 / - / - / Planned (Remote gRPC) |
 
 **替代方案（无 SQL 数据库）**:
 - 使用 KV 存储简单数据
@@ -57,8 +57,8 @@ Edge Canon 将所有特性分为两类：
 
 | Feature | Cloudflare | Deno | Tencent | Deislet | 说明 |
 |---------|-----------|------|---------|---------|------|
-| **Node.js Runtime** | ⚠️ | ✅ | ✅ | ✅ | Limited / Compat Layer / Node Functions / Native |
-| **Server-Side Rendering** | ❌ | ✅ | ✅ | ✅ | - / Native SSR / Framework SSR / Native |
+| **Node.js Runtime** | ⚠️ | ✅ | ✅ | ⚠️ | Limited / Compat Layer / Node Functions / Planned (limited, no npm resolution) |
+| **Server-Side Rendering** | ❌ | ✅ | ✅ | ⚠️ | - / Native SSR / Framework SSR / Planned |
 | **Incremental Static Regeneration** | ❌ | ✅ | ✅ | ⚠️ | - / ISR with revalidation / Framework ISR / Planned |
 | **WebAssembly (Wasm)** | ✅ | ✅ | ✅ | ✅ | Native / Native / Native / Native |
 
@@ -71,8 +71,8 @@ Edge Canon 将所有特性分为两类：
 
 | Feature | Cloudflare | Deno | Tencent | Deislet | 实现方式 |
 |---------|-----------|------|---------|---------|---------|
-| **Cron Jobs** | ✅ | ✅ | ❌ | ✅ | Cron Triggers / Deno.cron / - / Native |
-| **Message Queues** | ✅ | ❌ | ❌ | ✅ | Queues / - / - / Native (Memory) |
+| **Cron Jobs** | ✅ | ✅ | ❌ | ⚠️ | Cron Triggers / Deno.cron / - / Planned |
+| **Message Queues** | ✅ | ❌ | ❌ | ⚠️ | Queues / - / - / Planned (persistent) |
 | **Durable Objects** | ✅ | ❌ | ❌ | ⚠️ | Durable Objects / - / - / Planned |
 
 **替代方案（无定时任务）**:
@@ -87,8 +87,8 @@ Edge Canon 将所有特性分为两类：
 
 | Feature | Cloudflare | Deno | Tencent | Deislet | 说明 |
 |---------|-----------|------|---------|---------|------|
-| **WebSockets** | ✅ | ✅ | ❌ | ✅ | WebSocket API / WebSocket API / - / Native |
-| **BroadcastChannel** | ❌ | ✅ | ❌ | ✅ | - / BroadcastChannel / - / Native |
+| **WebSockets** | ✅ | ✅ | ❌ | ⚠️ | WebSocket API / WebSocket API / - / Runtime only, edge path unverified |
+| **BroadcastChannel** | ❌ | ✅ | ❌ | ✅ | - / BroadcastChannel / - / Native (single node only) |
 
 **替代方案（无 WebSocket）**:
 - 使用 Server-Sent Events (SSE) 进行单向推送
@@ -185,24 +185,30 @@ Edge Canon 将所有特性分为两类：
 
 ### Deislet (Self-Hosted)
 
-**✅ 基础特性**: 全部支持
-- HTTP Handler, Request/Response, 环境变量, 路由参数
-- KV Storage (Denix KV)
+> Deislet is under active development. The entries below reflect what the
+> platform actually implements today; planned capabilities are listed
+> separately rather than as supported.
+
+**✅ 基础特性**:
+- HTTP Handler, Request/Response（文本主体；二进制主体开发中）
+- 环境变量
 - Cache API
 - 生命周期, 日志, Web 标准
 
+**⚠️ 基础特性（开发中）**:
+- 路由参数 — 需要编译器的自有平台目标产出分发代码
+- KV Storage — 客户端与协议就绪，服务端开发中
+
 **✅ 扩展特性**:
-- SQL Database (Remote gRPC)
-- Object Storage (Remote gRPC)
-- Node.js Runtime (Native)
-- Server-Side Rendering (Native)
-- Cron Jobs (Native)
-- WebSockets (Native)
-- Message Queues (Native, Memory-based)
-- BroadcastChannel (Native)
 - WebAssembly
+- BroadcastChannel（单节点内）
 
 **⚠️ 计划中**:
+- SQL Database, Object Storage, Message Queues — 服务端开发中
+- Cron Jobs
+- WebSockets — 运行时已具备，边缘链路待验证
+- Node.js Runtime — 有限支持，不含 npm 包解析
+- Server-Side Rendering
 - Incremental Static Regeneration
 - Durable Objects
 
