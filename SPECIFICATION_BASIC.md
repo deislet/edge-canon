@@ -333,7 +333,7 @@ export default async function handler(context: Context) {
 | Cloudflare | KV Namespaces | ≤ 25MB |
 | Deno | Deno KV | ≤ 64KB |
 | Tencent | EdgeKV | ≤ 2MB |
-| Deislet | Denix KV | ≤ 10MB |
+| Deislet | deis-store 的 KvStore（每租户一个 SQLite） | 无单值上限，实际卡在 gRPC 单条消息 16MB；键 ≤ 1KB |
 
 ---
 
@@ -343,11 +343,15 @@ export default async function handler(context: Context) {
 
 ```typescript
 interface Cache {
-  put(request: Request | string, response: Response): Promise<void>;
-  match(request: Request | string): Promise<Response | undefined>;
-  delete(request: Request | string): Promise<boolean>;
+  put(request: Request | URL | string, response: Response): Promise<void>;
+  match(request: Request | URL | string): Promise<Response | undefined>;
+  delete(request: Request | URL | string): Promise<boolean>;
 }
 ```
+
+键的三种写法指向同一条记录：`URL` 与字符串按其完整 URL 取键，`Request` 按它的
+`.url`。本节下面的示例用的正是 `new URL(context.request.url)`，所以 `URL` 必须在
+签名里——早前的签名只写了 `Request | string`，与自己的示例对不上。
 
 **使用示例**:
 
@@ -464,6 +468,11 @@ export default async function handler(context: Context) {
 
 **JSON**:
 - `JSON.parse()`, `JSON.stringify()`
+
+**平台现状**: 这份清单是要求，不是各平台的现状。目前唯一有明确缺口的是 Deislet：
+`fetch`、`crypto`、`ReadableStream` / `WritableStream` / `TransformStream`、
+`setInterval` / `clearInterval` 这几项在它的 Isolate 里不存在，调用会直接
+`ReferenceError`。逐项清单与实测方式见 `PLATFORM_MATRIX.md` 的 Deislet 一节。
 
 ### 8.2 示例
 

@@ -106,7 +106,14 @@ export default async function handler(context: Context) {
 | Cloudflare | D1 Database | SQLite |
 | Deno | Postgres integration | PostgreSQL |
 | Tencent | ❌ 不支持 | - |
-| Deislet | Remote gRPC | PostgreSQL / MySQL |
+| Deislet | deis-store，每租户一个独立 SQLite 文件，走 gRPC | SQLite |
+
+**Deislet 说明（2026-08-29 回源码核对）**:
+- `query` / `execute` 可用，参数与结果都以 JSON 过 Isolate 边界。
+- `transaction` **不可用**：deis-store 每次调用落在连接池里任意一条连接上，没有能跨
+  `await` 持住 `BEGIN` 的会话。调用它会抛错。此前它接下回调、不执行、直接 resolve，
+  等于两条写入一条都没发生而调用方毫不知情；现在至少当场报错。
+  替代：把语句拆成各自安全的 `execute`。
 
 **Tencent 替代方案**:
 - 使用外部数据库服务
@@ -187,7 +194,21 @@ export default async function handler(context: Context) {
 | Cloudflare | R2 Buckets | 对象大小无限制 |
 | Deno | ❌ 不支持 | - |
 | Tencent | ❌ 不支持 | - |
-| Deislet | Remote gRPC | 对象大小 ≤ 5GB |
+| Deislet | deis-store 内容寻址落盘，分块流式 Put/Get；`context.services.blob` 收字符串 / `ArrayBuffer` / `ArrayBufferView` | 服务端默认单对象 ≤ 512MB |
+
+**Deislet 说明（2026-08-29）**:
+
+`put` 接受字符串、`ArrayBuffer` 和任意 `ArrayBufferView`；`get` 回一个带
+`arrayBuffer()` / `text()` / `json()` 的对象，键不存在时回 `null`；`delete` 幂等。
+上面接口定义里的 `list()` 与「`put` 返回 `BlobObject`」这两项在 Deislet 上没有：
+`put` 回 `undefined`，也没有列举接口。
+
+这一格在 2026-08-29 之前是 ⚠️，因为 Isolate 侧两条路都断——`blob.put(key, "字符串")`
+报 `TextEncoder is not defined`（运行时当时没装这个全局），`blob.put(key, arrayBuffer)`
+报 `serde_v8 error: invalid type; expected: array, got: Uint8Array`（`op_blob_put`
+的入参声明成了 `#[serde] Vec<u8>`，serde_v8 不收定型数组）。两处都已修好，
+并且补了一条顶着真 deis-store 的 Isolate 端到端测试，字符串与原始字节双向往返；
+在此之前仓库里没有任何测试从 Isolate 调过 blob，所以这个洞躺了很久没被照出来。
 
 ---
 
@@ -244,7 +265,10 @@ interface ScheduledEvent {
 | Cloudflare | Cron Triggers | 标准 Cron |
 | Deno | Deno.cron | 标准 Cron |
 | Tencent | ❌ 不支持 | - |
-| Deislet | Native Scheduler | 标准 Cron |
+| Deislet | deis-control 按 (应用, 环境) 调度，到点只在一个健康节点上触发 | 标准 Cron |
+
+**Deislet 说明**: 一次触发是「打出去就不管」——失败不重试，错过的那一次也不会补。
+非做不可的活儿应该由这个 handler 往队列里塞，队列才有重试和死信。
 
 **Tencent 替代方案**:
 - 使用外部 cron 服务（GitHub Actions、云函数定时触发）
@@ -317,7 +341,17 @@ interface Message {
 | Cloudflare | Queues | ≤ 128KB |
 | Deno | ❌ 不支持 | - |
 | Tencent | ❌ 不支持 | - |
-| Deislet | Native (Memory) | ≤ 10MB |
+| Deislet | deis-queue：SQLite 持久化，租约式 Pull + Ack / Nack，超次数进死信表 | 默认 ≤ 1MB（可配，硬顶 8MB）|
+
+**Deislet 说明（2026-08-29 回源码核对）**:
+- 不是内存队列。消息落在 SQLite 里，进程重启不丢；投递超过 `max_attempts`（默认 5 次）
+  的消息进 `dead_letter` 表，默认永久保留，等人来看。
+- 单条消息体默认上限 1MB（`max_body_bytes`），不是 10MB。可以调，但会被压到一次 Pull
+  应答装得下的大小（`MAX_GRPC_MESSAGE_BYTES / 2`，即 8MB）——否则消息能存进去、永远发
+  不出来。大东西应该放对象存储，队列里只传键。
+- `message.body` 是**发送时的原文**，不是解析过的对象；`message.json()` 才是解析。
+- `message.ack()` / `message.retry()` 都在。默认是「没说话就算办完了」：handler 正常返回
+  后，没被 `retry()` 标记的消息全部确认；handler 抛异常则整批退回。
 
 ---
 
@@ -325,7 +359,7 @@ interface Message {
 
 ### 4.1 WebSockets
 
-**支持平台**: ✅ Cloudflare, ✅ Deno, ❌ Tencent, ✅ Deislet
+**支持平台**: ✅ Cloudflare, ✅ Deno, ❌ Tencent, ⚠️ Deislet
 
 #### Server (Upgrade)
 
@@ -368,7 +402,18 @@ socket.send("Hello");
 | Cloudflare | WebSocket API | 无明确限制 |
 | Deno | WebSocket API | 无明确限制 |
 | Tencent | ❌ 不支持 | - |
-| Deislet | Native WebSocket | 依赖配置 |
+| Deislet | ⚠️ 只有节点内那一半：`WebSocketPair` 桥接 + 节点 HTTP 处理器接升级请求 | 未验证 |
+
+**Deislet 保留**:
+- 上面 **Server (Upgrade)** 那段写法在节点内部是通的，有进程内测试。
+- 但覆盖 HTTP 升级那一段的集成测试在没有服务监听时会直接返回并算通过，等于没测；
+  经过 deis-proxy 的那一跳从未端到端验证过。
+- 上面 **Client** 那段在 Deislet 上**跑不了**：运行时没有把客户端 `WebSocket` 装到
+  `globalThis` 上，`new WebSocket(...)` 是 `ReferenceError`。
+- 二进制帧当前会被当成文本交付：解码那条路径用了 `atob`，而这个全局同样不存在，
+  异常被 `catch` 吞掉，`event.data` 留下的是原始 JSON 字符串。
+
+补上真正的测试之前不要按「可用」规划。
 
 **Tencent 替代方案**:
 - 使用 Server-Sent Events (SSE) 单向推送
@@ -379,7 +424,7 @@ socket.send("Hello");
 
 ### 4.2 BroadcastChannel
 
-**支持平台**: ❌ Cloudflare, ✅ Deno, ❌ Tencent, ✅ Deislet
+**支持平台**: ❌ Cloudflare, ✅ Deno, ❌ Tencent, ❌ Deislet
 
 #### 接口定义
 
@@ -401,13 +446,17 @@ channel.onmessage = (event) => {
 - 分布式缓存失效通知
 - 实时协作功能
 
+**Deislet 不支持**: 运行时没有把这个全局装到 `globalThis` 上（探针应用里
+`typeof globalThis.BroadcastChannel === "undefined"`），Isolate 之间也没有共享总线。
+`new BroadcastChannel(...)` 是 `ReferenceError`。
+
 ---
 
 ## 5. 运行时与执行 (Runtime & Execution)
 
 ### 5.1 Node.js Runtime
 
-**支持平台**: ⚠️ Cloudflare (Limited), ✅ Deno, ✅ Tencent, ✅ Deislet
+**支持平台**: ⚠️ Cloudflare (Limited), ✅ Deno, ✅ Tencent, ❌ Deislet
 
 #### Cloudflare 限制
 
@@ -421,15 +470,20 @@ Cloudflare 仅提供有限的 Node.js 兼容性（`nodejs_compat` flag）：
 
 **建议**: 优先使用 Web 标准 API 或构建时 polyfill
 
-#### Deno / Tencent / Deislet
+#### Deno / Tencent
 
 完整 Node.js 兼容层或原生支持。
+
+#### Deislet 不支持
+
+运行时是裸 `deno_core`，没有注册 `deno_node`：`require`、`Buffer`、`node:` 前缀模块
+都不存在，也不做 npm 包解析。这不是排期问题，是形态上就没有。
 
 ---
 
 ### 5.2 Server-Side Rendering (SSR)
 
-**支持平台**: ❌ Cloudflare, ✅ Deno, ✅ Tencent, ✅ Deislet
+**支持平台**: ❌ Cloudflare, ✅ Deno, ✅ Tencent, ❌ Deislet
 
 #### 使用示例
 
@@ -453,7 +507,10 @@ export default async function handler(context: Context) {
 | Cloudflare | ❌ 不支持（使用静态生成替代） |
 | Deno | ✅ 原生 SSR 支持 |
 | Tencent | ✅ Framework SSR (Next.js, Nuxt) |
-| Deislet | ✅ 原生 SSR 支持 |
+| Deislet | ❌ 不支持 |
+
+**Deislet 不支持**: 没有框架挂钩，也没有 npm 生态可依赖——上面这段示例的
+`import ... from 'react-dom/server'` 在 Deislet 上解析不了。增量静态再生 (ISR) 同理。
 
 ---
 
@@ -480,6 +537,13 @@ export default async function handler(context: Context) {
 - **WASI 支持**: 实验性，建议使用 `wasm32-unknown-unknown`
 - **内存**: Wasm 内存计入 isolate 总内存限制
 - **同步执行**: Wasm 函数同步执行，避免长时间循环
+
+**Deislet 说明（2026-08-29 实测）**: `WebAssembly` 这个全局是 V8 自带的，在 Isolate 里
+确实存在——探针应用里 `new WebAssembly.Module(bytes)` 加 `new WebAssembly.Instance(m)`
+都跑通了，`WebAssembly.instantiateStreaming` 也在（但它要一个带流式主体的 `Response`，
+而运行时的 `Response` 没有流式主体，所以这条路走不通）。上面示例里
+`import mathModule from './math.wasm'` 这种写法：运行时的模块加载器认得 `.wasm` 说明符，
+但 `deis build` 把 `.wasm` 打进函数代码这条链路没有端到端验证过，不要照抄。
 
 ---
 
