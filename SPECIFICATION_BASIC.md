@@ -469,10 +469,16 @@ export default async function handler(context: Context) {
 **JSON**:
 - `JSON.parse()`, `JSON.stringify()`
 
-**平台现状**: 这份清单是要求，不是各平台的现状。目前唯一有明确缺口的是 Deislet：
-`fetch`、`crypto`、`ReadableStream` / `WritableStream` / `TransformStream`、
-`setInterval` / `clearInterval` 这几项在它的 Isolate 里不存在，调用会直接
-`ReferenceError`。逐项清单与实测方式见 `PLATFORM_MATRIX.md` 的 Deislet 一节。
+**平台现状**: 这份清单是要求，不是各平台的现状。上一版记的那处缺口——Deislet 的
+Isolate 里没有 `fetch`、`crypto`、三个 Stream 构造器和 `setInterval` / `clearInterval`
+——已于 2026-08-29 补齐，本节要求的全局它现在一个不缺。逐项清单与实测方式见
+`PLATFORM_MATRIX.md` 的 Deislet 一节。
+
+需要提醒实现者的是 `fetch` 那一条：本节要求平台**提供** `fetch`，没有要求它可以打到
+任意地址。一个多租户平台如果让处理函数无差别出网，第一个能打到的往往就是平台自己
+跑在本机上的内部服务，而那些服务通常只靠「外面进不来」这一条在防守。所以实现里给
+`fetch` 配一套出网策略（默认拒绝内网、按需放行）不算违反本节；把 `fetch` 整个拿掉
+才算。
 
 ### 8.2 示例
 

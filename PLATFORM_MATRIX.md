@@ -212,43 +212,64 @@ Edge Canon 将所有特性分为两类：
   （此前 `log` 只由 deis-build 生成的入口模块加在请求路径上，队列和 cron 的 handler
   拿到的 context 上根本没有 `log`）。*demo 验证（请求路径）*
 
-**⚠️ 基础特性（有保留，这两格不要按 ✅ 规划）**:
+**✅ 基础特性（续，2026-08-29 第二轮转正）**:
 
-- Request/Response — 用的是运行时自带的最小实现，不是 `deno_fetch` 的那套。
-  已知缺口：主体只有文本（请求与响应体在 Isolate 边界上都是字符串，二进制过不去）；
-  `Response` 没有 `Response.json()` 静态方法、没有 `ok` / `statusText` / `redirect`，
-  也没有 `arrayBuffer()` / `blob()` / `formData()` 与流式主体。
-  日常写法（`new Response(JSON.stringify(x), { status, headers })`、
-  `await context.request.text()`）是通的。
+- Web 标准 — SPECIFICATION_BASIC.md 8.1 节要求的全局现在**一个不缺**。上一版这一格
+  记的是「扩展注册了但没人往 `globalThis` 上挂」——那一步补上了，
+  `src/runtime/js/bootstrap.js` 末尾用 `ObjectDefineProperties(globalThis, …)` 做的
+  正是 Deno 在自己 `99_main.js` 里做的那件事。实测：
 
-- Web 标准 — **实际可用的全局比这一格看上去少得多**。`deno_web` / `deno_fetch` /
-  `deno_crypto` / `deno_websocket` / `deno_net` 这几个扩展确实注册了（op 都在），
-  但这些扩展的 JS 模块只 `export`、不往 `globalThis` 上挂东西，`deno_core` 自己也
-  只挂一个 `console`，所以真正存在的全局只有运行时亲手装上去的那些。
-  2026-08-29 用一个只做 `typeof globalThis[name]` 的探针应用实测：
+  - **有**：`fetch`、`crypto`、`Request` / `Response` / `Headers`、
+    `URL` / `URLSearchParams`、`ReadableStream` / `WritableStream` /
+    `TransformStream`、`setTimeout` / `clearTimeout`、`setInterval` /
+    `clearInterval`、`AbortController` / `AbortSignal`、`DOMException`、
+    `TextEncoder` / `TextDecoder`、`atob` / `btoa`、`EventTarget`、
+    `queueMicrotask`、`console`、`caches`、`WebSocketPair` / `WebSocketServer`
+  - **没有**：`Deno`、`Blob`、`File`、`FormData`、`URLPattern`、客户端
+    `WebSocket`、`BroadcastChannel`、`structuredClone`、`Event`、`performance`、
+    `navigator`、`addEventListener`
 
-  - **有**：`Headers`、`Request`、`Response`、`URL`、`URLSearchParams`、
-    `EventTarget`、`setTimeout` / `clearTimeout`、`queueMicrotask`、`console`、
-    `caches`、`WebSocketPair` / `WebSocketServer`、
-    `TextEncoder` / `TextDecoder`、`atob` / `btoa`
-  - **没有**：`fetch`、`crypto`、`AbortController`、`ReadableStream` /
-    `WritableStream` / `TransformStream`、`setInterval` / `clearInterval`、
-    `Blob`、`FormData`、`URLPattern`、客户端 `WebSocket`、`BroadcastChannel`、
-    `MessageChannel`、`structuredClone`、`Event`、`performance`、`navigator`
+  右边这一列大半**不是没实现**：`Blob`、`FormData`、`Event` 在 Isolate 内部是活的，
+  deno_fetch 和 deno_web 自己要用，`response.blob()` 照样返回对象——只是构造器没有
+  挂成全局名。这条线是有意划的：8.1 节要的，加上让 8.1 节能用起来的那几个
+  （`AbortController` / `AbortSignal` 用来取消出网请求，`DOMException` 用来按类型
+  catch `crypto.subtle`、流和被取消的 `fetch` 抛出的错），到此为止。
 
-  `TextEncoder` / `TextDecoder` / `atob` / `btoa` 是 2026-08-29 补上的（只做 UTF-8，
-  其它编码名直接 `RangeError`，不冒充成 UTF-8 解）。补它们不是为了把格子填满：
-  运行时自己有四处代码在调它们，因此一直抛 `ReferenceError`——
-  `request.arrayBuffer()`、二进制请求体、`blob.put(key, "字符串")`、
-  `blob.get(...).text()`，以及 WebSocket 的二进制帧解码。
+  `TextEncoder` / `TextDecoder` / `atob` / `btoa` 仍是运行时手写的，**只做 UTF-8**，
+  其它编码名直接 `RangeError`，不冒充成 UTF-8 解。
 
-  **`fetch` 不存在**这一条最要紧：Edge Canon 把它列进基础特性，而在 Deislet 上调它
-  会直接 `ReferenceError`。
+  *demo 验证*：`scripts/demo.sh verify` 里三项——处理函数 `fetch` 打通一个平台之外
+  的上游并把响应体原样带回；同一个处理函数改打 deis-store 必须打不通；
+  `crypto.randomUUID()` 是 v4 且两次不同、`crypto.subtle.digest('SHA-256','deislet')`
+  等于已知摘要。
 
-  这一格现在有测试守着：`crates/deis-runtime/src/runtime/isolate_test.rs` 的
-  `the_isolate_global_surface_is_the_one_the_documents_describe` 在真 Isolate 里
-  逐个 `typeof`，**两边都断言**——「有」的少一个红，「没有」的多一个也红，
-  所以往 `globalThis` 上加东西必须连同本节和 `crates/deis-runtime/README.md` 一起改。
+- Request/Response — 用的是 `deno_fetch` 自己的那套，运行时手写的最小实现已删除，
+  没有留两份。实测可用：`Response.json()` / `Response.redirect()` /
+  `Response.error()`、`ok`、`arrayBuffer()` / `blob()` / `formData()`、`clone()`、
+  `Headers.getSetCookie()`，`body` 是真的 `ReadableStream`。
+
+  仍存的一条保留：**主体过 Isolate 边界时是字符串**，所以二进制请求体 / 响应体会被
+  有损转换。`return fetch(<二进制上游>)` 会损坏内容。
+
+**⚠️ 基础特性（有保留，这一格不要按 ✅ 规划）**:
+
+- 出站 `fetch` 是**有策略的**，不是一个无差别的 HTTP 客户端。这不是缺口，是多租户
+  平台的必需品：deis-store / deis-queue 至今无条件相信别人给的 `x-deis-tenant` 头，
+  一个没有策略兜着的 `fetch` 等于把每个应用的数据都摊开。规则是**默认拒绝、例外
+  放行**——公网通，环回 / 私有 / 链路本地（含云元数据 `169.254.169.254`）/ 唯一本地 /
+  组播 / 广播 / 保留段一律拒，运维用节点配置的 `[fetch] allow` 单独开口子；判的是
+  **解析之后的地址**，所以 `localhost`、`[::1]`、`[::ffff:127.0.0.1]` 这些写法都拦得住。
+  被拒的调用抛 `TypeError`（按规范失败的 `fetch` 本来就抛这个），应用能 catch。
+
+  移植提示：**在 Deislet 上打不到公网以外的地址**，包括同机的其它服务。写死内网地址
+  的应用要么改成走 `context.services.*`，要么让运维把那个地址加进 `[fetch] allow`。
+
+  已知的两个洞，都只在**重定向**那一层，都是量出来的：deno 的 net 描述符写不出 IPv6
+  网段，所以 `Location:` 指向 IPv6 唯一本地 / 链路本地字面量的重定向拦不住；白名单里
+  写字面 IP 会在那一层开一个「一个地址、所有端口」的洞（平台自己的端点已单独精确
+  写进拒绝列表，不受这个洞影响）。另外 `deno_fetch` 无条件读进程环境的
+  `HTTP_PROXY` / `HTTPS_PROXY`，一旦命中代理，防 DNS 重绑定那道保证就没了。
+  细节见 `crates/deis-runtime/README.md`。
 
 **✅ 扩展特性**:
 - SQL Database — 每租户一个独立 SQLite，由 deis-store 通过 gRPC 提供。
@@ -354,6 +375,30 @@ Error: Platform EdgeOne Pages does not support required features
 ---
 
 ## 更新日志
+
+- **2026-08-29（第四轮，Web 全局补齐 + 出网策略）**: 上一轮记下的那处不达标补上了，
+  并且是顶着跑起来的节点验的，不是读代码读出来的。
+  - **基础规范 8.1 节的全局一个不缺**。`fetch`、`crypto`、
+    `ReadableStream` / `WritableStream` / `TransformStream`、`setInterval` /
+    `clearInterval` 全部装上；同时装上真的 `Request` / `Response` / `Headers` /
+    `URL` / `URLSearchParams` / `setTimeout`，以及 `AbortController` / `AbortSignal` /
+    `DOMException`——没有后三个，新表面无法取消、错误也没法按类型 catch。
+    运行时手写的 `Headers` / `Request` / `Response` / `URL` / `URLSearchParams` /
+    `setTimeout` 补丁全部删除，没有留两份实现。
+  - **`fetch` 配了出网策略**。默认拒绝所有非公网地址，运维用 `[fetch] allow` 开口子；
+    平台自己的服务端点在白名单之后再判一次，开不到它们身上。这一条是**对抗性验过**
+    的：从一个能被指挥去哪儿的处理函数出发，逐个试了直连 deis-store、`localhost`、
+    `[::1]`、`[::ffff:127.0.0.1]`、URL 带账号密码、`file:` / `ftp:` / `gopher:`，
+    全部被拒且带日志；随后把白名单里那个上游换成一台会发 302 的服务器，往平台各个
+    端口打，也全部被拒。
+  - **改掉两个会打死节点的 bug**：没装 rustls CryptoProvider 时第一次
+    `fetch("https://…")` 会在 V8 回调里 panic-abort，整个节点带着所有应用一起挂；
+    `allow_net` 空列表被映射成 deno 的「一个都不给」，导致每次 fetch 都以
+    「run again with the --allow-net flag」失败。
+  - **仍然记着的两个洞**（都只在重定向那一层，都量出来了）：deno 的 net 描述符写不出
+    IPv6 网段；白名单里写字面 IP 会开一个「一个地址、所有端口」的洞。平台自己的端点
+    已作为精确条目单独写进拒绝列表，两种拼法都写，不受第二个洞影响。另外
+    `deno_fetch` 无条件读进程环境的 `HTTP_PROXY` / `HTTPS_PROXY`。
 
 - **2026-08-29（第三轮，整合期实测）**: 五条并行改动合流后重跑全部检查，顺手补上
   两处「文档说有、代码没有」的洞。
