@@ -108,12 +108,18 @@ export default async function handler(context: Context) {
 | Tencent | ❌ 不支持 | - |
 | Deislet | deis-store，每租户一个独立 SQLite 文件，走 gRPC | SQLite |
 
-**Deislet 说明（2026-08-29 回源码核对）**:
+**Deislet 说明（2026-08-30 回源码核对）**:
 - `query` / `execute` 可用，参数与结果都以 JSON 过 Isolate 边界。
-- `transaction` **不可用**：deis-store 每次调用落在连接池里任意一条连接上，没有能跨
-  `await` 持住 `BEGIN` 的会话。调用它会抛错。此前它接下回调、不执行、直接 resolve，
-  等于两条写入一条都没发生而调用方毫不知情；现在至少当场报错。
-  替代：把语句拆成各自安全的 `execute`。
+- `transaction` **可用**：`await context.services.database.transaction(async (tx) => { ... })`。
+  deis-store 为这次事务钉住该租户的一条连接、以 `IMMEDIATE` 开启，回调里经
+  `tx.execute` / `tx.query` 发出的每条语句都落在这条连接上，`tx.query` 能读到本事务
+  尚未提交的写入。回调正常返回即提交、以回调的返回值 resolve；回调抛错即回滚，并把
+  回调自己抛的那个错原样再抛出去。服务端给每个事务一个硬期限（默认 5 秒，
+  `{ timeoutMs }` 只能往短里要），到点由 deis-store 自己回滚，之后再用这个 `tx`
+  会抛错说明「因超出期限被回滚」。**回调里用外层的 `context.services.database`
+  不算在事务里**——它走另一条连接，读到的是事务开启前的库。
+  此前这一格是「不可用，调用即抛错」，更早则是「接下回调、不执行、直接 resolve」，
+  两条写入一条都没发生而调用方毫不知情；两者都已不再是现状。
 
 **Tencent 替代方案**:
 - 使用外部数据库服务
@@ -343,13 +349,24 @@ interface Message {
 | Tencent | ❌ 不支持 | - |
 | Deislet | deis-queue：SQLite 持久化，租约式 Pull + Ack / Nack，超次数进死信表 | 默认 ≤ 1MB（可配，硬顶 8MB）|
 
-**Deislet 说明（2026-08-29 回源码核对）**:
+**Deislet 说明（2026-08-30 回源码核对）**:
 - 不是内存队列。消息落在 SQLite 里，进程重启不丢；投递超过 `max_attempts`（默认 5 次）
   的消息进 `dead_letter` 表，默认永久保留，等人来看。
+- 消息体过 Rust/JS 边界与 gRPC 边界都是按字节走的（`queue.proto` 的
+  `message_body` / `body` 是 `bytes`，不是 `string`）：`send(message)` 一个字符串
+  按 UTF-8 编码、一个普通对象按 JSON 编码后再编码，一个 `ArrayBuffer` 或
+  `ArrayBufferView` 原样按字节发送——这是此前唯一发不出去的一种，即便死信表一直
+  是按字节存的。
 - 单条消息体默认上限 1MB（`max_body_bytes`），不是 10MB。可以调，但会被压到一次 Pull
   应答装得下的大小（`MAX_GRPC_MESSAGE_BYTES / 2`，即 8MB）——否则消息能存进去、永远发
   不出来。大东西应该放对象存储，队列里只传键。
 - `message.body` 是**发送时的原文**，不是解析过的对象；`message.json()` 才是解析。
+  但这只是消息体本身是合法 UTF-8 文本时的情况——消息体现在是按字节走的（见上一条），
+  一个 `ArrayBuffer`/`ArrayBufferView` 发出去的消息，体不一定解得成字符串。这种情况下
+  `message.body` 是 `null`（不是空字符串，也不是乱码），只能靠 `message.bytes()` 读；
+  对一个 `body` 为 `null` 的消息调用 `message.json()` 会直接抛出说明原因的
+  `TypeError`，而不是试图解析一段从未存在过的文本。`message.bytes()` 对任何消息都能用，
+  不关心它是不是文本。
 - `message.ack()` / `message.retry()` 都在。默认是「没说话就算办完了」：handler 正常返回
   后，没被 `retry()` 标记的消息全部确认；handler 抛异常则整批退回。
 
@@ -359,7 +376,7 @@ interface Message {
 
 ### 4.1 WebSockets
 
-**支持平台**: ✅ Cloudflare, ✅ Deno, ❌ Tencent, ⚠️ Deislet
+**支持平台**: ✅ Cloudflare, ✅ Deno, ❌ Tencent, ✅ Deislet
 
 #### Server (Upgrade)
 
@@ -402,18 +419,23 @@ socket.send("Hello");
 | Cloudflare | WebSocket API | 无明确限制 |
 | Deno | WebSocket API | 无明确限制 |
 | Tencent | ❌ 不支持 | - |
-| Deislet | ⚠️ 只有节点内那一半：`WebSocketPair` 桥接 + 节点 HTTP 处理器接升级请求 | 未验证 |
+| Deislet | 服务端（`WebSocketPair` 桥接）与客户端（`WebSocket` 全局，走出网策略）都实现 | 无明确限制；客户端连接受 `[fetch] allow` 出网策略约束，与 `fetch` 同一道判定点 |
 
-**Deislet 保留**:
-- 上面 **Server (Upgrade)** 那段写法在节点内部是通的，有进程内测试。
-- 但覆盖 HTTP 升级那一段的集成测试在没有服务监听时会直接返回并算通过，等于没测；
-  经过 deis-proxy 的那一跳从未端到端验证过。
-- 上面 **Client** 那段在 Deislet 上**跑不了**：运行时没有把客户端 `WebSocket` 装到
-  `globalThis` 上，`new WebSocket(...)` 是 `ReferenceError`。
-- 二进制帧当前会被当成文本交付：解码那条路径用了 `atob`，而这个全局同样不存在，
-  异常被 `catch` 吞掉，`event.data` 留下的是原始 JSON 字符串。
-
-补上真正的测试之前不要按「可用」规划。
+**Deislet 说明（2026-08-30 回源码核对）**:
+- 上面 **Server (Upgrade)** 那段写法在节点内部是通的，有进程内测试
+  （`websocket_direct_test.rs`）；覆盖 HTTP 升级那一段的集成测试
+  （`websocket_bridging_test.rs`）自己起一个真的 router、用真 WebSocket 客户端连
+  上去，断言 101 与文本/二进制两轮 echo 往返。经过 deis-proxy 的那一跳现在也有
+  专门的端到端测试：`websocket_through_proxy_test.rs` 起一个真的 `deis-proxy`
+  二进制，走真实的 HTTP Upgrade 握手；`scripts/demo.sh verify` 的
+  「websockets」一组同样从这一跳发起。
+- 上面 **Client** 那段在 Deislet 上现在跑得通：客户端 `WebSocket` 是
+  `crates/deis-runtime/src/runtime/ws_client_ops.rs` 背后的真实现，装在
+  `globalThis` 上，`new WebSocket(...)` 不再抛 `ReferenceError`。它开的是一条
+  出网连接，因此必须、也确实走了和 `fetch` 一样的 `runtime/fetch_policy.rs`
+  判定：一个解析到回环、私有网段或平台自身端点的目标同样被拒。
+- 文本帧与二进制帧都原样交付，两个方向都有测试覆盖，不再依赖 `atob` 这条此前
+  会被吞掉异常的路径。
 
 **Tencent 替代方案**:
 - 使用 Server-Sent Events (SSE) 单向推送
