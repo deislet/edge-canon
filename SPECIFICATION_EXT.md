@@ -1,5 +1,9 @@
 # Edge Canon Extended Specification v0.1.0
 
+> **版本状态：** 本文是 v0.1 的历史扩展规范。其可选扩展模型不会进入下一版本；
+> 迁移与发布门槛见
+> [`proposals/0001-unified-platform-contract`](proposals/0001-unified-platform-contract/README.zh.md)。
+
 > **扩展规范**: 可选的增强特性
 > **编译时验证**: 编译器会检查目标平台是否支持使用的扩展特性
 

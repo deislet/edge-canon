@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/conformance-registry.schema.json",
+  "title": "Edge Canon conformance registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "registryId", "standardContract", "standardId",
+    "standardReleaseStatus", "updatedAt", "certificationPolicy", "backends"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "registryId": {"type": "string", "minLength": 1},
+    "standardContract": {"type": "string", "minLength": 1},
+    "standardId": {"type": "string", "minLength": 1},
+    "standardReleaseStatus": {"enum": ["proposal", "candidate", "release-candidate", "standard", "retired"]},
+    "updatedAt": {"type": "string", "format": "date-time"},
+    "certificationPolicy": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "certificationUnit", "requiredMaturity", "freshEvidenceRequired",
+        "mandatoryTestSkipsAllowed", "semanticWaiversAllowed",
+        "supportRequiresMaintainedImplementation"
+      ],
+      "properties": {
+        "certificationUnit": {"const": "complete-standard-version"},
+        "requiredMaturity": {"const": "conformance-passed"},
+        "freshEvidenceRequired": {"const": true},
+        "mandatoryTestSkipsAllowed": {"const": false},
+        "semanticWaiversAllowed": {"const": false},
+        "supportRequiresMaintainedImplementation": {"const": true}
+      }
+    },
+    "backends": {
+      "type": "array", "minItems": 1,
+      "items": {"$ref": "#/$defs/backend"}
+    }
+  },
+  "$defs": {
+    "backend": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "displayName", "role", "implementation", "evidence", "certification"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "displayName": {"type": "string", "minLength": 1},
+        "role": {"enum": ["first-class", "experimental"]},
+        "implementation": {
+          "type": "object", "additionalProperties": false,
+          "required": ["repository", "sourceCommit", "scope"],
+          "properties": {
+            "repository": {"type": "string", "format": "uri"},
+            "sourceCommit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "scope": {"type": "string", "minLength": 1}
+          }
+        },
+        "evidence": {
+          "type": "object", "additionalProperties": false,
+          "required": ["maturity", "observedAt", "outcome", "records"],
+          "properties": {
+            "maturity": {"enum": ["artifact-generated", "syntax-verified", "deployed", "conformance-passed"]},
+            "observedAt": {"type": "string", "format": "date-time"},
+            "outcome": {"enum": ["pass", "fail", "stale"]},
+            "records": {
+              "type": "array", "minItems": 1,
+              "items": {
+                "type": "object", "additionalProperties": false,
+                "required": ["kind", "reference", "note"],
+                "properties": {
+                  "kind": {"type": "string", "minLength": 1},
+                  "reference": {"type": "string", "minLength": 1},
+                  "note": {"type": "string", "minLength": 1}
+                }
+              }
+            }
+          }
+        },
+        "certification": {
+          "type": "object", "additionalProperties": false,
+          "required": ["status", "compliant", "supported", "validUntil", "blockers"],
+          "properties": {
+            "status": {"enum": ["not-certified", "valid", "stale", "revoked", "historical"]},
+            "compliant": {"type": "boolean"},
+            "supported": {"type": "boolean"},
+            "validUntil": {"type": ["string", "null"], "format": "date-time"},
+            "blockers": {"type": "array", "items": {"type": "string", "minLength": 1}}
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "$schema": "../schemas/standard-contract.schema.json",
+  "schemaVersion": 1,
+  "contractId": "edge-canon.next",
+  "standardVersion": "next",
+  "releaseStatus": "proposal",
+  "normativeRelease": false,
+  "capabilityModel": "single-standard",
+  "profiles": [],
+  "governance": {
+    "repository": "https://github.com/deislet/edge-canon",
+    "proposal": "proposals/0001-unified-platform-contract/README.zh.md",
+    "proposalStage": "draft",
+    "referenceVendorRule": "mainstream-semantic-intersection",
+    "referenceVendors": [
+      "cloudflare-workers-pages",
+      "tencent-edgeone-makers"
+    ]
+  },
+  "compatibility": {
+    "applicationPinsExactStandardVersion": true,
+    "publishedVersionsAreImmutable": true,
+    "providerRuntimeDetectionForbidden": true,
+    "unimplementedMandatoryCapability": "reject-before-deploy",
+    "initialNodeBaseline": "24-lts",
+    "nodeSubsetIsVersionedByStandard": true
+  },
+  "semanticDimensions": [
+    "api",
+    "errors",
+    "concurrency-consistency-ordering",
+    "lifecycle",
+    "minimum-resource-guarantees",
+    "security-isolation",
+    "failure-recovery",
+    "upgrade-migration"
+  ],
+  "capabilityFamilies": [
+    {"id": "web-fetch-events", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "routing-static-assets", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "streams-websockets-background-work", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "web-platform-apis", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "node-npm-subset", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "ssr-streaming-ssr-isr", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "environment-secrets", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "kv-cache-sql-blob", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "queue-schedule-service-binding", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "stateful-objects", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "logical-resource-bindings", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "canonical-build-artifact", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "deployment-preview-rollback", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "observability", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "data-export-deletion", "requirement": "mandatory", "definitionStatus": "pending"}
+  ],
+  "artifacts": {
+    "canonicalArtifactRequired": true,
+    "providerArtifactsDerivedFromCanonical": true,
+    "providerResourceIdsAllowedInApplicationSource": false,
+    "providerDriversMayUsePinnedOfficialCliOrApi": true
+  },
+  "conformance": {
+    "registry": "conformance/registry.json",
+    "certificationUnit": "complete-standard-version",
+    "mandatoryTestsMayBeSkipped": false,
+    "semanticWaiversAllowed": false,
+    "freshEvidenceRequired": true,
+    "complianceImpliesSupport": false
+  },
+  "initialImplementations": [
+    {"id": "deislet", "role": "first-class"},
+    {"id": "cloudflare-workers-pages", "role": "first-class"},
+    {"id": "tencent-edgeone-makers", "role": "first-class"},
+    {"id": "deno", "role": "experimental"}
+  ]
+}

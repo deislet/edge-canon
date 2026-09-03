@@ -1,5 +1,9 @@
 # Edge Canon Basic Specification v0.1.0
 
+> **版本状态：** 本文只描述 v0.1 已有实现。下一版本将采用单一标准、取消可选
+> capability profile；迁移与发布门槛见
+> [`proposals/0001-unified-platform-contract`](proposals/0001-unified-platform-contract/README.zh.md)。
+
 > **基础规范**：所有平台必须支持的基础能力
 > **保证**: 遵循此规范的代码可在任何 Edge Canon 兼容平台运行
 

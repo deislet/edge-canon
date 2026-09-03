@@ -7,6 +7,13 @@
 
 **Edge Canon** is the unified standard for writing edge functions that run everywhere—Cloudflare, Deno, Tencent, **Deislet**, and beyond.
 
+> **Evolution notice:** v0.1 remains the description of the existing implementation.
+> The next standard is being defined as one capability set, without Basic/Extended
+> profiles, in [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md).
+> Its machine-readable [contract](standard/contract.json) and
+> [conformance registry](conformance/registry.json) are proposals, not a released
+> compatibility claim.
+
 ## Documentation
 
 * 📜 **[SPECIFICATION](SPECIFICATION.md)**  

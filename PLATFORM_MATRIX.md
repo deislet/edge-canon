@@ -1,5 +1,9 @@
 # Platform Support Matrix
 
+> **证据边界：** 本表描述 v0.1 实现观察，不能产生下一版本的合规或支持声明。
+> `edge-canon.next` 的唯一机器可读状态见
+> [`conformance/registry.json`](conformance/registry.json)。
+
 > 精确定义各平台对 Edge Canon 特性的支持情况
 > 编译器 (`deis-build`) 在构建时会自动验证平台兼容性
 

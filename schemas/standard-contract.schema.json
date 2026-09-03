@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/standard-contract.schema.json",
+  "title": "Edge Canon standard contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "contractId", "standardVersion", "releaseStatus",
+    "normativeRelease", "capabilityModel", "profiles", "governance",
+    "compatibility", "semanticDimensions", "capabilityFamilies", "artifacts",
+    "conformance", "initialImplementations"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "contractId": {"type": "string", "pattern": "^edge-canon\\.[a-z0-9.-]+$"},
+    "standardVersion": {"type": "string", "minLength": 1},
+    "releaseStatus": {"enum": ["proposal", "candidate", "release-candidate", "standard", "retired"]},
+    "normativeRelease": {"type": "boolean"},
+    "capabilityModel": {"const": "single-standard"},
+    "profiles": {"type": "array", "maxItems": 0},
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "proposal", "proposalStage", "referenceVendorRule", "referenceVendors"],
+      "properties": {
+        "repository": {"type": "string", "format": "uri"},
+        "proposal": {"type": "string", "minLength": 1},
+        "proposalStage": {"enum": ["draft", "candidate", "release-candidate", "accepted", "withdrawn"]},
+        "referenceVendorRule": {"const": "mainstream-semantic-intersection"},
+        "referenceVendors": {
+          "type": "array", "minItems": 2, "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "applicationPinsExactStandardVersion", "publishedVersionsAreImmutable",
+        "providerRuntimeDetectionForbidden", "unimplementedMandatoryCapability",
+        "initialNodeBaseline", "nodeSubsetIsVersionedByStandard"
+      ],
+      "properties": {
+        "applicationPinsExactStandardVersion": {"const": true},
+        "publishedVersionsAreImmutable": {"const": true},
+        "providerRuntimeDetectionForbidden": {"const": true},
+        "unimplementedMandatoryCapability": {"const": "reject-before-deploy"},
+        "initialNodeBaseline": {"type": "string", "minLength": 1},
+        "nodeSubsetIsVersionedByStandard": {"const": true}
+      }
+    },
+    "semanticDimensions": {
+      "type": "array", "minItems": 8, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "capabilityFamilies": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "requirement", "definitionStatus"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "requirement": {"const": "mandatory"},
+          "definitionStatus": {"enum": ["pending", "draft", "normative-complete"]}
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "canonicalArtifactRequired", "providerArtifactsDerivedFromCanonical",
+        "providerResourceIdsAllowedInApplicationSource", "providerDriversMayUsePinnedOfficialCliOrApi"
+      ],
+      "properties": {
+        "canonicalArtifactRequired": {"const": true},
+        "providerArtifactsDerivedFromCanonical": {"const": true},
+        "providerResourceIdsAllowedInApplicationSource": {"const": false},
+        "providerDriversMayUsePinnedOfficialCliOrApi": {"const": true}
+      }
+    },
+    "conformance": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "registry", "certificationUnit", "mandatoryTestsMayBeSkipped",
+        "semanticWaiversAllowed", "freshEvidenceRequired", "complianceImpliesSupport"
+      ],
+      "properties": {
+        "registry": {"type": "string", "minLength": 1},
+        "certificationUnit": {"const": "complete-standard-version"},
+        "mandatoryTestsMayBeSkipped": {"const": false},
+        "semanticWaiversAllowed": {"const": false},
+        "freshEvidenceRequired": {"const": true},
+        "complianceImpliesSupport": {"const": false}
+      }
+    },
+    "initialImplementations": {
+      "type": "array", "minItems": 3,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "role"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "role": {"enum": ["first-class", "experimental"]}
+        }
+      }
+    }
+  }
+}

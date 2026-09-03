@@ -1,0 +1,151 @@
+{
+  "$schema": "../schemas/conformance-registry.schema.json",
+  "schemaVersion": 1,
+  "registryId": "edge-canon-public-conformance",
+  "standardContract": "standard/contract.json",
+  "standardId": "edge-canon.next",
+  "standardReleaseStatus": "proposal",
+  "updatedAt": "2026-09-03T17:02:29+08:00",
+  "certificationPolicy": {
+    "certificationUnit": "complete-standard-version",
+    "requiredMaturity": "conformance-passed",
+    "freshEvidenceRequired": true,
+    "mandatoryTestSkipsAllowed": false,
+    "semanticWaiversAllowed": false,
+    "supportRequiresMaintainedImplementation": true
+  },
+  "backends": [
+    {
+      "id": "deislet",
+      "displayName": "Deislet",
+      "role": "first-class",
+      "implementation": {
+        "repository": "https://github.com/deislet/deislet",
+        "sourceCommit": "5edec52048061dfad1c1af91aa59592e8b817fbb",
+        "scope": "embedded single-machine demo topology"
+      },
+      "evidence": {
+        "maturity": "deployed",
+        "observedAt": "2026-09-03T17:02:29+08:00",
+        "outcome": "pass",
+        "records": [
+          {
+            "kind": "repository-witness",
+            "reference": "https://github.com/deislet/deislet/blob/5edec52048061dfad1c1af91aa59592e8b817fbb/scripts/demo.sh",
+            "note": "Local Deislet deploy and smoke coverage; not an Edge Canon conformance run or signed evidence bundle."
+          }
+        ]
+      },
+      "certification": {
+        "status": "not-certified",
+        "compliant": false,
+        "supported": false,
+        "validUntil": null,
+        "blockers": [
+          "edge-canon.next is not a released standard",
+          "mandatory conformance kit does not yet exist",
+          "no signed complete-version conformance record"
+        ]
+      }
+    },
+    {
+      "id": "cloudflare-workers-pages",
+      "displayName": "Cloudflare Workers/Pages",
+      "role": "first-class",
+      "implementation": {
+        "repository": "https://github.com/deislet/deislet",
+        "sourceCommit": "5edec52048061dfad1c1af91aa59592e8b817fbb",
+        "scope": "Deislet Cloudflare build adapter"
+      },
+      "evidence": {
+        "maturity": "artifact-generated",
+        "observedAt": "2026-09-03T17:02:29+08:00",
+        "outcome": "pass",
+        "records": [
+          {
+            "kind": "repository-witness",
+            "reference": "https://github.com/deislet/deislet/tree/5edec52048061dfad1c1af91aa59592e8b817fbb/crates/deis-build-adapter-cloudflare",
+            "note": "The adapter and conditional Wrangler dry-run path exist; this registry has no immutable vendor verification record for the exact artifact."
+          }
+        ]
+      },
+      "certification": {
+        "status": "not-certified",
+        "compliant": false,
+        "supported": false,
+        "validUntil": null,
+        "blockers": [
+          "edge-canon.next is not a released standard",
+          "no recorded deployment identity for an exact canonical artifact",
+          "mandatory conformance kit does not yet exist"
+        ]
+      }
+    },
+    {
+      "id": "tencent-edgeone-makers",
+      "displayName": "Tencent EdgeOne Makers",
+      "role": "first-class",
+      "implementation": {
+        "repository": "https://github.com/deislet/deislet",
+        "sourceCommit": "5edec52048061dfad1c1af91aa59592e8b817fbb",
+        "scope": "Deislet Tencent EdgeOne build adapter"
+      },
+      "evidence": {
+        "maturity": "artifact-generated",
+        "observedAt": "2026-09-03T17:02:29+08:00",
+        "outcome": "pass",
+        "records": [
+          {
+            "kind": "repository-witness",
+            "reference": "https://github.com/deislet/deislet/tree/5edec52048061dfad1c1af91aa59592e8b817fbb/crates/deis-build-adapter-tencent",
+            "note": "The adapter generates EdgeOne-shaped output; no exact-artifact official CLI/API verification or deployment record is attached."
+          }
+        ]
+      },
+      "certification": {
+        "status": "not-certified",
+        "compliant": false,
+        "supported": false,
+        "validUntil": null,
+        "blockers": [
+          "edge-canon.next is not a released standard",
+          "no official syntax-verification record for the exact artifact",
+          "mandatory conformance kit does not yet exist"
+        ]
+      }
+    },
+    {
+      "id": "deno",
+      "displayName": "Deno",
+      "role": "experimental",
+      "implementation": {
+        "repository": "https://github.com/deislet/deislet",
+        "sourceCommit": "5edec52048061dfad1c1af91aa59592e8b817fbb",
+        "scope": "Deislet Deno build adapter"
+      },
+      "evidence": {
+        "maturity": "artifact-generated",
+        "observedAt": "2026-09-03T17:02:29+08:00",
+        "outcome": "pass",
+        "records": [
+          {
+            "kind": "repository-witness",
+            "reference": "https://github.com/deislet/deislet/tree/5edec52048061dfad1c1af91aa59592e8b817fbb/crates/deis-build-adapter-deno",
+            "note": "Experimental adapter evidence only; Deno is not a first-class release blocker."
+          }
+        ]
+      },
+      "certification": {
+        "status": "not-certified",
+        "compliant": false,
+        "supported": false,
+        "validUntil": null,
+        "blockers": [
+          "experimental implementation",
+          "edge-canon.next is not a released standard",
+          "mandatory conformance kit does not yet exist"
+        ]
+      }
+    }
+  ]
+}
