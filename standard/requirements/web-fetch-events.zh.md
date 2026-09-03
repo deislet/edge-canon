@@ -73,7 +73,7 @@ type RequestHandler =
 
 本维度仍为 `pending`。必须基于参考后端可长期兑现的公开保证，至少确定 CPU、wall time、响应 body、请求/响应大小、内存、子请求、并发以及 `waitUntil` 宽限期的最低值和超限错误，才能分配条款标识。供应商套餐上限不能直接写成标准保证。
 
-当前公开事实、空白和待决基线已记录在[最低资源保证证据基线](../evidence/web-fetch-events-resource-baseline.zh.md)。证据显示部分数值可以直接比较，但套餐选择与超限语义会实质改变标准，需先完成产品决策。
+当前公开事实与空白已记录在[最低资源保证证据基线](../evidence/web-fetch-events-resource-baseline.zh.md)。基线政策已经确定：取每个参考供应商面向一般用户开放的最低免费档或入门档共同可兑现的保证，不允许用更高付费档抬高标准。CPU 等部分数值可以直接比较，但公开证据空白、精确计量和超限语义仍未解决，所以本维度继续阻断发布。
 
 ## 8. 安全与隔离
 
@@ -96,7 +96,7 @@ type RequestHandler =
 
 本草案进入 `normative-complete` 前至少还需：
 
-1. 完成 `minimum-resource-guarantees`，并把套餐差异与最低标准分开；
+1. 按最低免费/入门档共同保证完成 `minimum-resource-guarantees`，并把更高套餐容量与最低标准分开；
 2. 完成所引用的 `web-platform-apis`、`environment-secrets`、`logical-resource-bindings` 与 canonical artifact 类型；
 3. 将当前机器可读用例实现为可在三个一等后端运行的同源 fixture 和 provider-independent oracle；
 4. 用真实部署验证错误响应、流式生命周期、后台集合和断连隔离，不以本地 mock 代替；

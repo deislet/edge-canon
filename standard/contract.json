@@ -26,6 +26,12 @@
     "initialNodeBaseline": "24-lts",
     "nodeSubsetIsVersionedByStandard": true
   },
+  "resourceGuarantees": {
+    "referencePlanBaseline": "lowest-generally-available-free-or-entry-plan",
+    "allReferenceVendorsMustMeetBaseline": true,
+    "unknownPublicGuarantee": "release-blocker",
+    "higherPlanCapacityIsPortable": false
+  },
   "semanticDimensions": [
     "api",
     "errors",

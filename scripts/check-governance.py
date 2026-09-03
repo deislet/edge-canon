@@ -61,6 +61,25 @@ def validate_contract(contract: dict) -> None:
     require(contract.get("capabilityModel") == "single-standard", "only one standard is allowed")
     require(contract.get("profiles") == [], "capability profiles are forbidden")
 
+    resource_guarantees = contract.get("resourceGuarantees", {})
+    require(
+        resource_guarantees.get("referencePlanBaseline")
+        == "lowest-generally-available-free-or-entry-plan",
+        "resource guarantees must use every reference vendor's lowest generally available free or entry plan",
+    )
+    require(
+        resource_guarantees.get("allReferenceVendorsMustMeetBaseline") is True,
+        "every reference vendor must meet the resource baseline",
+    )
+    require(
+        resource_guarantees.get("unknownPublicGuarantee") == "release-blocker",
+        "an unknown public resource guarantee must block release",
+    )
+    require(
+        resource_guarantees.get("higherPlanCapacityIsPortable") is False,
+        "higher-plan capacity must not become a portable application guarantee",
+    )
+
     status = contract.get("releaseStatus")
     normative = contract.get("normativeRelease")
     require(

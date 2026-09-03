@@ -7,7 +7,7 @@
   "required": [
     "schemaVersion", "contractId", "standardVersion", "releaseStatus",
     "normativeRelease", "capabilityModel", "profiles", "requirementsRegistry", "governance",
-    "compatibility", "semanticDimensions", "capabilityFamilies", "artifacts",
+    "compatibility", "resourceGuarantees", "semanticDimensions", "capabilityFamilies", "artifacts",
     "conformance", "initialImplementations"
   ],
   "properties": {
@@ -50,6 +50,20 @@
         "unimplementedMandatoryCapability": {"const": "reject-before-deploy"},
         "initialNodeBaseline": {"type": "string", "minLength": 1},
         "nodeSubsetIsVersionedByStandard": {"const": true}
+      }
+    },
+    "resourceGuarantees": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "referencePlanBaseline", "allReferenceVendorsMustMeetBaseline",
+        "unknownPublicGuarantee", "higherPlanCapacityIsPortable"
+      ],
+      "properties": {
+        "referencePlanBaseline": {"const": "lowest-generally-available-free-or-entry-plan"},
+        "allReferenceVendorsMustMeetBaseline": {"const": true},
+        "unknownPublicGuarantee": {"const": "release-blocker"},
+        "higherPlanCapacityIsPortable": {"const": false}
       }
     },
     "semanticDimensions": {
