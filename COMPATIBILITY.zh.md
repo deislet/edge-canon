@@ -1,5 +1,9 @@
 # Node.js 兼容性策略
 
+> **版本边界：** 本文是 v0.1 兼容策略。下一标准版本将以 Node 24 LTS 为初始
+> 基线定义版本化 Node/npm subset，迁移由
+> [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md)跟踪。
+
 > **核心理念**：保持运行时纯净（仅支持 Web 标准），利用编译器解决生态兼容问题。
 >
 > [English](./COMPATIBILITY.md)

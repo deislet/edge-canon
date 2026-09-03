@@ -1,5 +1,9 @@
 # Edge Canon 设计原则与哲学
 
+> **版本边界：** 本文解释 v0.1。其按目标进行编译期 capability negotiation 的
+> 方向，在下一标准版本中由 [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md)
+> 的单一能力集合取代。
+
 > Edge Canon 规范的架构基石。
 > 
 > [English](./PRINCIPLES.md)

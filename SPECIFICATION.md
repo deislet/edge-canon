@@ -1,5 +1,10 @@
 # Edge Canon Specification v0.1.0
 
+> **Version boundary:** this document describes the existing v0.1 contract.
+> Its Basic/Extended split does not carry into the next standard. The single,
+> profile-free contract and its release gates are tracked in
+> [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md).
+
 > The authoritative specification for universal edge functions.
 > **Write Once, Run Anywhere**: Cloudflare Workers, Deno Deploy, Tencent EdgeOne, **Deislet**.
 > [中文版](./SPECIFICATION.zh.md)

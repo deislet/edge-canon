@@ -1,5 +1,10 @@
 # Node.js Compatibility Strategy
 
+> **Version boundary:** this is the v0.1 compatibility strategy. The next
+> standard instead defines a versioned Node/npm subset, beginning from the
+> Node 24 LTS baseline, through
+> [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md).
+
 > **Core Philosophy**: Keep the runtime pure (Web Standards only) while leveraging the compiler to bridge the ecosystem gap.
 >
 > [中文版](./COMPATIBILITY.zh.md)

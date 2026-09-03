@@ -1,5 +1,9 @@
 # Edge Canon Specification v0.1.0
 
+> **版本边界：** 本文描述已有 v0.1 契约，其中 Basic/Extended 的划分不会进入
+> 下一标准版本。单一、无 profile 的契约及发布门槛见
+> [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md)。
+
 > 统一边缘函数部署标准规范
 > 支持多平台兼容发布（Cloudflare Workers/Pages、Deno Deploy、Tencent EdgeOne、**Deislet**）
 > **核心原则**：一次编写,随处部署;禁止平台特定代码

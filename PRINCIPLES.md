@@ -1,5 +1,9 @@
 # Edge Canon Principles & Design Philosophy
 
+> **Version boundary:** this is the v0.1 rationale. Its per-target compile-time
+> capability negotiation is superseded for the next standard by the single
+> capability set proposed in [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md).
+
 > The architectural foundation of the Edge Canon specification.
 > 
 > [中文版](./PRINCIPLES.zh.md)
