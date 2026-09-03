@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/requirements-registry.schema.json",
+  "title": "Edge Canon requirements registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "standardId", "status", "semanticDimensions", "families"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "standardId": {"type": "string", "minLength": 1},
+    "status": {"enum": ["draft", "frozen"]},
+    "semanticDimensions": {
+      "type": "array", "minItems": 8, "maxItems": 8, "uniqueItems": true,
+      "items": {
+        "enum": [
+          "api", "errors", "concurrency-consistency-ordering", "lifecycle",
+          "minimum-resource-guarantees", "security-isolation",
+          "failure-recovery", "upgrade-migration"
+        ]
+      }
+    },
+    "families": {
+      "type": "array", "minItems": 1,
+      "items": {"$ref": "#/$defs/family"}
+    }
+  },
+  "$defs": {
+    "family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "definitionStatus", "draftPath", "dimensions", "conformance"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+        "definitionStatus": {"enum": ["pending", "draft", "normative-complete"]},
+        "draftPath": {"type": ["string", "null"]},
+        "dimensions": {
+          "type": "object",
+          "required": [
+            "api", "errors", "concurrency-consistency-ordering", "lifecycle",
+            "minimum-resource-guarantees", "security-isolation",
+            "failure-recovery", "upgrade-migration"
+          ],
+          "minProperties": 8,
+          "maxProperties": 8,
+          "additionalProperties": {"$ref": "#/$defs/dimension"}
+        },
+        "conformance": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["suiteId", "fixtureStatus", "oracleStatus", "harnessStatus"],
+          "properties": {
+            "suiteId": {"type": "string", "pattern": "^EC-[A-Z0-9-]+$"},
+            "fixtureStatus": {"enum": ["planned", "draft", "complete"]},
+            "oracleStatus": {"enum": ["planned", "draft", "complete"]},
+            "harnessStatus": {"enum": ["planned", "draft", "complete"]}
+          }
+        }
+      }
+    },
+    "dimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "clauseIds"],
+      "properties": {
+        "status": {"enum": ["pending", "draft", "normative-complete"]},
+        "clauseIds": {
+          "type": "array", "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^EC-[A-Z0-9-]+$"}
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "pending"}}},
+          "then": {"properties": {"clauseIds": {"maxItems": 0}}},
+          "else": {"properties": {"clauseIds": {"minItems": 1}}}
+        }
+      ]
+    }
+  }
+}

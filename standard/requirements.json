@@ -1,0 +1,179 @@
+{
+  "$schema": "../schemas/requirements-registry.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "status": "draft",
+  "semanticDimensions": [
+    "api",
+    "errors",
+    "concurrency-consistency-ordering",
+    "lifecycle",
+    "minimum-resource-guarantees",
+    "security-isolation",
+    "failure-recovery",
+    "upgrade-migration"
+  ],
+  "families": [
+    {
+      "id": "web-fetch-events",
+      "definitionStatus": "draft",
+      "draftPath": "standard/requirements/web-fetch-events.zh.md",
+      "dimensions": {
+        "api": {"status": "draft", "clauseIds": ["EC-WEB-API-001", "EC-WEB-API-002", "EC-WEB-API-003", "EC-WEB-API-004", "EC-WEB-API-005"]},
+        "errors": {"status": "draft", "clauseIds": ["EC-WEB-ERR-001", "EC-WEB-ERR-002", "EC-WEB-ERR-003"]},
+        "concurrency-consistency-ordering": {"status": "draft", "clauseIds": ["EC-WEB-CON-001", "EC-WEB-CON-002"]},
+        "lifecycle": {"status": "draft", "clauseIds": ["EC-WEB-LIFE-001", "EC-WEB-LIFE-002", "EC-WEB-LIFE-003", "EC-WEB-LIFE-004"]},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []},
+        "security-isolation": {"status": "draft", "clauseIds": ["EC-WEB-SEC-001", "EC-WEB-SEC-002"]},
+        "failure-recovery": {"status": "draft", "clauseIds": ["EC-WEB-FAIL-001", "EC-WEB-FAIL-002"]},
+        "upgrade-migration": {"status": "draft", "clauseIds": ["EC-WEB-UPG-001", "EC-WEB-UPG-002"]}
+      },
+      "conformance": {
+        "suiteId": "EC-WEB",
+        "fixtureStatus": "draft",
+        "oracleStatus": "draft",
+        "harnessStatus": "planned"
+      }
+    },
+    {
+      "id": "routing-static-assets", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-ROUTING", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "streams-websockets-background-work", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-STREAM", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "web-platform-apis", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-WEBAPI", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "node-npm-subset", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-NODE", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "ssr-streaming-ssr-isr", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-SSR", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "environment-secrets", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-ENV", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "kv-cache-sql-blob", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-DATA", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "queue-schedule-service-binding", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-ASYNC", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "stateful-objects", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-STATE", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "logical-resource-bindings", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-BIND", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "canonical-build-artifact", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-ARTIFACT", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "deployment-preview-rollback", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-DEPLOY", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "observability", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-OBS", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    },
+    {
+      "id": "data-export-deletion", "definitionStatus": "pending", "draftPath": null,
+      "dimensions": {
+        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
+        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
+        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+      },
+      "conformance": {"suiteId": "EC-LIFECYCLE", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+    }
+  ]
+}

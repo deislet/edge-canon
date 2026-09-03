@@ -8,8 +8,10 @@
 
 > **演进说明：** v0.1 文档继续描述已有实现。下一版本按单一能力集合、无
 > Basic/Extended profile 的方向在 [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md)
-> 中制定；机器可读[契约](standard/contract.json)和[一致性 registry](conformance/registry.json)
-> 当前均为 proposal，不构成已发布的兼容性声明。
+> 中制定；机器可读[契约](standard/contract.json)、[需求注册表](standard/requirements.json)、
+> [一致性测试包](conformance/kit.json)和[实现 registry](conformance/registry.json)
+> 当前均为 proposal，不构成已发布的兼容性声明。首个候选能力族是
+> [Web Fetch Events](standard/requirements/web-fetch-events.zh.md)。
 
 ## 文档索引
 

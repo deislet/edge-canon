@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -20,6 +21,19 @@ FIRST_CLASS = {
     "cloudflare-workers-pages",
     "tencent-edgeone-makers",
 }
+REQUIRED_DIMENSIONS = (
+    "api",
+    "errors",
+    "concurrency-consistency-ordering",
+    "lifecycle",
+    "minimum-resource-guarantees",
+    "security-isolation",
+    "failure-recovery",
+    "upgrade-migration",
+)
+DEFINITION_STATUSES = {"pending", "draft", "normative-complete"}
+CONFORMANCE_STATUSES = {"planned", "draft", "complete"}
+CLAUSE_PATTERN = re.compile(r"^EC-[A-Z0-9-]+$")
 
 
 class ValidationError(RuntimeError):
@@ -58,8 +72,17 @@ def validate_contract(contract: dict) -> None:
     require(proposal.is_file(), f"governance proposal does not exist: {proposal.relative_to(ROOT)}")
 
     dimensions = contract.get("semanticDimensions", [])
-    require(len(dimensions) == len(set(dimensions)), "semanticDimensions contains duplicates")
-    require(len(dimensions) >= 8, "all required semantic dimensions must be explicit")
+    require(
+        dimensions == list(REQUIRED_DIMENSIONS),
+        "semanticDimensions must be the canonical eight dimensions in order",
+    )
+
+    requirements_path = contract.get("requirementsRegistry")
+    require(requirements_path == "standard/requirements.json", "contract must name the canonical requirements registry")
+    require((ROOT / requirements_path).is_file(), "contract requirements registry does not exist")
+    kit_path = contract.get("conformance", {}).get("kit")
+    require(kit_path == "conformance/kit.json", "contract must name the canonical conformance kit")
+    require((ROOT / kit_path).is_file(), "contract conformance kit does not exist")
 
     families = contract.get("capabilityFamilies", [])
     family_ids = [family.get("id") for family in families]
@@ -67,7 +90,7 @@ def validate_contract(contract: dict) -> None:
     for family in families:
         require(family.get("requirement") == "mandatory", f"{family.get('id')}: non-mandatory profile found")
         require(
-            family.get("definitionStatus") in {"pending", "draft", "normative-complete"},
+            family.get("definitionStatus") in DEFINITION_STATUSES,
             f"{family.get('id')}: invalid definitionStatus",
         )
 
@@ -91,6 +114,146 @@ def validate_contract(contract: dict) -> None:
             if family["definitionStatus"] != "normative-complete"
         ]
         require(not incomplete, f"release is blocked by incomplete capability definitions: {incomplete}")
+
+
+def validate_requirements(contract: dict, requirements: dict) -> dict[str, str]:
+    require(requirements.get("schemaVersion") == 1, "requirements schemaVersion must be 1")
+    require(requirements.get("standardId") == contract.get("contractId"), "requirements standardId does not match contract")
+    require(requirements.get("semanticDimensions") == list(REQUIRED_DIMENSIONS), "requirements dimensions differ from contract")
+    expected_document_status = "frozen" if contract.get("releaseStatus") in {"release-candidate", "standard"} else "draft"
+    require(requirements.get("status") == expected_document_status, "requirements document status differs from release stage")
+
+    contract_families = {family["id"]: family for family in contract["capabilityFamilies"]}
+    families = requirements.get("families", [])
+    family_ids = [family.get("id") for family in families]
+    require(len(family_ids) == len(set(family_ids)), "requirements family IDs must be unique")
+    require(set(family_ids) == set(contract_families), "requirements and contract family sets differ")
+
+    clause_owner: dict[str, str] = {}
+    for family in families:
+        family_id = family["id"]
+        status = family.get("definitionStatus")
+        require(status in DEFINITION_STATUSES, f"{family_id}: invalid requirements definitionStatus")
+        require(status == contract_families[family_id]["definitionStatus"], f"{family_id}: definitionStatus differs from contract")
+
+        dimensions = family.get("dimensions", {})
+        require(set(dimensions) == set(REQUIRED_DIMENSIONS), f"{family_id}: dimensions must match the canonical set")
+        dimension_statuses: list[str] = []
+        family_clause_ids: list[str] = []
+        for dimension_name in REQUIRED_DIMENSIONS:
+            dimension = dimensions[dimension_name]
+            dimension_status = dimension.get("status")
+            clause_ids = dimension.get("clauseIds", [])
+            require(dimension_status in DEFINITION_STATUSES, f"{family_id}/{dimension_name}: invalid status")
+            require(len(clause_ids) == len(set(clause_ids)), f"{family_id}/{dimension_name}: duplicate clause ID")
+            if dimension_status == "pending":
+                require(not clause_ids, f"{family_id}/{dimension_name}: pending dimension has clauses")
+            else:
+                require(clause_ids, f"{family_id}/{dimension_name}: defined dimension has no clauses")
+            for clause_id in clause_ids:
+                require(bool(CLAUSE_PATTERN.fullmatch(clause_id)), f"{clause_id}: invalid clause ID")
+                require(clause_id not in clause_owner, f"{clause_id}: clause ID is duplicated")
+                clause_owner[clause_id] = family_id
+            family_clause_ids.extend(clause_ids)
+            dimension_statuses.append(dimension_status)
+
+        draft_path = family.get("draftPath")
+        if status == "pending":
+            require(all(value == "pending" for value in dimension_statuses), f"{family_id}: pending family contains defined dimensions")
+            require(draft_path is None, f"{family_id}: pending family must not claim a draft path")
+        else:
+            require(isinstance(draft_path, str) and draft_path, f"{family_id}: defined family needs a draft path")
+            draft_file = ROOT / draft_path
+            require(draft_file.is_file(), f"{family_id}: draft path does not exist: {draft_path}")
+            draft_text = draft_file.read_text(encoding="utf-8")
+            for clause_id in family_clause_ids:
+                require(draft_text.count(clause_id) == 1, f"{clause_id}: clause must appear exactly once in {draft_path}")
+        if status == "normative-complete":
+            require(
+                all(value == "normative-complete" for value in dimension_statuses),
+                f"{family_id}: normative-complete requires all dimensions complete",
+            )
+        if status == "draft":
+            require(any(value == "draft" for value in dimension_statuses), f"{family_id}: draft family has no draft dimension")
+
+        conformance = family.get("conformance", {})
+        for key in ("fixtureStatus", "oracleStatus", "harnessStatus"):
+            require(conformance.get(key) in CONFORMANCE_STATUSES, f"{family_id}: invalid {key}")
+        if status == "normative-complete":
+            require(
+                all(conformance.get(key) == "complete" for key in ("fixtureStatus", "oracleStatus", "harnessStatus")),
+                f"{family_id}: normative-complete requires complete fixture, oracle, and harness",
+            )
+
+    return clause_owner
+
+
+def validate_cases(relative_path: str, standard_id: str, suite_id: str, clause_owner: dict[str, str], family_id: str) -> set[str]:
+    case_file = load_json(relative_path)
+    require(case_file.get("schemaVersion") == 1, f"{relative_path}: schemaVersion must be 1")
+    require(case_file.get("standardId") == standard_id, f"{relative_path}: standardId mismatch")
+    require(case_file.get("suiteId") == suite_id, f"{relative_path}: suiteId mismatch")
+    require(case_file.get("status") in {"draft", "frozen"}, f"{relative_path}: invalid case document status")
+    require(case_file.get("executionModel") == "provider-independent-oracle", f"{relative_path}: invalid execution model")
+    cases = case_file.get("cases", [])
+    case_ids = [case.get("id") for case in cases]
+    require(cases and len(case_ids) == len(set(case_ids)), f"{relative_path}: case IDs must be present and unique")
+    covered: set[str] = set()
+    for case in cases:
+        clause_ids = case.get("clauseIds", [])
+        require(clause_ids, f"{relative_path}/{case.get('id')}: no clause IDs")
+        require(case.get("fixture", {}).get("requirements"), f"{relative_path}/{case.get('id')}: fixture requirements missing")
+        require(case.get("oracle", {}).get("observations"), f"{relative_path}/{case.get('id')}: oracle observations missing")
+        require(case.get("oracle", {}).get("assertions"), f"{relative_path}/{case.get('id')}: oracle assertions missing")
+        for clause_id in clause_ids:
+            require(clause_id in clause_owner, f"{relative_path}: unknown clause {clause_id}")
+            require(clause_owner[clause_id] == family_id, f"{relative_path}: {clause_id} belongs to another family")
+            covered.add(clause_id)
+    return covered
+
+
+def validate_kit(contract: dict, requirements: dict, kit: dict, clause_owner: dict[str, str]) -> None:
+    require(kit.get("schemaVersion") == 1, "kit schemaVersion must be 1")
+    require(kit.get("standardId") == contract.get("contractId"), "kit standardId does not match contract")
+    require(kit.get("requirementsRegistry") == contract.get("requirementsRegistry"), "kit requirements registry differs from contract")
+    expected_document_status = "frozen" if contract.get("releaseStatus") in {"release-candidate", "standard"} else "draft"
+    require(kit.get("status") == expected_document_status, "kit document status differs from release stage")
+
+    requirements_by_family = {family["id"]: family for family in requirements["families"]}
+    suites = kit.get("suites", [])
+    suite_ids = [suite.get("id") for suite in suites]
+    suite_families = [suite.get("familyId") for suite in suites]
+    require(len(suite_ids) == len(set(suite_ids)), "kit suite IDs must be unique")
+    require(len(suite_families) == len(set(suite_families)), "kit may define only one suite per family")
+    require(set(suite_families) == set(requirements_by_family), "kit and requirements family sets differ")
+
+    for suite in suites:
+        family_id = suite["familyId"]
+        family = requirements_by_family[family_id]
+        expected = family["conformance"]
+        require(suite.get("id") == expected.get("suiteId"), f"{family_id}: suite ID differs from requirements")
+        for key in ("fixtureStatus", "oracleStatus", "harnessStatus"):
+            require(suite.get(key) == expected.get(key), f"{family_id}: {key} differs from requirements")
+        cases_path = suite.get("casesPath")
+        statuses = [suite[key] for key in ("fixtureStatus", "oracleStatus", "harnessStatus")]
+        if all(value == "planned" for value in statuses):
+            require(cases_path is None, f"{family_id}: fully planned suite must not claim case definitions")
+            continue
+        require(isinstance(cases_path, str) and cases_path, f"{family_id}: started suite needs casesPath")
+        require((ROOT / cases_path).is_file(), f"{family_id}: casesPath does not exist")
+        covered = validate_cases(cases_path, contract["contractId"], suite["id"], clause_owner, family_id)
+        case_file = load_json(cases_path)
+        require(case_file.get("status") == kit.get("status"), f"{family_id}: cases status differs from kit")
+        expected_clauses = {clause_id for clause_id, owner in clause_owner.items() if owner == family_id}
+        require(covered == expected_clauses, f"{family_id}: draft cases must cover every defined clause")
+
+    if contract.get("releaseStatus") in {"release-candidate", "standard"}:
+        incomplete = [
+            suite["id"]
+            for suite in suites
+            if any(suite[key] != "complete" for key in ("fixtureStatus", "oracleStatus", "harnessStatus"))
+        ]
+        require(not incomplete, f"release is blocked by incomplete conformance suites: {incomplete}")
 
 
 def validate_registry(contract: dict, registry: dict) -> None:
@@ -138,10 +301,17 @@ def validate_registry(contract: dict, registry: dict) -> None:
 def main() -> int:
     try:
         contract = load_json("standard/contract.json")
+        requirements = load_json("standard/requirements.json")
+        kit = load_json("conformance/kit.json")
         registry = load_json("conformance/registry.json")
         load_json("schemas/standard-contract.schema.json")
+        load_json("schemas/requirements-registry.schema.json")
+        load_json("schemas/conformance-kit.schema.json")
+        load_json("schemas/conformance-cases.schema.json")
         load_json("schemas/conformance-registry.schema.json")
         validate_contract(contract)
+        clause_owner = validate_requirements(contract, requirements)
+        validate_kit(contract, requirements, kit, clause_owner)
         validate_registry(contract, registry)
     except (KeyError, TypeError, ValidationError) as error:
         print(f"governance validation failed: {error}", file=sys.stderr)
@@ -150,6 +320,8 @@ def main() -> int:
     print(
         "governance validation passed: "
         f"{len(contract['capabilityFamilies'])} mandatory capability families, "
+        f"{len(clause_owner)} draft clauses, "
+        f"{len(kit['suites'])} conformance suites, "
         f"{len(registry['backends'])} backend records, 0 capability profiles"
     )
     return 0

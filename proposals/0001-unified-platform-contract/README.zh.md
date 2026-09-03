@@ -25,7 +25,9 @@ Edge Canon 的下一个版本采用一个统一、版本化的应用标准。应
 
 ## 统一契约
 
-机器可读入口是 [`standard/contract.json`](../../standard/contract.json)。它约束：
+机器可读入口是 [`standard/contract.json`](../../standard/contract.json)。逐条要求由
+[`standard/requirements.json`](../../standard/requirements.json)登记，测试入口由
+[`conformance/kit.json`](../../conformance/kit.json)登记。它们共同约束：
 
 - 单一标准与禁止 profile；
 - 标准版本、治理阶段和参考供应商；
@@ -33,7 +35,9 @@ Edge Canon 的下一个版本采用一个统一、版本化的应用标准。应
 - canonical artifact、逻辑资源绑定和统一部署生命周期；
 - 完整版本认证、证据新鲜度及支持状态的派生规则。
 
-契约中的 `definitionStatus: pending` 是发布阻断项，不是可选能力。全部必需条目达到 `normative-complete`、获得对应 fixture/oracle，并由首批三个后端实现后，才可进入 release candidate。
+契约中的 `definitionStatus: pending` 是发布阻断项，不是可选能力。`draft` 只表示已有可审查候选文本，同样不构成合规基础。全部必需条目达到 `normative-complete`、获得对应 fixture/oracle 和可执行 harness，并由首批三个后端实现后，才可进入 release candidate。
+
+当前 `web-fetch-events` 已有[候选要求](../../standard/requirements/web-fetch-events.zh.md)和机器可读用例，但最低资源保证与依赖能力族尚未完成，测试 harness 也仍为 `planned`。其状态因此保持 `draft`，不能被实现或市场材料解释为已经支持。
 
 ## 首批实现范围
 

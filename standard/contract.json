@@ -7,6 +7,7 @@
   "normativeRelease": false,
   "capabilityModel": "single-standard",
   "profiles": [],
+  "requirementsRegistry": "standard/requirements.json",
   "governance": {
     "repository": "https://github.com/deislet/edge-canon",
     "proposal": "proposals/0001-unified-platform-contract/README.zh.md",
@@ -36,7 +37,7 @@
     "upgrade-migration"
   ],
   "capabilityFamilies": [
-    {"id": "web-fetch-events", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "web-fetch-events", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "routing-static-assets", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "streams-websockets-background-work", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "web-platform-apis", "requirement": "mandatory", "definitionStatus": "pending"},
@@ -60,6 +61,7 @@
   },
   "conformance": {
     "registry": "conformance/registry.json",
+    "kit": "conformance/kit.json",
     "certificationUnit": "complete-standard-version",
     "mandatoryTestsMayBeSkipped": false,
     "semanticWaiversAllowed": false,

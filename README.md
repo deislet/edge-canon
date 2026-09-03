@@ -10,9 +10,11 @@
 > **Evolution notice:** v0.1 remains the description of the existing implementation.
 > The next standard is being defined as one capability set, without Basic/Extended
 > profiles, in [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md).
-> Its machine-readable [contract](standard/contract.json) and
-> [conformance registry](conformance/registry.json) are proposals, not a released
-> compatibility claim.
+> Its machine-readable [contract](standard/contract.json),
+> [requirements registry](standard/requirements.json), draft
+> [conformance kit](conformance/kit.json), and
+> [implementation registry](conformance/registry.json) are proposals, not a
+> released compatibility claim.
 
 ## Documentation
 
