@@ -158,6 +158,10 @@ def validate_requirements(contract: dict, requirements: dict) -> dict[str, str]:
             dimension_statuses.append(dimension_status)
 
         draft_path = family.get("draftPath")
+        evidence_paths = family.get("evidencePaths", [])
+        require(len(evidence_paths) == len(set(evidence_paths)), f"{family_id}: duplicate evidence path")
+        for evidence_path in evidence_paths:
+            require((ROOT / evidence_path).is_file(), f"{family_id}: evidence path does not exist: {evidence_path}")
         if status == "pending":
             require(all(value == "pending" for value in dimension_statuses), f"{family_id}: pending family contains defined dimensions")
             require(draft_path is None, f"{family_id}: pending family must not claim a draft path")

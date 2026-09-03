@@ -29,11 +29,15 @@
     "family": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "definitionStatus", "draftPath", "dimensions", "conformance"],
+      "required": ["id", "definitionStatus", "draftPath", "evidencePaths", "dimensions", "conformance"],
       "properties": {
         "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
         "definitionStatus": {"enum": ["pending", "draft", "normative-complete"]},
         "draftPath": {"type": ["string", "null"]},
+        "evidencePaths": {
+          "type": "array", "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
         "dimensions": {
           "type": "object",
           "required": [

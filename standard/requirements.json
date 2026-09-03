@@ -18,6 +18,7 @@
       "id": "web-fetch-events",
       "definitionStatus": "draft",
       "draftPath": "standard/requirements/web-fetch-events.zh.md",
+      "evidencePaths": ["standard/evidence/web-fetch-events-resource-baseline.zh.md"],
       "dimensions": {
         "api": {"status": "draft", "clauseIds": ["EC-WEB-API-001", "EC-WEB-API-002", "EC-WEB-API-003", "EC-WEB-API-004", "EC-WEB-API-005"]},
         "errors": {"status": "draft", "clauseIds": ["EC-WEB-ERR-001", "EC-WEB-ERR-002", "EC-WEB-ERR-003"]},
@@ -36,7 +37,7 @@
       }
     },
     {
-      "id": "routing-static-assets", "definitionStatus": "pending", "draftPath": null,
+      "id": "routing-static-assets", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -46,7 +47,7 @@
       "conformance": {"suiteId": "EC-ROUTING", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "streams-websockets-background-work", "definitionStatus": "pending", "draftPath": null,
+      "id": "streams-websockets-background-work", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -56,7 +57,7 @@
       "conformance": {"suiteId": "EC-STREAM", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "web-platform-apis", "definitionStatus": "pending", "draftPath": null,
+      "id": "web-platform-apis", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -66,7 +67,7 @@
       "conformance": {"suiteId": "EC-WEBAPI", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "node-npm-subset", "definitionStatus": "pending", "draftPath": null,
+      "id": "node-npm-subset", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -76,7 +77,7 @@
       "conformance": {"suiteId": "EC-NODE", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "ssr-streaming-ssr-isr", "definitionStatus": "pending", "draftPath": null,
+      "id": "ssr-streaming-ssr-isr", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -86,7 +87,7 @@
       "conformance": {"suiteId": "EC-SSR", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "environment-secrets", "definitionStatus": "pending", "draftPath": null,
+      "id": "environment-secrets", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -96,7 +97,7 @@
       "conformance": {"suiteId": "EC-ENV", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "kv-cache-sql-blob", "definitionStatus": "pending", "draftPath": null,
+      "id": "kv-cache-sql-blob", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -106,7 +107,7 @@
       "conformance": {"suiteId": "EC-DATA", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "queue-schedule-service-binding", "definitionStatus": "pending", "draftPath": null,
+      "id": "queue-schedule-service-binding", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -116,7 +117,7 @@
       "conformance": {"suiteId": "EC-ASYNC", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "stateful-objects", "definitionStatus": "pending", "draftPath": null,
+      "id": "stateful-objects", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -126,7 +127,7 @@
       "conformance": {"suiteId": "EC-STATE", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "logical-resource-bindings", "definitionStatus": "pending", "draftPath": null,
+      "id": "logical-resource-bindings", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -136,7 +137,7 @@
       "conformance": {"suiteId": "EC-BIND", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "canonical-build-artifact", "definitionStatus": "pending", "draftPath": null,
+      "id": "canonical-build-artifact", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -146,7 +147,7 @@
       "conformance": {"suiteId": "EC-ARTIFACT", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "deployment-preview-rollback", "definitionStatus": "pending", "draftPath": null,
+      "id": "deployment-preview-rollback", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -156,7 +157,7 @@
       "conformance": {"suiteId": "EC-DEPLOY", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "observability", "definitionStatus": "pending", "draftPath": null,
+      "id": "observability", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
@@ -166,7 +167,7 @@
       "conformance": {"suiteId": "EC-OBS", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "data-export-deletion", "definitionStatus": "pending", "draftPath": null,
+      "id": "data-export-deletion", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
       "dimensions": {
         "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
         "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
