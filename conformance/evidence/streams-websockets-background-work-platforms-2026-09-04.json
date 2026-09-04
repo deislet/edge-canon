@@ -1,0 +1,48 @@
+{
+  "$schema": "../../schemas/conformance-platform-evidence.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-STREAM",
+  "status": "draft-non-certifying",
+  "observedAt": "2026-09-04T12:17:18Z",
+  "artifactSha256": "9b0e96df3b984aae1aade0329e0b5ed03dd61ac8f878ec10c9bea94822ce011b",
+  "referenceImplementationPath": "conformance/harness/streams-websockets-background-work/runner.mjs",
+  "referenceImplementationSha256": "759c417557e812c8bffc3680fff06cf12a55929599c34072b29a0d20cb66f440",
+  "observations": [
+    {
+      "platform": "linux",
+      "osVersion": "Linux 6.8.0-124-generic",
+      "architecture": "x86_64",
+      "nodeVersion": "v22.21.1",
+      "outcome": "pass",
+      "caseCount": 13,
+      "artifactSha256": "9b0e96df3b984aae1aade0329e0b5ed03dd61ac8f878ec10c9bea94822ce011b"
+    },
+    {
+      "platform": "macos",
+      "osVersion": "macOS 26.6 (Darwin 25.6.0)",
+      "architecture": "arm64",
+      "nodeVersion": "v26.0.0",
+      "outcome": "pass",
+      "caseCount": 13,
+      "artifactSha256": "9b0e96df3b984aae1aade0329e0b5ed03dd61ac8f878ec10c9bea94822ce011b"
+    },
+    {
+      "platform": "windows",
+      "osVersion": "Windows 10.0.26100",
+      "architecture": "AMD64",
+      "nodeVersion": "v24.16.0",
+      "outcome": "pass",
+      "caseCount": 13,
+      "artifactSha256": "9b0e96df3b984aae1aade0329e0b5ed03dd61ac8f878ec10c9bea94822ce011b"
+    }
+  ],
+  "limitations": [
+    "This is reference-harness evidence, not provider conformance or certification evidence.",
+    "The exact standard pin is commit 0b3862e9626c9c390df20e34e94f38a2f6e68621; the reference runner bytes are bound separately.",
+    "The direct ReadableStream and WritableStream constructors used to build internal fault fixtures are harness infrastructure, not part of the portable application surface.",
+    "The 65,536-octet result proves local reference portability only; Cloudflare, EdgeOne, and Deislet live response streaming and disconnect behavior remain pending.",
+    "No WebSocket runtime behavior was tested because WebSocket termination is absent from the reference-vendor application-runtime intersection and is rejected by this draft.",
+    "Background-work tests prove all-settled association and no implicit retry in the reference runtime; provider grace periods, crash cancellation, and durable delivery are not certified."
+  ]
+}

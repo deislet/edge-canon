@@ -34,3 +34,7 @@ EdgeOne 公开的 `TransformStream` writable 默认 high-water mark 为 32 KiB�
 3. 证明 provider packager 会拒绝 transformer callback、直接 constructor 与 WebSocket 引用，而不是由供应商静默忽略或只在部分平台运行；
 4. 若未来 EdgeOne Edge Functions 提供 WebSocket 终止 API，重新比较握手、消息类型/大小、背压、close、异常断线和升级语义，发布新标准版本；
 5. 冻结流式请求/响应总量、单 chunk、未消费 tee 分支和断开后的共同资源行为。
+
+## Reference portability evidence
+
+2026-09-04 的 Linux、macOS 与 Windows 同源执行结果保存在 [`streams-websockets-background-work-platforms-2026-09-04.json`](../../conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json)。三套环境均通过 13 个 Draft case，并生成同一 capability-lock identity。该记录只证明 reference harness 的可移植性，不是 Cloudflare、EdgeOne 或 Deislet runtime 的合规证据。

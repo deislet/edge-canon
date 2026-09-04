@@ -59,7 +59,10 @@
     {
       "id": "streams-websockets-background-work", "definitionStatus": "draft",
       "draftPath": "standard/requirements/streams-websockets-background-work.zh.md",
-      "evidencePaths": ["standard/evidence/streams-websockets-background-work-baseline.zh.md"],
+      "evidencePaths": [
+        "standard/evidence/streams-websockets-background-work-baseline.zh.md",
+        "conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json"
+      ],
       "dimensions": {
         "api": {"status": "draft", "clauseIds": ["EC-STREAM-API-001", "EC-STREAM-API-002", "EC-STREAM-API-003", "EC-STREAM-API-004", "EC-STREAM-API-005", "EC-STREAM-API-006", "EC-STREAM-API-007"]},
         "errors": {"status": "draft", "clauseIds": ["EC-STREAM-ERR-001", "EC-STREAM-ERR-002", "EC-STREAM-ERR-003", "EC-STREAM-ERR-004"]},
