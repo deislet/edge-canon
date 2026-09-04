@@ -45,9 +45,17 @@ test("EC-STREAM capability lock rejects drift", () => {
 });
 
 test("EC-STREAM source policy rejects provider-only surfaces", () => {
-  assert.equal(captureSourceFailure("new WebSocket('wss://example.com')"), "EC_STREAM_WEBSOCKET_NONPORTABLE");
-  assert.equal(captureSourceFailure("export default handler", ["new WebSocketPair()"]), "EC_STREAM_WEBSOCKET_NONPORTABLE");
-  assert.equal(captureSourceFailure("new TransformStream({ transform() {} })"), "EC_STREAM_TRANSFORMER_NONPORTABLE");
+  const empty = { providerGlobals: [], directStreamConstructors: [], transformersWithArguments: 0 };
+  assert.equal(captureSourceFailure("new WebSocket('wss://example.com')", [], { ...empty, providerGlobals: ["WebSocket"] }), "EC_STREAM_WEBSOCKET_NONPORTABLE");
+  assert.equal(captureSourceFailure("export default handler", ["new WebSocketPair()"], { ...empty, providerGlobals: ["WebSocketPair"] }), "EC_STREAM_WEBSOCKET_NONPORTABLE");
+  assert.equal(captureSourceFailure("new TransformStream({ transform() {} })", [], { ...empty, transformersWithArguments: 1 }), "EC_STREAM_TRANSFORMER_NONPORTABLE");
+});
+
+test("EC-STREAM source policy consumes semantic analysis instead of identifier text", () => {
+  const empty = { providerGlobals: [], directStreamConstructors: [], transformersWithArguments: 0 };
+  const harmless = "type WebSocket = string; class WebSocketPair {}; const text = 'new WebSocket()';";
+  assert.equal(captureSourceFailure(harmless, [], empty), null);
+  assert.equal(captureSourceFailure("export default handler", [], undefined), "EC_STREAM_SOURCE_INVALID");
 });
 
 test("EC-STREAM waitUntil rejects work registered after close without executing its thenable", async () => {

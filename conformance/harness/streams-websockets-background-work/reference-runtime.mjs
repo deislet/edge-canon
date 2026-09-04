@@ -85,15 +85,23 @@ export function createIdentityTransform() {
   });
 }
 
-export function validateApplicationSource(source, dependencySources = []) {
+export function validateApplicationSource(source, dependencySources = [], analysis) {
   if (typeof source !== "string" || !Array.isArray(dependencySources) || dependencySources.some((item) => typeof item !== "string")) {
     reject("EC_STREAM_SOURCE_INVALID", "source and dependencies must be strings");
   }
-  for (const value of [source, ...dependencySources]) {
-    if (/\b(?:WebSocketPair|WebSocket)\b/.test(value)) reject("EC_STREAM_WEBSOCKET_NONPORTABLE", "WebSocket is not in the portable reference intersection");
-    if (/new\s+(?:ReadableStream|WritableStream)\s*\(/.test(value)) reject("EC_STREAM_DIRECT_CONSTRUCTOR_NONPORTABLE", "direct stream constructors are not portable in v1");
-    if (/new\s+TransformStream\s*\(\s*[^)\s]/.test(value)) reject("EC_STREAM_TRANSFORMER_NONPORTABLE", "TransformStream arguments are not portable in v1");
+  exactKeys(analysis, ["providerGlobals", "directStreamConstructors", "transformersWithArguments"], "EC_STREAM_SOURCE_INVALID");
+  if (!Array.isArray(analysis.providerGlobals) || analysis.providerGlobals.some((name) => !["WebSocket", "WebSocketPair"].includes(name))) {
+    reject("EC_STREAM_SOURCE_INVALID", "providerGlobals must contain only scope-resolved WebSocket global names");
   }
+  if (!Array.isArray(analysis.directStreamConstructors) || analysis.directStreamConstructors.some((name) => !["ReadableStream", "WritableStream"].includes(name))) {
+    reject("EC_STREAM_SOURCE_INVALID", "directStreamConstructors contains an unknown constructor");
+  }
+  if (!Number.isSafeInteger(analysis.transformersWithArguments) || analysis.transformersWithArguments < 0) {
+    reject("EC_STREAM_SOURCE_INVALID", "transformersWithArguments must be a non-negative integer");
+  }
+  if (analysis.providerGlobals.length > 0) reject("EC_STREAM_WEBSOCKET_NONPORTABLE", "WebSocket is not in the portable reference intersection");
+  if (analysis.directStreamConstructors.length > 0) reject("EC_STREAM_DIRECT_CONSTRUCTOR_NONPORTABLE", "direct stream constructors are not portable in v1");
+  if (analysis.transformersWithArguments > 0) reject("EC_STREAM_TRANSFORMER_NONPORTABLE", "TransformStream arguments are not portable in v1");
   return { applicationGlobals: ["TransformStream"], providerGlobals: [] };
 }
 
@@ -147,9 +155,9 @@ export function captureContractFailure(value, expectedStandardVersion) {
   }
 }
 
-export function captureSourceFailure(source, dependencySources = []) {
+export function captureSourceFailure(source, dependencySources = [], analysis) {
   try {
-    validateApplicationSource(source, dependencySources);
+    validateApplicationSource(source, dependencySources, analysis);
     return null;
   } catch (error) {
     if (!(error instanceof StreamContractError)) throw error;

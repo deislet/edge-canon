@@ -300,13 +300,14 @@ export async function runSuite(options = {}) {
     await readerFailure;
     chunkFailures.push({ variant, ...result });
   }
+  const emptyAnalysis = { providerGlobals: [], directStreamConstructors: [], transformersWithArguments: 0 };
   const sourceFailures = [
-    { variant: "websocket", code: captureSourceFailure("const socket = new WebSocket(url);") },
-    { variant: "websocket-pair-dependency", code: captureSourceFailure("export default handler", ["new WebSocketPair()"] ) },
-    { variant: "readable-constructor", code: captureSourceFailure("new ReadableStream({ start() {} })") },
-    { variant: "transformer", code: captureSourceFailure("new TransformStream({ transform() {} })") },
+    { variant: "websocket", code: captureSourceFailure("const socket = new WebSocket(url);", [], { ...emptyAnalysis, providerGlobals: ["WebSocket"] }) },
+    { variant: "websocket-pair-dependency", code: captureSourceFailure("export default handler", ["new WebSocketPair()"], { ...emptyAnalysis, providerGlobals: ["WebSocketPair"] }) },
+    { variant: "readable-constructor", code: captureSourceFailure("new ReadableStream({ start() {} })", [], { ...emptyAnalysis, directStreamConstructors: ["ReadableStream"] }) },
+    { variant: "transformer", code: captureSourceFailure("new TransformStream({ transform() {} })", [], { ...emptyAnalysis, transformersWithArguments: 1 }) },
   ];
-  const allowedSurface = validateApplicationSource("const { readable, writable } = new TransformStream(); export { readable, writable };");
+  const allowedSurface = validateApplicationSource("const { readable, writable } = new TransformStream(); export { readable, writable };", [], emptyAnalysis);
   cases.push(record(CASE_IDS[10], { chunkFailures, sourceFailures, allowedSurface }));
 
   let attempts = 0;

@@ -18,7 +18,7 @@ WebSocket 的结论同样属于标准：截至基线日期，Cloudflare 能在 W
 - **EC-STREAM-API-004**：标准 stream body 的应用可写 chunk 只接受 `Uint8Array`；读取必须以 `{value: Uint8Array, done: false}` 返回每个 chunk，并最终返回 `{value: undefined, done: true}`。字符串、对象和供应商专有 blob chunk 不能成为隐式共同语义。
 - **EC-STREAM-API-005**：Request/Response 必须接受标准 readable byte stream body；handler 返回 Response 后，body 可以继续按产生顺序传输，无需先完整缓冲。HEAD/null-body 约束仍由 Web Platform APIs 与 Fetch 语义决定。
 - **EC-STREAM-API-006**：调用 context 的 `waitUntil(promise)` 必须登记 Promise 为该 invocation 的后台工作；允许多次登记，所有已登记任务按独立 all-settled 集合跟踪。它不返回任务结果，也不提供持久队列语义。
-- **EC-STREAM-API-007**：本版本不提供应用可用的 `WebSocket`、`WebSocketPair`、server accept 或 provider WebSocket handle。源码、canonical artifact 或依赖图一旦引用这些 API，必须以 `EC_STREAM_WEBSOCKET_NONPORTABLE` 在部署前失败。
+- **EC-STREAM-API-007**：本版本不提供应用可用的 `WebSocket`、`WebSocketPair`、server accept 或 provider WebSocket handle。源码、canonical artifact 或依赖图一旦引用这些 API，必须以 `EC_STREAM_WEBSOCKET_NONPORTABLE` 在部署前失败。“引用”以解析 TypeScript 类型和词法作用域后的运行时语义为准：未绑定的同名全局、`globalThis` / `self` 的同名静态属性及其解构读取属于引用；注释、字符串、擦除后的类型以及本地定义或导入的同名 binding 不属于引用。packager 必须把 AST 分析结果交给策略验证器，不能以源码文本正则替代作用域解析。
 
 ## 2. 错误
 
