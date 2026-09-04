@@ -104,6 +104,18 @@ export default function handler(context) {
     }
     case "/capture-wait-until":
       closedWaitUntil = context.waitUntil.bind(context);
+      context.waitUntil(new Promise((resolve) => {
+        setTimeout(() => {
+          try {
+            closedWaitUntil(Promise.resolve("late-registration"));
+            context.env.EVIDENCE.record("late-wait-until:none:none").finally(resolve);
+          } catch (error) {
+            context.env.EVIDENCE.record(
+              `late-wait-until:${error?.name ?? typeof error}:${error?.code ?? "none"}`,
+            ).finally(resolve);
+          }
+        }, 20);
+      }));
       return new Response("wait-until-captured");
     case "/late-wait-until": {
       if (!closedWaitUntil) return new Response("no prior lifecycle", { status: 409 });

@@ -210,18 +210,17 @@ for (const provider of providers) {
 
       const captured = await invoke("/capture-wait-until");
       assert.equal(await captured.response.text(), "wait-until-captured");
-      const late = await invoke("/late-wait-until");
-      assert.deepEqual(await late.response.json(), {
-        exceptionType: "TypeError",
-        failureCode: "EC_WAIT_UNTIL_CLOSED",
-      });
+      await Promise.all(captured.background);
       assert.ok(evidence.some((entry) =>
         entry.invocationId === captured.invocationId && entry.failureCode === "EC_WAIT_UNTIL_CLOSED"));
+      assert.ok(evidence.some((entry) =>
+        entry.invocationId === captured.invocationId
+          && entry.marker === "late-wait-until:TypeError:EC_WAIT_UNTIL_CLOSED"));
       assert.equal(
         evidence.find((entry) =>
           entry.invocationId === captured.invocationId && entry.event === "lifecycle-closed")
           .registeredBackgroundTaskCount,
-        0,
+        1,
       );
 
       const originalFetch = globalThis.fetch;

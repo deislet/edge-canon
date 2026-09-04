@@ -9,7 +9,8 @@
     "calibrationPath",
     "oraclePath", "observationSchema", "providerProtocol", "providerAdapterSchema",
     "providerAdapterRequestSchema", "providerAdapterResultSchema", "canonicalArtifactSchema",
-    "derivedArtifactSchema", "providerDeploymentStateSchema", "canonicalArtifactBuilder", "coveredCaseIds",
+    "derivedArtifactSchema", "providerDeploymentStateSchema", "providerInvocationStateSchema",
+    "canonicalArtifactBuilder", "coveredCaseIds",
     "providerAdapterPaths", "providerAdapters"
   ],
   "properties": {
@@ -33,6 +34,7 @@
     "canonicalArtifactSchema": {"type": "string", "minLength": 1},
     "derivedArtifactSchema": {"type": "string", "minLength": 1},
     "providerDeploymentStateSchema": {"type": "string", "minLength": 1},
+    "providerInvocationStateSchema": {"type": "string", "minLength": 1},
     "canonicalArtifactBuilder": {"type": "string", "minLength": 1},
     "coveredCaseIds": {
       "type": "array", "minItems": 1, "uniqueItems": true,

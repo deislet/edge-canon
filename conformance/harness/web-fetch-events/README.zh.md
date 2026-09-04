@@ -1,6 +1,6 @@
 # EC-WEB 可执行 harness 草案
 
-本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight` 和确定性 `prepare`，尚无任何一个完成真实部署取证，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
+本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight`、确定性 `prepare`、身份绑定 `deploy` 与统一的 at-most-once `invoke`，Cloudflare 和 Deislet 还实现了可核验 `cleanup`。`collect`、全流程 `run`、EdgeOne 公开清理路径与真实账户证据仍未完成，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
 
 ## 固定边界
 

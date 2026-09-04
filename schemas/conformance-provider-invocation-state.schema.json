@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/conformance-provider-invocation-state.schema.json",
+  "title": "Edge Canon provider invocation state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "stateFormat", "operationId", "backendId", "standardVersion", "suiteId",
+    "canonicalArtifactSha256", "derivedArtifactSha256", "deploymentIdentitySha256", "planSha256",
+    "status", "currentStep", "completedSteps", "rawEvidenceFile", "rawEvidenceSha256",
+    "createdAt", "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "stateFormat": {"const": "edge-canon.provider-invocation-state/v1"},
+    "operationId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "backendId": {"enum": ["deislet", "cloudflare-workers-pages", "tencent-edgeone-makers"]},
+    "standardVersion": {"type": "string", "pattern": "^edge-canon\\.next@[0-9a-f]{40}$"},
+    "suiteId": {"const": "EC-WEB"},
+    "canonicalArtifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "derivedArtifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "deploymentIdentitySha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "planSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"enum": ["invoking", "invoked", "invoke-indeterminate"]},
+    "currentStep": {"type": ["string", "null"], "maxLength": 128},
+    "completedSteps": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 128}
+    },
+    "rawEvidenceFile": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$", "maxLength": 255},
+    "rawEvidenceSha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "updatedAt": {"type": "string", "format": "date-time"}
+  }
+}

@@ -212,7 +212,7 @@ function readOperationLock(lockPath) {
   return { value, inode: status.ino };
 }
 
-function acquireOperationLock(statePath) {
+export function acquireOperationLock(statePath) {
   const lockPath = `${statePath}.lock`;
   const hostname = os.hostname();
   const nonce = crypto.randomBytes(16).toString("hex");
@@ -258,6 +258,14 @@ function acquireOperationLock(statePath) {
     }
   }
   throw new ProviderDeploymentError("EC_ADAPTER_OPERATION_BUSY", "operation lock could not be acquired");
+}
+
+export function loadProviderDeployment({ request, manifest }) {
+  const artifact = validatePreparedProviderArtifact({ request, manifest });
+  const filePath = deploymentStatePath(request, manifest);
+  const state = readState(filePath, request, manifest, artifact);
+  fail(state, "EC_ADAPTER_STATE_MISSING", "operation has no deployment state");
+  return { artifact, filePath, state };
 }
 
 function removeTemporaryOutput(outputPath) {

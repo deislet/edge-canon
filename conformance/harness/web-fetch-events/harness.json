@@ -18,6 +18,7 @@
   "canonicalArtifactSchema": "schemas/conformance-canonical-artifact.schema.json",
   "derivedArtifactSchema": "schemas/conformance-derived-artifact.schema.json",
   "providerDeploymentStateSchema": "schemas/conformance-provider-deployment-state.schema.json",
+  "providerInvocationStateSchema": "schemas/conformance-provider-invocation-state.schema.json",
   "canonicalArtifactBuilder": "conformance/harness/web-fetch-events/canonical-artifact.mjs",
   "coveredCaseIds": [
     "EC-WEB-T001",

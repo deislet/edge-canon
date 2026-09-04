@@ -99,6 +99,35 @@ version 和 URL。调用供应商工具前必须先记录 `deploying`；超时�
 在 Control 删除回执确认全部节点卸载成功后才视为完成。EdgeOne CLI 1.6.32 和已确认的公开 API
 尚未提供非交互项目删除契约，因此其 cleanup 必须继续标为 pending，不能调用未公开接口冒充实现。
 
+`invoke` 与部署、清理共用同一把 operation 锁，并在第一个被测 HTTP 请求前建立符合
+`schemas/conformance-provider-invocation-state.schema.json` 的 `0600` 状态。状态绑定部署 identity
+摘要、两级产物摘要、精确标准版本及固定调用计划。每个步骤先把 `currentStep` 原子落盘，再发请求；
+有界原始交换随后追加到 `0600` NDJSON 并 `fsync`，最后才推进完成前缀。只要进程在请求发出后未能
+证明完整响应，状态就进入 `invoke-indeterminate`；相同 operation 不得重发这个或后续 handler 请求。
+完成态同时固定整份 NDJSON 的 SHA-256，重复调用只复核并返回原证据。
+
+调用目标只能来自已核验 deployment state，不能由调用者另给 URL。Deislet 额外用同一 state 中的
+项目名及环境产生平台路由头；测试令牌和 invocation identity 是 adapter 传输头，wrapper 在构造应用
+`Request` 前删除。每个响应采用覆盖 headers 与 body 的总 deadline、大小上限和手动 redirect 策略；
+原始证据只保存允许列出的响应头、body 摘要/有界字节和读取片段长度，不保存请求令牌。
+
+T012 必须是新部署收到的首个 handler 请求。T009 不得假设连续请求落在同一 isolate：fixture 在
+一次请求内先登记保活任务，响应生命周期关闭后由该任务尝试迟到注册，并以同一 invocation 的失败码
+和 marker 证明同步 `TypeError`。T007 记录网络读取片段但最终按协议哨兵重建应用 chunk，不能把 HTTP
+传输分片误当 `ReadableStream.enqueue` 边界。T010 读取第一段后主动 cancel，再以独立 invocation
+执行 probe。
+
+受控 origin 和连接 barrier 共用以下 provider-neutral 管理路径；管理请求必须携带同一一次性
+`EDGE_CANON_EVIDENCE_TOKEN`，应用请求不知道管理凭证：
+
+- `POST /__edge-canon/control/origin/reset` 与 `GET /__edge-canon/control/origin/status`；
+- `POST /__edge-canon/control/barrier/reset`、`GET /__edge-canon/control/barrier/status` 与
+  `POST /__edge-canon/control/barrier/release`。
+
+origin status 至少返回 `totalRequestCount`；barrier status 返回互不重复、范围为 0–6 的
+`waitingSlots`、`startedSlots`、`cancelledSlots`。T014 只有在独立控制面已经观察到至少六条连接等待
+响应头后才释放 barrier。管理面或网络结果不确定同样使本次 invoke 不可重放。
+
 ## 证据和完成条件
 
 `evidenceDirectory` 必须是本次 operation 独占目录，证据文件使用 `0600`，引用只能指向该目录内的不可变文件或访问受控的远端记录。adapter 输出原始 observation，不增加 `pass`、`compliant` 或 semantic waiver。

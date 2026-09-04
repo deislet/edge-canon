@@ -119,16 +119,19 @@ test("fixture registers independent background tasks including one rejection", a
 test("fixture calls a captured waitUntil after its lifecycle is closed", async () => {
   let closed = false;
   const capture = context("/capture-wait-until");
-  capture.value.waitUntil = () => {
-    if (closed) throw new TypeError("EC_WAIT_UNTIL_CLOSED");
+  const tasks = [];
+  capture.value.waitUntil = (promise) => {
+    if (closed) {
+      const error = new TypeError("waitUntil closed");
+      Object.defineProperty(error, "code", { value: "EC_WAIT_UNTIL_CLOSED" });
+      throw error;
+    }
+    tasks.push(Promise.resolve(promise));
   };
   assert.equal(await handler(capture.value).text(), "wait-until-captured");
   closed = true;
-  const response = handler(context("/late-wait-until").value);
-  assert.deepEqual(await response.json(), {
-    exceptionType: "TypeError",
-    failureCode: null,
-  });
+  await Promise.all(tasks);
+  assert.ok(capture.background.includes("late-wait-until:TypeError:EC_WAIT_UNTIL_CLOSED"));
 });
 
 test("fixture exposes the standard calibrated CPU workload", async () => {

@@ -134,6 +134,6 @@ test("Cloudflare preflight verifies the package lock and keeps credentials out o
   request.operation = "invoke";
   await assert.rejects(
     runAdapter({ manifestPath, request, hostEnvironment: {} }),
-    (error) => error instanceof AdapterError && error.code === "EC_ADAPTER_OPERATION_UNIMPLEMENTED",
+    (error) => error instanceof AdapterError && error.code === "EC_ADAPTER_CONFIGURATION_MISSING",
   );
 });

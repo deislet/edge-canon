@@ -16,6 +16,10 @@ import {
   ProviderDeploymentError,
   validateDeploymentConfiguration,
 } from "./provider-deployment.mjs";
+import {
+  invokeProvider,
+  ProviderInvocationError,
+} from "./provider-invocation.mjs";
 
 const PROTOCOL_VERSION = "edge-canon.provider-adapter/v1";
 const OPERATIONS = new Set(["inspect", "preflight", "prepare", "deploy", "invoke", "collect", "cleanup", "run"]);
@@ -190,6 +194,9 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
     manifest.credentialEnvironment[request.operation],
     request.operation !== "preflight",
   );
+  if (request.operation === "invoke") {
+    return invokeProvider({ request, manifest, environment });
+  }
   const tool = manifest.tool.distribution === "npm"
     ? verifyNpmTool(manifest, request.configuration)
     : verifyWorkspaceTool(manifest, request.configuration);
@@ -229,7 +236,7 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
 }
 
 function failureResult(request, manifest, error) {
-  const code = error instanceof AdapterError || error instanceof AdapterProcessError || error instanceof ProviderArtifactError || error instanceof ProviderDeploymentError
+  const code = error instanceof AdapterError || error instanceof AdapterProcessError || error instanceof ProviderArtifactError || error instanceof ProviderDeploymentError || error instanceof ProviderInvocationError
     ? error.code
     : "EC_ADAPTER_INTERNAL";
   return {

@@ -28,7 +28,7 @@
     "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
     "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
     "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
-    "invoke": [],
+    "invoke": ["derivedDirectory", "projectName", "compatibilityDate", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
     "collect": [],
     "cleanup": [],
     "run": []
@@ -38,27 +38,27 @@
     "preflight": {"status": "implemented", "remoteSideEffects": false},
     "prepare": {"status": "implemented", "remoteSideEffects": false},
     "deploy": {"status": "implemented", "remoteSideEffects": true},
-    "invoke": {"status": "pending", "remoteSideEffects": true},
+    "invoke": {"status": "implemented", "remoteSideEffects": true},
     "collect": {"status": "pending", "remoteSideEffects": false},
     "cleanup": {"status": "pending", "remoteSideEffects": true},
     "run": {"status": "pending", "remoteSideEffects": true}
   },
   "caseCoverage": [
-    {"id": "EC-WEB-T001", "status": "pending", "blockers": ["deploy, invoke and evidence collection are not implemented"]},
-    {"id": "EC-WEB-T002", "status": "pending", "blockers": ["background evidence sink and dynamic route driver are not implemented"]},
-    {"id": "EC-WEB-T003", "status": "pending", "blockers": ["multi-method invocation driver is not implemented"]},
-    {"id": "EC-WEB-T004", "status": "pending", "blockers": ["structured runtime failure evidence is not implemented"]},
-    {"id": "EC-WEB-T005", "status": "pending", "blockers": ["structured invalid-result evidence is not implemented"]},
-    {"id": "EC-WEB-T006", "status": "pending", "blockers": ["concurrent invocation driver is not implemented"]},
-    {"id": "EC-WEB-T007", "status": "pending", "blockers": ["stream lifecycle capture is not implemented"]},
-    {"id": "EC-WEB-T008", "status": "pending", "blockers": ["background settlement evidence is not implemented"]},
-    {"id": "EC-WEB-T009", "status": "pending", "blockers": ["closed lifecycle evidence is not implemented"]},
-    {"id": "EC-WEB-T010", "status": "pending", "blockers": ["disconnect-capable invocation driver is not implemented"]},
-    {"id": "EC-WEB-T011", "status": "pending", "blockers": ["deployment identity is not yet linked to the verified canonical and derived artifact lineage"]},
-    {"id": "EC-WEB-T012", "status": "pending", "blockers": ["EdgeOne CPU measurement collection is not implemented"]},
-    {"id": "EC-WEB-T013", "status": "pending", "blockers": ["controlled redirect origin evidence is not implemented"]},
-    {"id": "EC-WEB-T014", "status": "pending", "blockers": ["controlled connection barrier evidence is not implemented"]},
-    {"id": "EC-WEB-T015", "status": "pending", "blockers": ["one-million-octet request driver and body evidence are not implemented"]}
+    {"id": "EC-WEB-T001", "status": "pending", "blockers": ["observation collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T002", "status": "pending", "blockers": ["authenticated sink collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T003", "status": "pending", "blockers": ["observation collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T004", "status": "pending", "blockers": ["structured failure sink collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T005", "status": "pending", "blockers": ["structured failure sink collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T006", "status": "pending", "blockers": ["concurrency observation collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T007", "status": "pending", "blockers": ["stream lifecycle sink collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T008", "status": "pending", "blockers": ["background settlement sink collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T009", "status": "pending", "blockers": ["late-registration sink collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T010", "status": "pending", "blockers": ["disconnect background sink collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T011", "status": "pending", "blockers": ["oracle digest and backend implementation version collection remain pending"]},
+    {"id": "EC-WEB-T012", "status": "pending", "blockers": ["a documented backend CPU measurement source and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T013", "status": "pending", "blockers": ["authenticated controlled-origin service, collection and live evidence remain pending"]},
+    {"id": "EC-WEB-T014", "status": "pending", "blockers": ["authenticated connection-barrier service, collection and live evidence remain pending"]},
+    {"id": "EC-WEB-T015", "status": "pending", "blockers": ["invocation-count sink collection and real-provider evidence remain pending"]}
   ],
   "security": {
     "shell": false,
@@ -68,7 +68,7 @@
     "cleanupAfterRunFailure": true
   },
   "limitations": [
-    "Inspect, preflight, deterministic prepare and collision-checked deploy are executable; this manifest is not conformance evidence.",
+    "Inspect, preflight, deterministic prepare, collision-checked deploy and at-most-once invocation are executable; collection remains pending and this manifest is not conformance evidence.",
     "EdgeOne CLI 1.6.32 publishes no non-interactive project deletion command, and no public deletion API contract has been identified; cleanup remains pending.",
     "No EdgeOne test account or exact deployment observation is recorded."
   ]
