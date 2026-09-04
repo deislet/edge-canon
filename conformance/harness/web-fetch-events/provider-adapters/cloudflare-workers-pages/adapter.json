@@ -39,7 +39,8 @@
     {"id": "EC-WEB-T011", "status": "pending", "blockers": ["canonical and derived artifact lineage is not implemented"]},
     {"id": "EC-WEB-T012", "status": "pending", "blockers": ["Cloudflare CPU measurement collection is not implemented"]},
     {"id": "EC-WEB-T013", "status": "pending", "blockers": ["controlled redirect origin evidence is not implemented"]},
-    {"id": "EC-WEB-T014", "status": "pending", "blockers": ["controlled connection barrier evidence is not implemented"]}
+    {"id": "EC-WEB-T014", "status": "pending", "blockers": ["controlled connection barrier evidence is not implemented"]},
+    {"id": "EC-WEB-T015", "status": "pending", "blockers": ["one-million-octet request driver and body evidence are not implemented"]}
   ],
   "security": {
     "shell": false,

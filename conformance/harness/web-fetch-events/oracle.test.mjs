@@ -26,6 +26,7 @@ test("the complete draft sample passes", () => {
       "EC-WEB-T012",
       "EC-WEB-T013",
       "EC-WEB-T014",
+      "EC-WEB-T015",
     ],
   });
 });
@@ -66,4 +67,10 @@ test("a provider cannot hide cross-request marker mixing", () => {
   const tampered = structuredClone(sample);
   tampered.cases[5].data.responses[0].responseMarker = "request-1";
   assert.throws(() => verifyDocument(tampered), /mixed request markers/);
+});
+
+test("a provider cannot truncate the one-million-octet request body", () => {
+  const tampered = structuredClone(sample);
+  tampered.cases[14].data.receivedByteLength -= 1;
+  assert.throws(() => verifyDocument(tampered), /truncated or expanded/);
 });

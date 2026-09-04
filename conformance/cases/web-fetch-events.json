@@ -117,6 +117,14 @@
       "clauseIds": ["EC-WEB-LIMIT-003"],
       "fixture": {"scenario": "六个受控目标在 barrier 后才发送响应头，第七个请求同时登记但不作为最低保证", "requirements": ["six connection barrier", "connection start evidence", "seventh probe request"]},
       "oracle": {"observations": ["connections waiting before barrier", "request cancellation", "response markers"], "assertions": ["barrier 释放前至少六个不同外连已在等待响应头", "前六个没有被第七个取消、改写或抢占", "测试不要求第七个立即连接"]}
+    },
+    {
+      "id": "EC-WEB-T015",
+      "title": "一百万 octet 请求 body 完整进入 handler",
+      "kind": "boundary",
+      "clauseIds": ["EC-WEB-LIMIT-004"],
+      "fixture": {"scenario": "发送 Content-Length 为 1000000、无 Content-Encoding 且内容为固定二进制模式的请求", "requirements": ["exact one-million-octet body", "identity content coding", "known content length"]},
+      "oracle": {"observations": ["handler invocation count", "received body byte length", "first and last octet", "resource failure code"], "assertions": ["请求进入 handler 恰好一次", "完整读取 1000000 octet 且首尾标记未改变", "保证范围内不产生 body size failure"]}
     }
   ]
 }

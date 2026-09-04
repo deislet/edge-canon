@@ -16,6 +16,7 @@ const EXPECTED_CASES = [
   "EC-WEB-T012",
   "EC-WEB-T013",
   "EC-WEB-T014",
+  "EC-WEB-T015",
 ];
 const ERROR_BODY = "Internal Server Error\n";
 const SHA256 = /^[0-9a-f]{64}$/;
@@ -293,6 +294,34 @@ const VERIFIERS = {
       ["started-before-barrier", "queued-until-release"].includes(data.seventhProbeOutcome),
       "T014 seventh request outcome is invalid",
     );
+  },
+  "EC-WEB-T015"(data) {
+    exactKeys(
+      data,
+      [
+        "contentEncoding",
+        "declaredContentLength",
+        "firstOctet",
+        "handlerInvocationCount",
+        "lastOctet",
+        "receivedByteLength",
+        "receivedSha256",
+        "resourceFailureCode",
+        "status",
+      ],
+      "T015 data",
+    );
+    requireValue(data.status === 200, "T015 request did not reach the handler successfully");
+    requireValue(data.handlerInvocationCount === 1, "T015 handler invocation count differs");
+    requireValue(data.contentEncoding === null, "T015 must use identity content coding");
+    requireValue(data.declaredContentLength === "1000000", "T015 declared content length differs");
+    requireValue(data.receivedByteLength === 1_000_000, "T015 request body was truncated or expanded");
+    requireValue(data.firstOctet === 0 && data.lastOctet === 15, "T015 request body endpoint markers differ");
+    requireValue(
+      data.receivedSha256 === "2c030d49ec131bfbbb446ad21e7a2f12cdb4f2f4f3fda3ac709dd2e68a4646c7",
+      "T015 request body content or order differs",
+    );
+    requireValue(data.resourceFailureCode === null, "T015 failed within the guaranteed request body size");
   },
 };
 

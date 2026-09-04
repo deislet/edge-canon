@@ -2,7 +2,7 @@
 
 [`registry.json`](registry.json) 是后端实现证据与认证状态的唯一机器可读入口。平台矩阵可以解释能力差异，但不能自行产生合规或支持声明。
 
-[`kit.json`](kit.json) 是标准测试集索引。它把能力族连接到 provider-independent 用例；当前只有 `EC-WEB` 存在草案用例，并已有覆盖 T001–T014 的统一 fixture、原始 observation 格式和可执行 oracle。三个一等后端已有受 schema 和治理约束的 Draft manifest，以及可执行的安全 `inspect`/`preflight`，但准备、真实部署、调用、取证和清理仍未实现，完成 adapter 列表因此仍为空。其余 14 个能力族也尚未执行化，所以 harness 只是 `draft`。机器可读用例、oracle 自测和工具 preflight 不是后端执行证据，不能据此提高任何后端的成熟度或认证状态。
+[`kit.json`](kit.json) 是标准测试集索引。它把能力族连接到 provider-independent 用例；当前只有 `EC-WEB` 存在草案用例，并已有覆盖 T001–T015 的统一 fixture、原始 observation 格式和可执行 oracle。三个一等后端已有受 schema 和治理约束的 Draft manifest，以及可执行的安全 `inspect`/`preflight`，但准备、真实部署、调用、取证和清理仍未实现，完成 adapter 列表因此仍为空。其余 14 个能力族也尚未执行化，所以 harness 只是 `draft`。机器可读用例、oracle 自测和工具 preflight 不是后端执行证据，不能据此提高任何后端的成熟度或认证状态。
 
 证据成熟度依次为：
 

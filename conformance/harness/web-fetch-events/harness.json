@@ -29,7 +29,8 @@
     "EC-WEB-T011",
     "EC-WEB-T012",
     "EC-WEB-T013",
-    "EC-WEB-T014"
+    "EC-WEB-T014",
+    "EC-WEB-T015"
   ],
   "providerAdapterPaths": [
     "conformance/harness/web-fetch-events/provider-adapters/deislet/adapter.json",

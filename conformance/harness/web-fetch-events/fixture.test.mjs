@@ -180,3 +180,23 @@ test("fixture opens seven connection probes and preserves every marker", async (
     globalThis.fetch = originalFetch;
   }
 });
+
+test("fixture reads the exact one-million-octet request body", async () => {
+  const body = new Uint8Array(1_000_000);
+  for (let index = 0; index < body.length; index += 1) body[index] = index % 251;
+  const call = context("/request-body-limit", {
+    method: "POST",
+    headers: { "content-length": "1000000" },
+    body,
+  });
+  const response = await handler(call.value);
+  assert.deepEqual(await response.json(), {
+    contentEncoding: null,
+    declaredContentLength: "1000000",
+    firstOctet: 0,
+    lastOctet: 15,
+    receivedByteLength: 1_000_000,
+    receivedSha256: "2c030d49ec131bfbbb446ad21e7a2f12cdb4f2f4f3fda3ac709dd2e68a4646c7",
+  });
+  assert.deepEqual(call.background, ["request-body-limit-invoked"]);
+});

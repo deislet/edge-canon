@@ -24,7 +24,7 @@
         "errors": {"status": "draft", "clauseIds": ["EC-WEB-ERR-001", "EC-WEB-ERR-002", "EC-WEB-ERR-003"]},
         "concurrency-consistency-ordering": {"status": "draft", "clauseIds": ["EC-WEB-CON-001", "EC-WEB-CON-002"]},
         "lifecycle": {"status": "draft", "clauseIds": ["EC-WEB-LIFE-001", "EC-WEB-LIFE-002", "EC-WEB-LIFE-003", "EC-WEB-LIFE-004"]},
-        "minimum-resource-guarantees": {"status": "draft", "clauseIds": ["EC-WEB-LIMIT-001", "EC-WEB-LIMIT-002", "EC-WEB-LIMIT-003"]},
+        "minimum-resource-guarantees": {"status": "draft", "clauseIds": ["EC-WEB-LIMIT-001", "EC-WEB-LIMIT-002", "EC-WEB-LIMIT-003", "EC-WEB-LIMIT-004"]},
         "security-isolation": {"status": "draft", "clauseIds": ["EC-WEB-SEC-001", "EC-WEB-SEC-002"]},
         "failure-recovery": {"status": "draft", "clauseIds": ["EC-WEB-FAIL-001", "EC-WEB-FAIL-002"]},
         "upgrade-migration": {"status": "draft", "clauseIds": ["EC-WEB-UPG-001", "EC-WEB-UPG-002"]}

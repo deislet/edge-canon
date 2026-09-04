@@ -1,6 +1,6 @@
 # EC-WEB 可执行 harness 草案
 
-本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T014`，状态仍是 Draft；三个 adapter 只有受约束的 manifest 和 `inspect`/`preflight`，尚无任何一个完成真实部署取证，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
+本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 只有受约束的 manifest 和 `inspect`/`preflight`，尚无任何一个完成真实部署取证，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
 
 ## 固定边界
 
@@ -16,6 +16,6 @@
 5. `artifactSha256` 必须是 adapter 实际部署的 canonical artifact 摘要；`backend.standardVersion` 必须是 `edge-canon.next@<40 位 source commit>`，不接受浮动的 `next` 或 `latest`。`evidenceRefs` 指向构建、部署、调用或日志原件。
 6. adapter 无法读取 failure code、origin hit count 等观察时，该用例失败或保持未执行，不能用供应商错误页文本猜测，也不能省略字段后宣称通过。
 
-T012 先在 adapter 所在执行机运行 `node conformance/harness/web-fetch-events/calibrate-cpu.mjs`，把输出的 iterations 注入 `CPU_ITERATIONS`；`measuredCpuMilliseconds` 必须来自后端自身 CPU 计量，adapter 还须保存校准工作负载摘要和 fresh execution environment 证据，wall time 不可代替。T013 固定为 48 个直接 fetch 加一个发生一次跳转的 fetch，即 49 次 API 调用、50 个计入预算的子请求。T014 的受控 origin 必须在放行响应头前保存已有连接数，不能从最终成功数倒推并发。
+T012 先在 adapter 所在执行机运行 `node conformance/harness/web-fetch-events/calibrate-cpu.mjs`，把输出的 iterations 注入 `CPU_ITERATIONS`；`measuredCpuMilliseconds` 必须来自后端自身 CPU 计量，adapter 还须保存校准工作负载摘要和 fresh execution environment 证据，wall time 不可代替。T013 固定为 48 个直接 fetch 加一个发生一次跳转的 fetch，即 49 次 API 调用、50 个计入预算的子请求。T014 的受控 origin 必须在放行响应头前保存已有连接数，不能从最终成功数倒推并发。T015 发送第 `i` 个 octet 为 `i % 251` 的 1,000,000-octet body，固定 SHA-256 为 `2c030d49ec131bfbbb446ad21e7a2f12cdb4f2f4f3fda3ac709dd2e68a4646c7`；请求不得携带 `Content-Encoding`，并必须声明准确的 `Content-Length: 1000000`。
 
 `sample-pass.json` 只用于 oracle 自测，不是任何后端的运行证据。后续仍必须为三个一等后端各自实现 adapter 并真实运行全部用例，才能把 harness 标为 Complete。

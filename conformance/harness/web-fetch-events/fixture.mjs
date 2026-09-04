@@ -156,6 +156,24 @@ export default function handler(context) {
         return json({ markers });
       });
     }
+    case "/request-body-limit":
+      return (async () => {
+        await context.env.EVIDENCE.record("request-body-limit-invoked");
+        const body = await context.request.arrayBuffer();
+        const bytes = new Uint8Array(body);
+        const digest = await crypto.subtle.digest("SHA-256", body);
+        const receivedSha256 = Array.from(new Uint8Array(digest), (value) =>
+          value.toString(16).padStart(2, "0")
+        ).join("");
+        return json({
+          contentEncoding: context.request.headers.get("content-encoding"),
+          declaredContentLength: context.request.headers.get("content-length"),
+          firstOctet: bytes[0] ?? null,
+          lastOctet: bytes.at(-1) ?? null,
+          receivedByteLength: bytes.byteLength,
+          receivedSha256,
+        });
+      })();
     default:
       return new Response("not found", { status: 404 });
   }
