@@ -98,7 +98,9 @@ async function setup(context, operationId) {
         retained.push(Promise.resolve(promise));
       },
     };
-    return module.default.fetch(new Request(url, options), {}, executionContext);
+    const response = await module.default.fetch(new Request(url, options), {}, executionContext);
+    if (url.pathname === "/cpu") response.headers.set("cf-ray", "1234567890abcdef-SIN");
+    return response;
   };
   request.operation = "invoke";
   const environment = { EDGE_CANON_EVIDENCE_TOKEN: token };
@@ -182,4 +184,57 @@ test("collection refuses CPU wall time and does not write observations", async (
   );
   assert.equal(fs.readdirSync(harness.request.evidenceDirectory).some((name) => name.endsWith("-observations.json")), false);
   await Promise.allSettled(harness.retained);
+});
+
+test("Cloudflare adapter collect is wired to the provider telemetry source", async (context) => {
+  const harness = await setup(context, "collection-adapter");
+  const originalFetch = globalThis.fetch;
+  let telemetryQueries = 0;
+  globalThis.fetch = async (input, options = {}) => {
+    const url = new URL(input);
+    if (url.hostname !== "api.cloudflare.com") return originalFetch(input, options);
+    telemetryQueries += 1;
+    assert.equal(options.headers.authorization, "Bearer collect-token");
+    return new Response(JSON.stringify({
+      success: true,
+      errors: [],
+      messages: [],
+      result: { events: { count: 1, events: [{
+        timestamp: Date.now(),
+        dataset: "cloudflare-workers",
+        source: {},
+        $metadata: {
+          id: "cpu-event",
+          rayId: "1234567890abcdef-SIN",
+          service: harness.request.configuration.projectName,
+        },
+        $workers: {
+          cpuTimeMs: 9.1,
+          wallTimeMs: 12,
+          eventType: "fetch",
+          outcome: "ok",
+          requestId: "cpu-request",
+          scriptName: harness.request.configuration.projectName,
+          scriptVersion: { id: "version-collection-adapter" },
+        },
+      }] } },
+    }), { headers: { "content-type": "application/json" } });
+  };
+  try {
+    const result = await runAdapter({
+      manifestPath,
+      request: harness.request,
+      hostEnvironment: {
+        CLOUDFLARE_ACCOUNT_ID: "account-id",
+        CLOUDFLARE_API_TOKEN: "collect-token",
+        EDGE_CANON_EVIDENCE_TOKEN: token,
+      },
+    });
+    assert.equal(result.outcome, "succeeded");
+    assert.equal(telemetryQueries, 1);
+    assert.equal(verifyDocument(JSON.parse(fs.readFileSync(result.data.observationsPath, "utf8"))).status, "pass");
+  } finally {
+    globalThis.fetch = originalFetch;
+    await Promise.allSettled(harness.retained);
+  }
 });

@@ -381,6 +381,13 @@ function providerFiles(backendId, canonical, configuration) {
       main: "src/index.mjs",
       compatibility_date: compatibilityDate,
       workers_dev: true,
+      observability: {
+        enabled: true,
+        logs: {
+          invocation_logs: true,
+          head_sampling_rate: 1,
+        },
+      },
     }));
     return { entrypoint: "src/index.mjs", files };
   }

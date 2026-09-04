@@ -802,6 +802,7 @@ export async function collectProvider({
   const invocation = loadProviderInvocation({ request, manifest });
   const releaseLock = acquireOperationLock(deploymentStatePath(request, manifest));
   try {
+    const deadlineAt = Date.now() + manifest.security.timeoutSeconds * 1_000;
     const paths = collectionPaths(request, manifest);
     const existingState = readJson(paths.state, "collection state");
     if (existingState) return result(request, manifest, paths, validateCollectionState(existingState, request, manifest, invocation, paths), false);
@@ -812,7 +813,7 @@ export async function collectProvider({
       manifest,
       environment,
       fetchImpl,
-      timeoutMs: manifest.security.timeoutSeconds * 1_000,
+      timeoutMs: Math.max(1, deadlineAt - Date.now()),
       pollIntervalMs,
       snapshotPath: paths.sink,
       specs,
@@ -824,7 +825,7 @@ export async function collectProvider({
       cpuCollector,
       manifest,
       invocationId: cpuInvocationId,
-      context: { request, manifest, environment, invocation, rawRecord: raw[0], fetchImpl },
+      context: { request, manifest, environment, invocation, rawRecord: raw[0], fetchImpl, deadlineAt },
     });
     const sinkDigest = sha256(fs.readFileSync(paths.sink));
     const cpuDigest = sha256(fs.readFileSync(paths.cpu));

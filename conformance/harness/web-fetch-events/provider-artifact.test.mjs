@@ -105,6 +105,13 @@ for (const provider of providers) {
     assert.equal(first.data.idempotent, false);
     assert.equal(first.data.entrypoint, provider.entrypoint);
     assert.equal(first.data.canonicalArtifactSha256, canonical.canonicalArtifactSha256);
+    if (provider.backendId === "cloudflare-workers-pages") {
+      const wrangler = JSON.parse(fs.readFileSync(path.join(firstRequest.configuration.derivedDirectory, "wrangler.json"), "utf8"));
+      assert.deepEqual(wrangler.observability, {
+        enabled: true,
+        logs: { invocation_logs: true, head_sampling_rate: 1 },
+      });
+    }
 
     const again = await runAdapter({ manifestPath: manifestPath(provider), request: firstRequest, hostEnvironment: {} });
     assert.equal(again.data.idempotent, true);

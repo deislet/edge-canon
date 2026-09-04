@@ -20,6 +20,11 @@ import {
   invokeProvider,
   ProviderInvocationError,
 } from "./provider-invocation.mjs";
+import {
+  collectProvider,
+  ProviderCollectionError,
+} from "./provider-collection.mjs";
+import { cloudflareCpuCollector } from "./provider-cloudflare-cpu.mjs";
 
 const PROTOCOL_VERSION = "edge-canon.provider-adapter/v1";
 const OPERATIONS = new Set(["inspect", "preflight", "prepare", "deploy", "invoke", "collect", "cleanup", "run"]);
@@ -197,6 +202,10 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
   if (request.operation === "invoke") {
     return invokeProvider({ request, manifest, environment });
   }
+  if (request.operation === "collect") {
+    fail(manifest.backendId === "cloudflare-workers-pages", "EC_ADAPTER_OPERATION_UNIMPLEMENTED", "backend has no exact single-invocation CPU collector");
+    return collectProvider({ request, manifest, environment, cpuCollector: cloudflareCpuCollector });
+  }
   const tool = manifest.tool.distribution === "npm"
     ? verifyNpmTool(manifest, request.configuration)
     : verifyWorkspaceTool(manifest, request.configuration);
@@ -236,7 +245,7 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
 }
 
 function failureResult(request, manifest, error) {
-  const code = error instanceof AdapterError || error instanceof AdapterProcessError || error instanceof ProviderArtifactError || error instanceof ProviderDeploymentError || error instanceof ProviderInvocationError
+  const code = error instanceof AdapterError || error instanceof AdapterProcessError || error instanceof ProviderArtifactError || error instanceof ProviderDeploymentError || error instanceof ProviderInvocationError || error instanceof ProviderCollectionError
     ? error.code
     : "EC_ADAPTER_INTERNAL";
   return {

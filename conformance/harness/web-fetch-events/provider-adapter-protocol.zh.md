@@ -146,4 +146,10 @@ collection state 必须分别不可变落盘并互相绑定摘要。崩溃后可
 新的远端查询覆盖它。collector 只做事实归一化，不调用 oracle；即使 observation 描述的是不符合
 标准的行为，也不得在其中增加判定字段。
 
+Cloudflare `collect` 使用 T012 响应中的完整 `cf-ray` 和 operation 独占脚本名查询官方 Workers
+Observability Telemetry API 的 `cloudflare-workers` events view。派生产物必须启用 invocation logs
+并把 head sampling 固定为 1；查询只接受唯一含 `$workers.cpuTimeMs` 的 fetch event，并在可用时
+核对 `$workers.scriptVersion.id`。Ray 缺失、多条 CPU event、版本冲突、API 结果不完整或只存在
+`wallTimeMs` 都使 CPU 证据不可用，不能改用聚合值或耗时差值。
+
 manifest 为 `complete` 的必要条件是：八个操作均为 `implemented`、该 suite 全部用例均为 `implemented` 且无 blocker、三个 adapter 都通过真实测试账户运行，并能把 exact standard commit、canonical/derived artifact digest、provider deployment identity 和原始执行证据关联起来。仅完成 inspect/preflight 或本地 mock 仍是 `draft`。

@@ -29,7 +29,7 @@
     "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "invoke": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
-    "collect": [],
+    "collect": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "cleanup": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "run": []
   },
@@ -39,26 +39,26 @@
     "prepare": {"status": "implemented", "remoteSideEffects": false},
     "deploy": {"status": "implemented", "remoteSideEffects": true},
     "invoke": {"status": "implemented", "remoteSideEffects": true},
-    "collect": {"status": "pending", "remoteSideEffects": false},
+    "collect": {"status": "implemented", "remoteSideEffects": false},
     "cleanup": {"status": "implemented", "remoteSideEffects": true},
     "run": {"status": "pending", "remoteSideEffects": true}
   },
   "caseCoverage": [
-    {"id": "EC-WEB-T001", "status": "pending", "blockers": ["observation collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T002", "status": "pending", "blockers": ["authenticated sink collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T003", "status": "pending", "blockers": ["observation collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T004", "status": "pending", "blockers": ["structured failure sink collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T005", "status": "pending", "blockers": ["structured failure sink collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T006", "status": "pending", "blockers": ["concurrency observation collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T007", "status": "pending", "blockers": ["stream lifecycle sink collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T008", "status": "pending", "blockers": ["background settlement sink collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T009", "status": "pending", "blockers": ["late-registration sink collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T010", "status": "pending", "blockers": ["disconnect background sink collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T011", "status": "pending", "blockers": ["oracle digest and backend implementation version collection remain pending"]},
-    {"id": "EC-WEB-T012", "status": "pending", "blockers": ["backend CPU measurement collection and real-provider evidence remain pending"]},
-    {"id": "EC-WEB-T013", "status": "pending", "blockers": ["authenticated controlled-origin service, collection and live evidence remain pending"]},
-    {"id": "EC-WEB-T014", "status": "pending", "blockers": ["authenticated connection-barrier service, collection and live evidence remain pending"]},
-    {"id": "EC-WEB-T015", "status": "pending", "blockers": ["invocation-count sink collection and real-provider evidence remain pending"]}
+    {"id": "EC-WEB-T001", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T002", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T003", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T004", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T005", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T006", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T007", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T008", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T009", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T010", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T011", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T012", "status": "pending", "blockers": ["a live account token with Workers Observability Write and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T013", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T014", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
+    {"id": "EC-WEB-T015", "status": "pending", "blockers": ["real-provider evidence remains pending"]}
   ],
   "security": {
     "shell": false,
@@ -68,7 +68,7 @@
     "cleanupAfterRunFailure": true
   },
   "limitations": [
-    "Inspect, preflight, deterministic prepare, collision-checked deploy, at-most-once invocation and identity-bound cleanup are executable; collection remains pending and this manifest is not conformance evidence.",
+    "Inspect, preflight, deterministic prepare, collision-checked deploy, at-most-once invocation, exact Ray-ID CPU collection and identity-bound cleanup are executable; run orchestration remains pending and this manifest is not conformance evidence.",
     "No Cloudflare test account or exact deployment observation is recorded."
   ]
 }
