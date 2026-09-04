@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { capabilityLock, syntheticPackage } from "./fixture.mjs";
+import { capabilityLock, IMPORT_CONDITIONS, syntheticPackage } from "./fixture.mjs";
 import { verifyDocument } from "./oracle.mjs";
-import { captureFailure, deriveProviderConfiguration, sha512Integrity, validateApplicationSource, validateCapabilityLock, validatePackage } from "./reference-runtime.mjs";
+import { captureFailure, deriveProviderConfiguration, resolveConditionalTarget, sha512Integrity, validateApplicationSource, validateCapabilityLock, validatePackage } from "./reference-runtime.mjs";
 import { runSuite } from "./runner.mjs";
 
 const STANDARD_VERSION = "edge-canon.next@0000000000000000000000000000000000000000";
@@ -33,6 +33,17 @@ test("EC-NODE lock rejects API and condition drift", () => {
   assert.equal(captureFailure(() => validateCapabilityLock(expanded, STANDARD_VERSION)), "EC_NODE_API_SET_INVALID");
   const reordered = structuredClone(lock); reordered.modules.importConditions.reverse();
   assert.equal(captureFailure(() => validateCapabilityLock(reordered, STANDARD_VERSION)), "EC_NODE_CONDITIONS_INVALID");
+});
+
+test("EC-NODE conditional resolution follows Node package declaration order", () => {
+  assert.equal(
+    resolveConditionalTarget({ default: "./default.mjs", "edge-canon": "./edge.mjs" }, IMPORT_CONDITIONS),
+    "./default.mjs",
+  );
+  assert.equal(
+    resolveConditionalTarget({ unknown: "./unknown.mjs", "edge-canon": "./edge.mjs", default: "./default.mjs" }, IMPORT_CONDITIONS),
+    "./edge.mjs",
+  );
 });
 
 test("EC-NODE source policy rejects host control and dynamic resolution", () => {

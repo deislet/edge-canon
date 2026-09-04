@@ -126,7 +126,14 @@ export function resolveConditionalTarget(exportsValue, conditions) {
     return exportsValue;
   }
   if (!exportsValue || typeof exportsValue !== "object" || Array.isArray(exportsValue)) reject("EC_NPM_PACKAGE_UNRESOLVED", "invalid conditional exports");
-  for (const condition of conditions) if (condition in exportsValue) return resolveConditionalTarget(exportsValue[condition], conditions);
+  // Node's package contract gives the package object's key order semantic
+  // weight. `conditions` is the canonical active set carried by the lock; it
+  // must not be used to reorder the package author's object.
+  for (const [condition, target] of Object.entries(exportsValue)) {
+    if (condition === "default" || conditions.includes(condition)) {
+      return resolveConditionalTarget(target, conditions);
+    }
+  }
   reject("EC_NPM_PACKAGE_UNRESOLVED", "no matching export condition");
 }
 
