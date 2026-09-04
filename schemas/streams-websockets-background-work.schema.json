@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/streams-websockets-background-work.schema.json",
+  "title": "Edge Canon streams, WebSockets, and background work capability lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "format", "standardVersion", "baselineDate", "streams", "backgroundWork", "webSockets", "limits", "providerExtensions"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "format": {"const": "edge-canon.streams-websockets-background-work/v1"},
+    "standardVersion": {"type": "string", "pattern": "^edge-canon\\.next@[0-9a-f]{40}$"},
+    "baselineDate": {"const": "2026-09-04"},
+    "streams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readable", "writable", "transform", "body", "chunkType"],
+      "properties": {
+        "readable": {"const": "whatwg-selected-instance-subset"},
+        "writable": {"const": "whatwg-selected-instance-subset"},
+        "transform": {"const": "identity-only"},
+        "body": {"const": "request-response-byte-stream"},
+        "chunkType": {"const": "Uint8Array"}
+      }
+    },
+    "backgroundWork": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["api", "settlement", "reliability"],
+      "properties": {
+        "api": {"const": "context-wait-until"},
+        "settlement": {"const": "all-settled-independent"},
+        "reliability": {"const": "best-effort-no-retry"}
+      }
+    },
+    "webSockets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["portability", "sourcePolicy"],
+      "properties": {
+        "portability": {"const": "unavailable-in-reference-intersection"},
+        "sourcePolicy": {"const": "reject-before-deploy"}
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["streamedOctets", "fixtureChunkOctets"],
+      "properties": {
+        "streamedOctets": {"const": 65536},
+        "fixtureChunkOctets": {"const": 4096}
+      }
+    },
+    "providerExtensions": {"const": "non-portable"}
+  }
+}

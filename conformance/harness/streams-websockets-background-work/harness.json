@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../schemas/conformance-harness.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-STREAM",
+  "status": "draft",
+  "executionKind": "local-reference",
+  "fixturePath": "conformance/harness/streams-websockets-background-work/fixture.mjs",
+  "fixtureDependencyPaths": [],
+  "calibrationPath": null,
+  "oraclePath": "conformance/harness/streams-websockets-background-work/oracle.mjs",
+  "observationSchema": "schemas/conformance-observations.schema.json",
+  "contractSchema": "schemas/streams-websockets-background-work.schema.json",
+  "validatorPath": "conformance/harness/streams-websockets-background-work/reference-runtime.mjs",
+  "runnerPath": "conformance/harness/streams-websockets-background-work/runner.mjs",
+  "platforms": ["linux", "macos", "windows"],
+  "coveredCaseIds": [
+    "EC-STREAM-T001", "EC-STREAM-T002", "EC-STREAM-T003", "EC-STREAM-T004",
+    "EC-STREAM-T005", "EC-STREAM-T006", "EC-STREAM-T007", "EC-STREAM-T008",
+    "EC-STREAM-T009", "EC-STREAM-T010", "EC-STREAM-T011", "EC-STREAM-T012",
+    "EC-STREAM-T013"
+  ]
+}

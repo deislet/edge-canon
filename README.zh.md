@@ -13,6 +13,7 @@
 > 当前均为 proposal，不构成已发布的兼容性声明。已有候选能力族包括
 > [Web Fetch Events](standard/requirements/web-fetch-events.zh.md)、
 > [Routing 与 Static Assets](standard/requirements/routing-static-assets.zh.md)、
+> [Streams、WebSocket 与后台任务](standard/requirements/streams-websockets-background-work.zh.md)、
 > [Web Platform APIs](standard/requirements/web-platform-apis.zh.md)和
 > [Canonical Build Artifact](standard/requirements/canonical-build-artifact.zh.md)。
 
