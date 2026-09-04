@@ -5,7 +5,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schemaVersion", "standardId", "suiteId", "status", "fixturePath",
+    "schemaVersion", "standardId", "suiteId", "status", "fixturePath", "fixtureDependencyPaths",
+    "calibrationPath",
     "oraclePath", "observationSchema", "providerProtocol", "coveredCaseIds",
     "providerAdapters"
   ],
@@ -16,6 +17,11 @@
     "suiteId": {"type": "string", "pattern": "^EC-[A-Z0-9-]+$"},
     "status": {"enum": ["draft", "complete"]},
     "fixturePath": {"type": "string", "minLength": 1},
+    "fixtureDependencyPaths": {
+      "type": "array", "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "calibrationPath": {"type": ["string", "null"], "minLength": 1},
     "oraclePath": {"type": "string", "minLength": 1},
     "observationSchema": {"type": "string", "minLength": 1},
     "providerProtocol": {"type": "string", "minLength": 1},

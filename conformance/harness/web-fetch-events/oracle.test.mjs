@@ -17,6 +17,15 @@ test("the complete draft sample passes", () => {
       "EC-WEB-T003",
       "EC-WEB-T004",
       "EC-WEB-T005",
+      "EC-WEB-T006",
+      "EC-WEB-T007",
+      "EC-WEB-T008",
+      "EC-WEB-T009",
+      "EC-WEB-T010",
+      "EC-WEB-T011",
+      "EC-WEB-T012",
+      "EC-WEB-T013",
+      "EC-WEB-T014",
     ],
   });
 });
@@ -31,4 +40,30 @@ test("a provider cannot omit a draft case", () => {
   const incomplete = structuredClone(sample);
   incomplete.cases.pop();
   assert.throws(() => verifyDocument(incomplete), /requires exactly/);
+});
+
+test("a provider cannot relabel wall time as CPU evidence", () => {
+  const tampered = structuredClone(sample);
+  tampered.cases[11].data.measurementKind = "wall-time";
+  assert.throws(() => verifyDocument(tampered), /wall time/);
+});
+
+test("the subrequest oracle rejects the former off-by-one fixture", () => {
+  const tampered = structuredClone(sample);
+  tampered.cases[12].data.fetchCallCount = 50;
+  tampered.cases[12].data.subrequestStartCount = 51;
+  tampered.cases[12].data.originRequestCount = 51;
+  assert.throws(() => verifyDocument(tampered), /49 fetch API calls/);
+});
+
+test("a provider cannot omit the exact standard commit", () => {
+  const tampered = structuredClone(sample);
+  tampered.backend.standardVersion = "edge-canon.next";
+  assert.throws(() => verifyDocument(tampered), /exact standard commit/);
+});
+
+test("a provider cannot hide cross-request marker mixing", () => {
+  const tampered = structuredClone(sample);
+  tampered.cases[5].data.responses[0].responseMarker = "request-1";
+  assert.throws(() => verifyDocument(tampered), /mixed request markers/);
 });

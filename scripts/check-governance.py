@@ -8,6 +8,8 @@ import re
 import sys
 from pathlib import Path
 
+import jsonschema
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MATURITY = {
@@ -54,6 +56,31 @@ def load_json(relative: str) -> dict:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise ValidationError(message)
+
+
+def validate_schema_documents() -> None:
+    documents = {
+        "standard/contract.json": "schemas/standard-contract.schema.json",
+        "standard/requirements.json": "schemas/requirements-registry.schema.json",
+        "conformance/kit.json": "schemas/conformance-kit.schema.json",
+        "conformance/cases/web-fetch-events.json": "schemas/conformance-cases.schema.json",
+        "conformance/harness/web-fetch-events/harness.json": "schemas/conformance-harness.schema.json",
+        "conformance/harness/web-fetch-events/sample-pass.json": "schemas/conformance-observations.schema.json",
+        "conformance/registry.json": "schemas/conformance-registry.schema.json",
+    }
+    for relative, schema_relative in documents.items():
+        schema = load_json(schema_relative)
+        try:
+            jsonschema.Draft202012Validator.check_schema(schema)
+            jsonschema.Draft202012Validator(
+                schema,
+                format_checker=jsonschema.FormatChecker(),
+            ).validate(load_json(relative))
+        except jsonschema.SchemaError as error:
+            raise ValidationError(f"{schema_relative}: invalid JSON Schema: {error.message}") from error
+        except jsonschema.ValidationError as error:
+            location = "/".join(str(part) for part in error.absolute_path) or "<root>"
+            raise ValidationError(f"{relative}/{location}: {error.message}") from error
 
 
 def validate_contract(contract: dict) -> None:
@@ -255,6 +282,19 @@ def validate_harness(
         target = manifest.get(key)
         require(isinstance(target, str) and target, f"{relative_path}: {key} is missing")
         require((ROOT / target).is_file(), f"{relative_path}: {key} does not exist: {target}")
+    dependencies = manifest.get("fixtureDependencyPaths", [])
+    require(len(dependencies) == len(set(dependencies)), f"{relative_path}: duplicate fixture dependency")
+    for dependency in dependencies:
+        require(
+            isinstance(dependency, str) and (ROOT / dependency).is_file(),
+            f"{relative_path}: fixture dependency does not exist: {dependency}",
+        )
+    calibration = manifest.get("calibrationPath")
+    if calibration is not None:
+        require(
+            isinstance(calibration, str) and (ROOT / calibration).is_file(),
+            f"{relative_path}: calibration path does not exist: {calibration}",
+        )
     covered = manifest.get("coveredCaseIds", [])
     require(covered and len(covered) == len(set(covered)), f"{relative_path}: covered case IDs must be present and unique")
     require(set(covered) <= case_ids, f"{relative_path}: harness names an unknown case")
@@ -369,17 +409,11 @@ def validate_registry(contract: dict, registry: dict) -> None:
 
 def main() -> int:
     try:
+        validate_schema_documents()
         contract = load_json("standard/contract.json")
         requirements = load_json("standard/requirements.json")
         kit = load_json("conformance/kit.json")
         registry = load_json("conformance/registry.json")
-        load_json("schemas/standard-contract.schema.json")
-        load_json("schemas/requirements-registry.schema.json")
-        load_json("schemas/conformance-kit.schema.json")
-        load_json("schemas/conformance-cases.schema.json")
-        load_json("schemas/conformance-harness.schema.json")
-        load_json("schemas/conformance-observations.schema.json")
-        load_json("schemas/conformance-registry.schema.json")
         validate_contract(contract)
         clause_owner = validate_requirements(contract, requirements)
         validate_kit(contract, requirements, kit, clause_owner)

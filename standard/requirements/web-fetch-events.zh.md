@@ -6,7 +6,7 @@
 - 规范效力：无；仅在 Proposal 0001 晋级并发布后生效
 - 最后核对参考实现：2026-09-03
 
-本文把 HTTP 请求入口的行业共同语义整理为带稳定标识的候选条款。文中的“必须”“不得”描述候选标准行为，不代表当前实现已经合规。`minimum-resource-guarantees` 尚未定义，因此本能力族不能进入 `normative-complete`，任何后端也不能据此获得 `edge-canon.next` 合规声明。
+本文把 HTTP 请求入口的行业共同语义整理为带稳定标识的候选条款。文中的“必须”“不得”描述候选标准行为，不代表当前实现已经合规。`minimum-resource-guarantees` 尚未完整定义，因此本能力族不能进入 `normative-complete`，任何后端也不能据此获得 `edge-canon.next` 合规声明。
 
 ## 1. 参考边界
 
@@ -64,7 +64,7 @@ type RequestHandler =
 
 - **EC-WEB-LIFE-001**：后端必须允许响应 body 在 handler 返回后继续产生数据；不得仅因 handler Promise 已兑现就截断尚未结束的标准响应流。
 - **EC-WEB-LIFE-002**：一次调用可以多次调用 `waitUntil`。每个参数必须加入同一后台集合，单个 Promise 的拒绝不得取消集合中的其他 Promise。
-- **EC-WEB-LIFE-003**：后台 Promise 的拒绝必须记录为该调用的后台失败证据；它不得改变已经产生的 HTTP 响应，也不得转化为 handler 的隐式重试。
+- **EC-WEB-LIFE-003**：后台 Promise 的拒绝必须记录为该调用的后台失败证据，稳定失败代码为 `EC_BACKGROUND_REJECTED`；它不得改变已经产生的 HTTP 响应，也不得转化为 handler 的隐式重试。
 - **EC-WEB-LIFE-004**：`waitUntil` 只在前台生命周期关闭前接受新 Promise。关闭后的调用必须同步抛出 `TypeError`，并带稳定失败代码 `EC_WAIT_UNTIL_CLOSED`；不得无声丢弃任务。
 
 后台集合能继续多长时间属于最低资源保证，本草案尚未规定。因此“接受任务”不等同于无限执行保证。

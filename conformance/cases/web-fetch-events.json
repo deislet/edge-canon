@@ -75,8 +75,8 @@
       "title": "关闭后的 waitUntil 明确失败",
       "kind": "boundary",
       "clauseIds": ["EC-WEB-LIFE-004"],
-      "fixture": {"scenario": "保存 waitUntil 引用并在响应 body 关闭后调用", "requirements": ["lifecycle barrier", "synchronous exception capture"]},
-      "oracle": {"observations": ["exception type", "failure code", "background side effect"], "assertions": ["同步抛出 TypeError", "失败代码为 EC_WAIT_UNTIL_CLOSED", "被拒任务没有作为后台任务执行"]}
+      "fixture": {"scenario": "保存 waitUntil 引用并在响应 body 关闭后调用", "requirements": ["lifecycle barrier", "synchronous exception capture", "background registration evidence"]},
+      "oracle": {"observations": ["exception type", "failure code", "registered background task count"], "assertions": ["同步抛出 TypeError", "失败代码为 EC_WAIT_UNTIL_CLOSED", "后台集合登记数不增加；不对传入前已经开始执行的 Promise 作取消承诺"]}
     },
     {
       "id": "EC-WEB-T010",
@@ -84,7 +84,7 @@
       "kind": "failure",
       "clauseIds": ["EC-WEB-FAIL-001", "EC-WEB-FAIL-002"],
       "fixture": {"scenario": "handler 记录调用标记并返回长流；客户端读取首段后断开，随后发送探测请求", "requirements": ["disconnect-capable client", "invocation evidence sink", "streaming response"]},
-      "oracle": {"observations": ["invocation count", "body cancellation", "background evidence", "probe response"], "assertions": ["断开的调用只执行一次", "不把断开解释为事务回滚", "后续调用不含前次上下文或取消状态"]}
+      "oracle": {"observations": ["invocation count", "body terminal state", "background outcome", "transaction rollback claim", "probe response"], "assertions": ["断开的调用只执行一次", "body 可以被取消、报错或继续关闭，测试不把任一结果提升为额外保证", "不把断开解释为事务回滚", "后续调用不含前次上下文或取消状态"]}
     },
     {
       "id": "EC-WEB-T011",
@@ -107,7 +107,7 @@
       "title": "前五十次外部 fetch 均可开始",
       "kind": "boundary",
       "clauseIds": ["EC-WEB-LIMIT-002"],
-      "fixture": {"scenario": "向受控目标顺序发起 49 个直接外部 fetch 和一个产生单次重定向的 fetch，使调用与重定向跳转合计恰为 50 个子请求", "requirements": ["controlled external origin", "redirect counter", "subrequest start evidence"]},
+      "fixture": {"scenario": "向受控目标顺序发起 48 个直接外部 fetch 和一个产生单次重定向的 fetch，使 49 次 API 调用与重定向跳转合计恰为 50 个子请求", "requirements": ["controlled external origin", "redirect counter", "subrequest start evidence"]},
       "oracle": {"observations": ["fetch start count", "origin request count", "redirect hop count", "failure codes"], "assertions": ["标准计数把重定向跳转视为子请求", "预算内的全部子请求均开始且不是资源上限失败"]}
     },
     {

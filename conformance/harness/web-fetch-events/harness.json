@@ -5,6 +5,10 @@
   "suiteId": "EC-WEB",
   "status": "draft",
   "fixturePath": "conformance/harness/web-fetch-events/fixture.mjs",
+  "fixtureDependencyPaths": [
+    "conformance/harness/web-fetch-events/cpu-workload.mjs"
+  ],
+  "calibrationPath": "conformance/harness/web-fetch-events/calibrate-cpu.mjs",
   "oraclePath": "conformance/harness/web-fetch-events/oracle.mjs",
   "observationSchema": "schemas/conformance-observations.schema.json",
   "providerProtocol": "conformance/harness/web-fetch-events/README.zh.md",
@@ -13,7 +17,16 @@
     "EC-WEB-T002",
     "EC-WEB-T003",
     "EC-WEB-T004",
-    "EC-WEB-T005"
+    "EC-WEB-T005",
+    "EC-WEB-T006",
+    "EC-WEB-T007",
+    "EC-WEB-T008",
+    "EC-WEB-T009",
+    "EC-WEB-T010",
+    "EC-WEB-T011",
+    "EC-WEB-T012",
+    "EC-WEB-T013",
+    "EC-WEB-T014"
   ],
   "providerAdapters": []
 }

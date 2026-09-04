@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '24'
+      - name: Install the pinned governance validator
+        run: python3 -m pip install --disable-pip-version-check -r scripts/governance-requirements.txt
       - name: Validate contract, requirements, conformance kit, and registry
         run: python3 scripts/check-governance.py
       - name: Execute draft conformance oracles
