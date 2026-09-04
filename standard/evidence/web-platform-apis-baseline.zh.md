@@ -38,6 +38,8 @@
 4. Streams family 尚未冻结，因此不能把 body 属性存在误写成完整 backpressure/cancel 保证。
 5. Cloudflare/EdgeOne CLI 或 runtime 升级与本标准精确版本之间的兼容锁和回归证据。
 
-## Reference harness 边界
+## Reference harness 跨平台记录
 
-本能力族的 local reference harness 只校验选取语义在 Linux、macOS 与 Windows Node 24+ 的可执行性。它会用本地 HTTP server 检查 redirect 和并发关联，但这不是 Cloudflare、EdgeOne 或 Deislet provider 合规证据，也不替代真实平台对兼容 flag、网络路径和安全 shim 的验证。
+2026-09-04 的 Linux、macOS 与 Windows 同源执行结果保存在 [`web-platform-apis-platforms-2026-09-04.json`](../../conformance/evidence/web-platform-apis-platforms-2026-09-04.json)。三套环境均通过 14 个 Draft case，并生成同一 capability-lock identity；执行固定到 Edge Canon commit `ca4579ab5be27914d1cdde79dc36ea32ac7e7aaa`，reference runner 文件在三端摘要相同。
+
+该 local reference harness 只校验选取语义在三个操作系统和 Node 22/24/26 上的可执行性。它用本地 HTTP server 检查 redirect 和并发关联，但不是 Cloudflare、EdgeOne 或 Deislet provider 合规证据，也不替代真实平台对兼容 flag、网络路径和安全 shim 的验证。

@@ -82,6 +82,7 @@ def validate_schema_documents() -> None:
         "conformance/harness/web-platform-apis/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/routing-static-assets-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
+        "conformance/evidence/web-platform-apis-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/harness/web-fetch-events/sample-pass.json": "schemas/conformance-observations.schema.json",
         "conformance/harness/web-fetch-events/provider-adapters/deislet/adapter.json": "schemas/conformance-provider-adapter.schema.json",
         "conformance/harness/web-fetch-events/provider-adapters/cloudflare-workers-pages/adapter.json": "schemas/conformance-provider-adapter.schema.json",
@@ -528,6 +529,7 @@ def main() -> int:
         validate_registry(contract, registry)
         validate_platform_evidence("conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json", kit)
         validate_platform_evidence("conformance/evidence/routing-static-assets-platforms-2026-09-04.json", kit)
+        validate_platform_evidence("conformance/evidence/web-platform-apis-platforms-2026-09-04.json", kit)
     except (KeyError, TypeError, ValidationError) as error:
         print(f"governance validation failed: {error}", file=sys.stderr)
         return 1

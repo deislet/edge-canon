@@ -1,0 +1,47 @@
+{
+  "$schema": "../../schemas/conformance-platform-evidence.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-WEBAPI",
+  "status": "draft-non-certifying",
+  "observedAt": "2026-09-04T11:52:18Z",
+  "artifactSha256": "ed8e8d236a057147f76534d2d7cae14d4b92959b3bb3547b3ffea78fd9bcbddb",
+  "referenceImplementationPath": "conformance/harness/web-platform-apis/runner.mjs",
+  "referenceImplementationSha256": "7210333e00be2485031ed7fd9f13161fd003836ac34605115c9f81c4623287cd",
+  "observations": [
+    {
+      "platform": "linux",
+      "osVersion": "Linux 6.8.0-124-generic",
+      "architecture": "x86_64",
+      "nodeVersion": "v22.21.1",
+      "outcome": "pass",
+      "caseCount": 14,
+      "artifactSha256": "ed8e8d236a057147f76534d2d7cae14d4b92959b3bb3547b3ffea78fd9bcbddb"
+    },
+    {
+      "platform": "macos",
+      "osVersion": "macOS 26.6 (Darwin 25.6.0)",
+      "architecture": "arm64",
+      "nodeVersion": "v26.0.0",
+      "outcome": "pass",
+      "caseCount": 14,
+      "artifactSha256": "ed8e8d236a057147f76534d2d7cae14d4b92959b3bb3547b3ffea78fd9bcbddb"
+    },
+    {
+      "platform": "windows",
+      "osVersion": "Windows 10.0.26100",
+      "architecture": "AMD64",
+      "nodeVersion": "v24.16.0",
+      "outcome": "pass",
+      "caseCount": 14,
+      "artifactSha256": "ed8e8d236a057147f76534d2d7cae14d4b92959b3bb3547b3ffea78fd9bcbddb"
+    }
+  ],
+  "limitations": [
+    "This is reference-harness evidence, not provider conformance or certification evidence.",
+    "The exact standard pin is commit ca4579ab5be27914d1cdde79dc36ea32ac7e7aaa; the reference runner bytes are bound separately.",
+    "The HTTP redirect, abort, network-failure, and concurrency probes use loopback origins rather than public TLS endpoints.",
+    "Cloudflare, EdgeOne, and Deislet have not yet run EC-WEBAPI in their real runtimes; provider compatibility flags and security shims remain pending.",
+    "Randomness is checked for API shape, buffer identity, UUID version/variant, and nonzero output; this run is not a statistical entropy certification."
+  ]
+}

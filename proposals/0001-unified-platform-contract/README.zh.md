@@ -41,7 +41,7 @@ Edge Canon 的下一个版本采用一个统一、版本化的应用标准。应
 
 当前 `web-fetch-events` 已有[候选要求](../../standard/requirements/web-fetch-events.zh.md)、15 项机器可读用例和覆盖全部草案用例的可执行 fixture/oracle；三个 provider adapter 已登记固定工具版本，并已实现受约束的检查、派生产物、真实部署与调用边界，Cloudflare/Deislet 已接入单次 CPU 取证且 Deislet/Cloudflare 有清理路径，但全流程编排、EdgeOne 单次 CPU 与公开清理 API、三个真实账户证据仍未闭环。最低资源保证也只有 CPU、子请求、外连并发和 identity/已知长度的 1,000,000 octet 请求 body 四个 Draft 下限，其余 body 变体与超限处理、响应大小、wall time、应用可用内存和 `waitUntil` 尚未完成。
 
-`routing-static-assets`、`canonical-build-artifact` 与 `web-platform-apis` 也已进入 Draft，并分别具有机器可读 schema、case、reference harness 与 provider-independent oracle；其中前两者已有三操作系统 reference evidence，Web Platform APIs 正在收集同类证据。另有 11 个 mandatory capability family 仍为 `pending`，所有 Draft 也都缺三个一等后端的真实完整证据，因此 proposal 不能被实现或市场材料解释为已经支持。
+`routing-static-assets`、`canonical-build-artifact` 与 `web-platform-apis` 也已进入 Draft，并分别具有机器可读 schema、case、reference harness 与 provider-independent oracle；三者均已有 Linux、macOS 与 Windows reference evidence。另有 11 个 mandatory capability family 仍为 `pending`，所有 Draft 也都缺三个一等后端的真实完整证据，因此 proposal 不能被实现或市场材料解释为已经支持。
 
 ## 首批实现范围
 

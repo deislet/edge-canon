@@ -68,7 +68,10 @@
     },
     {
       "id": "web-platform-apis", "definitionStatus": "draft", "draftPath": "standard/requirements/web-platform-apis.zh.md",
-      "evidencePaths": ["standard/evidence/web-platform-apis-baseline.zh.md"],
+      "evidencePaths": [
+        "standard/evidence/web-platform-apis-baseline.zh.md",
+        "conformance/evidence/web-platform-apis-platforms-2026-09-04.json"
+      ],
       "dimensions": {
         "api": {"status": "draft", "clauseIds": ["EC-WEBAPI-API-001", "EC-WEBAPI-API-002", "EC-WEBAPI-API-003", "EC-WEBAPI-API-004", "EC-WEBAPI-API-005", "EC-WEBAPI-API-006", "EC-WEBAPI-API-007", "EC-WEBAPI-API-008", "EC-WEBAPI-API-009", "EC-WEBAPI-API-010"]},
         "errors": {"status": "draft", "clauseIds": ["EC-WEBAPI-ERR-001", "EC-WEBAPI-ERR-002", "EC-WEBAPI-ERR-003"]},
