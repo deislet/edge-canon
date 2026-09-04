@@ -6,7 +6,7 @@
 
 - 应用入口：[`provider-runtime-fixture.mjs`](provider-runtime-fixture.mjs)
 - 结果判定：[`provider-runtime-oracle.mjs`](provider-runtime-oracle.mjs)
-- handler 模型：`export default async function ({ request, context })`
+- handler 模型：`export default async function (context)`；`request` 与 `waitUntil` 都是该调用 context 的字段
 - 请求路径：`/?label=A`、`/?label=B`、`/stream`、`/capacity`
 
 准备阶段必须保持 fixture 字节不变。适配器可以生成供应商入口薄层，也可以调用锁定版本的供应商 CLI，但不能改写夹具、降低断言或让供应商 WebSocket 全局重新进入应用可见面。构建产物必须是随后实际部署和调用的同一份不可变产物，证据必须绑定精确标准提交、产物 SHA-256、provider 实现版本和部署身份。

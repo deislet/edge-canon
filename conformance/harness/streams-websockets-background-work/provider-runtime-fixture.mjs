@@ -235,7 +235,8 @@ function capacityResponse() {
   });
 }
 
-export default async function handler({ request, context }) {
+export default async function handler(context) {
+  const { request } = context;
   const url = new URL(request.url);
   if (url.pathname === "/stream") return streamingResponse();
   if (url.pathname === "/capacity") return capacityResponse();

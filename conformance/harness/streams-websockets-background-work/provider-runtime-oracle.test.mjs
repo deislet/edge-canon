@@ -76,14 +76,14 @@ async function probe(label) {
   const invocation = context();
   const response = await handler({
     request: new Request(`https://fixture.invalid/?label=${label}`),
-    context: invocation.value,
+    ...invocation.value,
   });
   await Promise.allSettled(invocation.tasks);
   return response.json();
 }
 
 async function streamEvidence() {
-  const response = await handler({ request: new Request("https://fixture.invalid/stream"), context: context().value });
+  const response = await handler({ request: new Request("https://fixture.invalid/stream"), ...context().value });
   let bodyEnded = false;
   const headersBeforeBodyEnd = response.headers.get("x-edge-canon-case") === "EC-STREAM-T006" && !bodyEnded;
   const body = new Uint8Array(await response.arrayBuffer()).map((value) => value);
@@ -99,7 +99,7 @@ async function streamEvidence() {
 }
 
 async function capacityEvidence() {
-  const response = await handler({ request: new Request("https://fixture.invalid/capacity"), context: context().value });
+  const response = await handler({ request: new Request("https://fixture.invalid/capacity"), ...context().value });
   const body = new Uint8Array(await response.arrayBuffer());
   return {
     status: response.status,
