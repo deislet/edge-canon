@@ -1,7 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import handler from "./fixture.mjs";
 import * as fixtureModule from "./fixture.mjs";
+
+test("fixture itself stays inside the locked EC-STREAM application surface", () => {
+  const source = fs.readFileSync(new URL("./fixture.mjs", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /\bnew\s+(?:globalThis\.)?(?:ReadableStream|WritableStream)\s*\(/);
+  assert.match(source, /new TransformStream\(\)/);
+});
 
 function context(path, init = {}) {
   const background = [];

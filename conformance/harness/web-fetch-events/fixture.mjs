@@ -81,17 +81,26 @@ export default function handler(context) {
       });
     }
     case "/stream":
-      return new Response(
-        new ReadableStream({
-          async start(controller) {
+      {
+        // EC-STREAM v1 intentionally exposes no direct ReadableStream
+        // constructor to applications. Produce the response through the
+        // standard identity TransformStream instead of asking the fixture for
+        // an API the same locked standard forbids.
+        const stream = new TransformStream();
+        const writer = stream.writable.getWriter();
+        void (async () => {
+          try {
             for (const chunk of ["stream-one", "stream-two", "stream-three"]) {
               await new Promise((resolve) => setTimeout(resolve, 5));
-              controller.enqueue(encoder.encode(chunk));
+              await writer.write(encoder.encode(chunk));
             }
-            controller.close();
-          },
-        }),
-      );
+            await writer.close();
+          } catch (error) {
+            try { await writer.abort(error); } catch (_) { /* already closed */ }
+          }
+        })();
+        return new Response(stream.readable);
+      }
     case "/background": {
       context.waitUntil(
         Promise.resolve().then(() => context.env.EVIDENCE.record("background-first")),
@@ -135,22 +144,24 @@ export default function handler(context) {
       context.waitUntil(
         Promise.resolve().then(() => context.env.EVIDENCE.record(`background:${marker}`)),
       );
+      const stream = new TransformStream();
+      const writer = stream.writable.getWriter();
       let timer;
-      return new Response(
-        new ReadableStream({
-          start(controller) {
-            controller.enqueue(encoder.encode(`first:${marker}`));
-            timer = setTimeout(() => {
-              controller.enqueue(encoder.encode(`second:${marker}`));
-              controller.close();
-            }, 250);
-          },
-          cancel() {
-            clearTimeout(timer);
-            return context.env.EVIDENCE.record(`body-cancelled:${marker}`);
-          },
-        }),
-      );
+      void writer.closed.catch(() => {
+        clearTimeout(timer);
+        return context.env.EVIDENCE.record(`body-cancelled:${marker}`);
+      });
+      void (async () => {
+        try {
+          await writer.write(encoder.encode(`first:${marker}`));
+          await new Promise((resolve) => { timer = setTimeout(resolve, 250); });
+          await writer.write(encoder.encode(`second:${marker}`));
+          await writer.close();
+        } catch (_) {
+          clearTimeout(timer);
+        }
+      })();
+      return new Response(stream.readable);
     }
     case "/probe":
       return new Response(`probe:${url.searchParams.get("marker") ?? "probe-marker"}`);
