@@ -69,6 +69,12 @@ test("a provider cannot hide cross-request marker mixing", () => {
   assert.throws(() => verifyDocument(tampered), /mixed request markers/);
 });
 
+test("adapter transport headers cannot reach application code", () => {
+  const tampered = structuredClone(sample);
+  tampered.cases[1].data.transportHeadersRemoved = false;
+  assert.throws(() => verifyDocument(tampered), /transport headers/);
+});
+
 test("a provider cannot truncate the one-million-octet request body", () => {
   const tampered = structuredClone(sample);
   tampered.cases[14].data.receivedByteLength -= 1;

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/conformance-provider-collection-state.schema.json",
+  "title": "Edge Canon provider collection state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "stateFormat", "operationId", "backendId", "standardVersion", "suiteId",
+    "canonicalArtifactSha256", "derivedArtifactSha256", "deploymentIdentitySha256",
+    "invocationEvidenceSha256", "sinkEvidenceFile", "sinkEvidenceSha256", "cpuEvidenceFile",
+    "cpuEvidenceSha256", "observationsFile", "observationsSha256", "status", "createdAt", "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "stateFormat": {"const": "edge-canon.provider-collection-state/v1"},
+    "operationId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "backendId": {"enum": ["deislet", "cloudflare-workers-pages", "tencent-edgeone-makers"]},
+    "standardVersion": {"type": "string", "pattern": "^edge-canon\\.next@[0-9a-f]{40}$"},
+    "suiteId": {"const": "EC-WEB"},
+    "canonicalArtifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "derivedArtifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "deploymentIdentitySha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "invocationEvidenceSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "sinkEvidenceFile": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$", "maxLength": 255},
+    "sinkEvidenceSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "cpuEvidenceFile": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$", "maxLength": 255},
+    "cpuEvidenceSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "observationsFile": {"type": "string", "pattern": "^[A-Za-z0-9._-]+$", "maxLength": 255},
+    "observationsSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"const": "collected"},
+    "createdAt": {"type": "string", "format": "date-time"},
+    "updatedAt": {"type": "string", "format": "date-time"}
+  }
+}

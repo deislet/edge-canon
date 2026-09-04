@@ -1,6 +1,6 @@
 # EC-WEB 可执行 harness 草案
 
-本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight`、确定性 `prepare`、身份绑定 `deploy` 与统一的 at-most-once `invoke`，Cloudflare 和 Deislet 还实现了可核验 `cleanup`。仓库同时提供了带持久化证据 sink、受控 origin 和连接 barrier 的认证 harness service。`collect`、全流程 `run`、EdgeOne 公开清理路径与真实账户证据仍未完成，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
+本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight`、确定性 `prepare`、身份绑定 `deploy` 与统一的 at-most-once `invoke`，Cloudflare 和 Deislet 还实现了可核验 `cleanup`。仓库同时提供了带持久化证据 sink、受控 origin 和连接 barrier 的认证 harness service，以及把这些原始事实确定性转换为 observation 的 provider-neutral collector。各后端的单次 CPU 证据源、adapter `collect` 接线、全流程 `run`、EdgeOne 公开清理路径与真实账户证据仍未全部完成，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
 
 ## 固定边界
 
@@ -44,5 +44,7 @@ node conformance/harness/web-fetch-events/harness-service.mjs \
 ```
 
 stdout 只输出三个可填入 adapter 配置的 URL。默认只监听回环 HTTP，适合本机测试；边缘平台需要访问时，必须在它前面配置 HTTPS 反向代理并限制网络入口，不能把明文 HTTP 或令牌放到公网。`GET/POST /events` 和全部 `__edge-canon/control` 路径都要求 `Authorization: Bearer <token>`。服务将事件追加到权限为 `0600` 的 NDJSON，逐条 `fsync`，重启时重新验证完整记录；同一 `(backendId, invocationId, eventSequence)` 永不接受第二次写入。一次 operation 不得复用已有事件或已触发的 origin/barrier 状态。
+
+`provider-collection.mjs` 只接受已经完整落盘并绑定部署身份的 invocation。它复核固定请求计划、响应摘要和 96 条预期 wrapper 事件，保存 sink 快照与后端单次 CPU 原件，再生成 15 条 observation。snapshot、CPU 原件、observations 和 collection state 都使用确定性文件名、`0600` 权限与 SHA-256 绑定；崩溃后只会复用逐字节一致的既有文件。collector 不调用 oracle，也不写 `pass`/`compliant`；语义是否通过仍由 canonical `oracle.mjs` 唯一决定。
 
 `sample-pass.json` 只用于 oracle 自测，不是任何后端的运行证据。后续仍必须为三个一等后端各自实现 adapter 并真实运行全部用例，才能把 harness 标为 Complete。

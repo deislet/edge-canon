@@ -139,4 +139,11 @@ URL 或日志。证据 sink 对每个 wrapper event 要求从 0 开始连续递�
 
 `evidenceDirectory` 必须是本次 operation 独占目录，证据文件使用 `0600`，引用只能指向该目录内的不可变文件或访问受控的远端记录。adapter 输出原始 observation，不增加 `pass`、`compliant` 或 semantic waiver。
 
+`collect` 只接受状态为 `invoked` 且摘要复核通过的 invocation。它逐项复核固定 HTTP 计划、请求/响应
+字节摘要和 sink 中属于本 operation 的连续事件序列；未知 invocation、重复序列、缺口、额外事件或
+身份不符都属于证据无效，不能按失败用例猜测字段。sink 快照、单次 CPU 原件、observations 与
+collection state 必须分别不可变落盘并互相绑定摘要。崩溃后可复用已经完整落盘的原件，但不能用
+新的远端查询覆盖它。collector 只做事实归一化，不调用 oracle；即使 observation 描述的是不符合
+标准的行为，也不得在其中增加判定字段。
+
 manifest 为 `complete` 的必要条件是：八个操作均为 `implemented`、该 suite 全部用例均为 `implemented` 且无 blocker、三个 adapter 都通过真实测试账户运行，并能把 exact standard commit、canonical/derived artifact digest、provider deployment identity 和原始执行证据关联起来。仅完成 inspect/preflight 或本地 mock 仍是 `draft`。

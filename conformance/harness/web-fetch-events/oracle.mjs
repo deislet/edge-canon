@@ -57,7 +57,7 @@ const VERIFIERS = {
     requireValue(data.status === 200 && data.body === "edge-canon-sync", "T001 response differs");
   },
   "EC-WEB-T002"(data) {
-    exactKeys(data, ["status", "contextKeys", "contextObjectIdentityUnique", "environment", "parameter", "backgroundEvidence"], "T002 data");
+    exactKeys(data, ["status", "contextKeys", "contextObjectIdentityUnique", "environment", "parameter", "backgroundEvidence", "transportHeadersRemoved"], "T002 data");
     requireValue(data.status === 200, "T002 response status differs");
     requireValue(
       JSON.stringify(data.contextKeys) === JSON.stringify(["env", "params", "request", "waitUntil"]),
@@ -66,6 +66,7 @@ const VERIFIERS = {
     requireValue(data.contextObjectIdentityUnique === true, "T002 context object was reused");
     requireValue(data.environment === "edge-canon-env" && data.parameter === "edge-canon-param", "T002 injected values differ");
     requireValue(data.backgroundEvidence === "background-complete", "T002 background task did not complete");
+    requireValue(data.transportHeadersRemoved === true, "T002 adapter transport headers reached application code");
   },
   "EC-WEB-T003"(data) {
     exactKeys(data, ["entrypointCount", "exchanges"], "T003 data");

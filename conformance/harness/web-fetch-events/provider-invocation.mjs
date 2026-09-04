@@ -127,7 +127,7 @@ export function invocationStatePath(request, manifest) {
   return `${deploymentStatePath(request, manifest).slice(0, -5)}.invocation.json`;
 }
 
-function rawEvidencePath(request, manifest) {
+export function providerInvocationEvidencePath(request, manifest) {
   const evidence = privateDirectory(request.evidenceDirectory, "evidenceDirectory");
   const name = `${manifest.backendId}-${sha256(Buffer.from(`${manifest.backendId}\0${request.operationId}`, "utf8")).slice(0, 32)}-invoke.ndjson`;
   return path.join(evidence, name);
@@ -212,7 +212,7 @@ function appendRecord(filePath, sequence, caseId, stepId, kind, data) {
   return record;
 }
 
-function invocationId(operationId, caseId, variant = "default") {
+export function providerInvocationId(operationId, caseId, variant = "default") {
   const value = `ecw-${sha256(Buffer.from(`${operationId}\0${caseId}\0${variant}`, "utf8")).slice(0, 40)}`;
   fail(INVOCATION_ID.test(value), "EC_ADAPTER_INTERNAL", "generated invocation identity is invalid");
   return value;
@@ -239,7 +239,7 @@ function requestUrl(base, pathname) {
 
 function transportHeaders(request, manifest, environment, caseId, variant, evidenceMode = "on") {
   const headers = {
-    "x-edge-canon-invocation-id": invocationId(request.operationId, caseId, variant),
+    "x-edge-canon-invocation-id": providerInvocationId(request.operationId, caseId, variant),
     "x-edge-canon-evidence-token": environment.EDGE_CANON_EVIDENCE_TOKEN,
   };
   if (evidenceMode === "off") headers["x-edge-canon-evidence-mode"] = "off";
@@ -252,7 +252,7 @@ function transportHeaders(request, manifest, environment, caseId, variant, evide
 
 function selectedHeaders(headers) {
   const result = {};
-  for (const name of ["cache-control", "content-encoding", "content-length", "content-type"]) {
+  for (const name of ["cache-control", "cf-ray", "content-encoding", "content-length", "content-type"]) {
     const value = headers.get(name);
     if (value !== null) result[name] = value.slice(0, 1024);
   }
@@ -631,7 +631,7 @@ export async function invokeProvider({ request, manifest, environment, fetchImpl
     fail(deployment.status === "deployed", "EC_ADAPTER_STATE_INVALID", "invoke requires a verified deployed provider identity");
     const base = deploymentBaseUrl(deployment);
     const statePath = invocationStatePath(request, manifest);
-    const evidencePath = rawEvidencePath(request, manifest);
+    const evidencePath = providerInvocationEvidencePath(request, manifest);
     let state = readJsonFile(statePath, "invocation state");
     if (state) state = validateState(state, request, manifest, deployment, artifact, evidencePath);
     if (state?.status === "invoked") return outcome(request, manifest, statePath, state, evidencePath, "succeeded", null, false);
@@ -724,3 +724,17 @@ export async function invokeProvider({ request, manifest, environment, fetchImpl
 }
 
 export const invocationPlan = Object.freeze(PLAN.map((step) => ({ ...step })));
+
+export function loadProviderInvocation({ request, manifest }) {
+  validateDeploymentConfiguration(request, manifest);
+  validateHarnessConfiguration(request.configuration);
+  const { artifact, state: deployment } = loadProviderDeployment({ request, manifest });
+  fail(deployment.status === "deployed", "EC_ADAPTER_STATE_INVALID", "collection requires a verified deployed provider identity");
+  const statePath = invocationStatePath(request, manifest);
+  const evidencePath = providerInvocationEvidencePath(request, manifest);
+  const state = readJsonFile(statePath, "invocation state");
+  fail(state, "EC_ADAPTER_STATE_MISSING", "operation has no invocation state");
+  validateState(state, request, manifest, deployment, artifact, evidencePath);
+  fail(state.status === "invoked", "EC_ADAPTER_STATE_INVALID", "collection requires a completed invocation");
+  return { artifact, deployment, evidencePath, state, statePath };
+}
