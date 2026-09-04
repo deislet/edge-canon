@@ -10,6 +10,7 @@
   "calibrationPath": null,
   "oraclePath": "conformance/harness/streams-websockets-background-work/oracle.mjs",
   "observationSchema": "schemas/conformance-observations.schema.json",
+  "providerProtocol": "conformance/harness/streams-websockets-background-work/provider-runtime-protocol.zh.md",
   "contractSchema": "schemas/streams-websockets-background-work.schema.json",
   "validatorPath": "conformance/harness/streams-websockets-background-work/reference-runtime.mjs",
   "runnerPath": "conformance/harness/streams-websockets-background-work/runner.mjs",

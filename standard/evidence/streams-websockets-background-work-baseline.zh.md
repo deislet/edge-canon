@@ -38,3 +38,5 @@ EdgeOne 公开的 `TransformStream` writable 默认 high-water mark 为 32 KiB�
 ## Reference portability evidence
 
 2026-09-04 的 Linux、macOS 与 Windows 同源执行结果保存在 [`streams-websockets-background-work-platforms-2026-09-04.json`](../../conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json)。三套环境均通过 13 个 Draft case，并生成同一 capability-lock identity。该记录只证明 reference harness 的可移植性，不是 Cloudflare、EdgeOne 或 Deislet runtime 的合规证据。
+
+真实后端的第一阶段运行时证据按 [`provider-runtime-protocol.zh.md`](../../conformance/harness/streams-websockets-background-work/provider-runtime-protocol.zh.md) 采集。该协议固定同一份无供应商分支的应用夹具、两个并发 invocation、流式响应时序和 64 KiB 响应摘要；当前判定名称明确为 `runtime-partial-pass`，剩余生命周期、背压、取消与构建拒绝断言必须继续单独补齐。

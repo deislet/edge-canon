@@ -142,6 +142,13 @@ const VERIFIERS = {
   },
 };
 
+export function verifyCaseData(id, data) {
+  const verifier = VERIFIERS[id];
+  requireValue(verifier !== undefined, `unknown EC-STREAM case ${id}`);
+  verifier(data);
+  return data;
+}
+
 export function verifyDocument(document) {
   exactKeys(document, ["schemaVersion", "standardId", "suiteId", "backend", "artifactSha256", "cases"], "observation document");
   requireValue(document.schemaVersion === 1 && document.standardId === "edge-canon.next" && document.suiteId === "EC-STREAM", "observation identity differs");
@@ -159,7 +166,7 @@ export function verifyDocument(document) {
     byId.set(item.id, item);
   }
   requireValue(byId.size === EXPECTED_CASES.length && EXPECTED_CASES.every((id) => byId.has(id)), "draft harness requires exactly thirteen stream cases");
-  for (const id of EXPECTED_CASES) VERIFIERS[id](byId.get(id).data, document);
+  for (const id of EXPECTED_CASES) verifyCaseData(id, byId.get(id).data);
   return { suiteId: "EC-STREAM", status: "pass", caseIds: [...EXPECTED_CASES] };
 }
 
