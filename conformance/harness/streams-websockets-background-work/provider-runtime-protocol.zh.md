@@ -6,6 +6,7 @@
 
 - 应用入口：[`provider-runtime-fixture.mjs`](provider-runtime-fixture.mjs)
 - 结果判定：[`provider-runtime-oracle.mjs`](provider-runtime-oracle.mjs)
+- 受控采集器：[`provider-runtime-collect.mjs`](provider-runtime-collect.mjs)，固定 10 秒请求上限、1 MiB probe JSON 上限、禁用 redirect，并发执行两个 probe
 - handler 模型：`export default async function (context)`；`request` 与 `waitUntil` 都是该调用 context 的字段
 - 请求路径：`/?label=A`、`/?label=B`、`/stream`、`/capacity`
 
@@ -16,11 +17,12 @@
 1. 对精确标准提交、fixture、编译器、运行时和供应商 CLI 记录版本及摘要。
 2. 在隔离测试 namespace 中部署不可变产物，并保存 provider 返回的部署身份。
 3. 同时发起 `?label=A` 与 `?label=B`，原样保存两个 JSON 响应；不能串行调用来掩盖跨请求污染。
-4. 调用 `/stream`。客户端必须在响应体结束前观察到状态与响应头，并记录完整响应体、是否发生替代响应以及 `x-edge-canon-case`。
+4. 调用 `/stream`。客户端必须在响应体结束前观察到状态与响应头，并记录完整响应体、响应头到 body 结束的单调时钟时长、是否发生替代响应以及 `x-edge-canon-case`。该时长至少为 25 ms；否则不能排除后端把整个 body 缓冲后才提交响应头。
 5. 调用 `/capacity`。保存完整 65,536 字节响应体的长度与 SHA-256，并把两个容量响应头解析成整数。
-6. 把元数据、两个 probe、stream 和 capacity 事实组成单一证据 JSON，执行：
+6. 把精确标准、产物和部署身份写入不含凭据的 collector 配置，以受控采集器产生证据，再执行 oracle：
 
    ```bash
+   node provider-runtime-collect.mjs config.json > evidence.json
    node provider-runtime-oracle.mjs evidence.json
    ```
 
@@ -28,7 +30,7 @@
 
 ## 证据字段与判定边界
 
-顶层只允许 `schemaVersion`、`standardVersion`、`artifactSha256`、`provider`、`probes`、`stream` 和 `capacity`。`standardVersion` 必须是 `edge-canon.next@<40 位提交>`；`provider` 必须包含非空的 `id`、`implementationVersion` 和 `deploymentId`。
+顶层只允许 `schemaVersion`、`standardVersion`、`artifactSha256`、`provider`、`collectedAt`、`probes`、`stream` 和 `capacity`。`standardVersion` 必须是 `edge-canon.next@<40 位提交>`；`provider` 必须包含非空的 `id`、`implementationVersion` 和 `deploymentId`。
 
 通过结果固定为 `runtime-partial-pass`。当前真实运行时部分可证明 T001、T002、T004、T010，T003 的顺序与锁释放、T006 的流式响应、T009 的 stream canary，以及 T011 的字节约束和供应商全局隔离。以下事实仍须由受控 provider 客户端、生命周期证据 sink 或部署前编译证据补齐：
 

@@ -122,10 +122,10 @@ function validateProbe(document, expectedLabel) {
 }
 
 function validateStream(value) {
-  exactKeys(value, ["status", "contentType", "caseHeader", "body", "headersBeforeBodyEnd", "replacementResponses"], "stream evidence");
+  exactKeys(value, ["status", "contentType", "caseHeader", "body", "headersBeforeBodyEnd", "bodyDurationAfterHeadersMs", "replacementResponses"], "stream evidence");
   requireValue(value.status === 200 && value.contentType === "application/octet-stream", "T006 response metadata differs");
   requireValue(value.caseHeader === "EC-STREAM-T006" && equal(value.body, [1, 2, 3, 4]), "T006 streamed response differs");
-  requireValue(value.headersBeforeBodyEnd === true && value.replacementResponses === 0, "T006 response was buffered or replaced");
+  requireValue(value.headersBeforeBodyEnd === true && Number.isFinite(value.bodyDurationAfterHeadersMs) && value.bodyDurationAfterHeadersMs >= 25 && value.replacementResponses === 0, "T006 response was buffered or replaced");
 }
 
 function validateCapacity(value) {
@@ -141,9 +141,10 @@ function validateCapacity(value) {
 }
 
 export function verifyProviderRuntimeEvidence(evidence) {
-  exactKeys(evidence, ["schemaVersion", "standardVersion", "artifactSha256", "provider", "probes", "stream", "capacity"], "provider runtime evidence");
+  exactKeys(evidence, ["schemaVersion", "standardVersion", "artifactSha256", "provider", "collectedAt", "probes", "stream", "capacity"], "provider runtime evidence");
   requireValue(evidence.schemaVersion === 1 && EXACT_STANDARD.test(evidence.standardVersion), "provider runtime standard identity differs");
   requireValue(SHA256.test(evidence.artifactSha256), "provider runtime artifact digest is invalid");
+  requireValue(typeof evidence.collectedAt === "string" && Number.isFinite(Date.parse(evidence.collectedAt)), "provider runtime collection time is invalid");
   exactKeys(evidence.provider, ["id", "implementationVersion", "deploymentId"], "provider identity");
   for (const [key, value] of Object.entries(evidence.provider)) {
     requireValue(typeof value === "string" && value.length > 0, `provider ${key} is missing`);

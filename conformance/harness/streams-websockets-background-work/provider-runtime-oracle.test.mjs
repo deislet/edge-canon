@@ -58,6 +58,7 @@ for (const name of ["WebSocket", "WebSocketPair", "WebSocketServer"]) {
 }
 
 const { default: handler } = await import("./provider-runtime-fixture.mjs");
+const { collectProviderRuntimeEvidence } = await import("./provider-runtime-collect.mjs");
 const { verifyProviderRuntimeEvidence } = await import("./provider-runtime-oracle.mjs");
 
 function context() {
@@ -84,6 +85,7 @@ async function probe(label) {
 
 async function streamEvidence() {
   const response = await handler({ request: new Request("https://fixture.invalid/stream"), ...context().value });
+  const headersAt = performance.now();
   let bodyEnded = false;
   const headersBeforeBodyEnd = response.headers.get("x-edge-canon-case") === "EC-STREAM-T006" && !bodyEnded;
   const body = new Uint8Array(await response.arrayBuffer()).map((value) => value);
@@ -94,6 +96,7 @@ async function streamEvidence() {
     caseHeader: response.headers.get("x-edge-canon-case"),
     body: [...body],
     headersBeforeBodyEnd,
+    bodyDurationAfterHeadersMs: performance.now() - headersAt,
     replacementResponses: 0,
   };
 }
@@ -121,6 +124,7 @@ async function evidence() {
     standardVersion: "edge-canon.next@0123456789abcdef0123456789abcdef01234567",
     artifactSha256: "0".repeat(64),
     provider: { id: "test-runtime", implementationVersion: process.version, deploymentId: "local-test-process" },
+    collectedAt: "2026-09-05T00:00:00.000Z",
     probes: [a, b],
     stream,
     capacity,
@@ -142,6 +146,21 @@ test("the provider runtime oracle accepts the normalized EC-STREAM runtime subse
     "EC-STREAM-T011/runtime-byte-and-global-isolation",
   ]);
   assert.ok(result.remainingAssertions.includes("EC-STREAM-T007/waitUntil-all-settled"));
+});
+
+test("the provider-neutral collector produces oracle-ready concurrent evidence", async () => {
+  const fetchImpl = async (input) => {
+    const invocation = context();
+    return handler({ request: new Request(input), ...invocation.value });
+  };
+  const value = await collectProviderRuntimeEvidence({
+    standardVersion: "edge-canon.next@0123456789abcdef0123456789abcdef01234567",
+    artifactSha256: "0".repeat(64),
+    baseUrl: "https://fixture.invalid/",
+    provider: { id: "test-runtime", implementationVersion: process.version, deploymentId: "collector-test" },
+  }, fetchImpl);
+  assert.equal(verifyProviderRuntimeEvidence(value).status, "runtime-partial-pass");
+  assert.ok(value.stream.bodyDurationAfterHeadersMs >= 25);
 });
 
 test("the provider runtime oracle rejects a cross-invocation stream canary", async () => {
