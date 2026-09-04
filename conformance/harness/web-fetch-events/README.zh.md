@@ -1,6 +1,6 @@
 # EC-WEB 可执行 harness 草案
 
-本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight`、确定性 `prepare`、身份绑定 `deploy` 与统一的 at-most-once `invoke`，Cloudflare 和 Deislet 还实现了可核验 `cleanup`。仓库同时提供了带持久化证据 sink、受控 origin 和连接 barrier 的认证 harness service，以及把这些原始事实确定性转换为 observation 的 provider-neutral collector；Cloudflare `collect` 已接入按 Ray ID 查询的单次 invocation CPU 证据，Deislet `collect` 已接入按平台盖章 trace ID 查询的 OS 线程 CPU 证据。EdgeOne 的单次 CPU 证据源、全流程 `run`、EdgeOne 公开清理路径与真实账户证据仍未全部完成，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
+本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight`、确定性 `prepare`、身份绑定 `deploy` 与统一的 at-most-once `invoke`，Cloudflare 和 Deislet 还实现了可核验 `collect`、`cleanup` 和可恢复的全流程 `run`。仓库同时提供了带持久化证据 sink、受控 origin 和连接 barrier 的认证 harness service，以及把这些原始事实确定性转换为 observation 的 provider-neutral collector；Cloudflare `collect` 已接入按 Ray ID 查询的单次 invocation CPU 证据，Deislet `collect` 已接入按平台盖章 trace ID 查询的 OS 线程 CPU 证据。EdgeOne 的单次 CPU 证据源、公开清理路径、全流程 `run` 与三个后端的真实账户证据仍未全部完成，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
 
 ## 固定边界
 

@@ -26,6 +26,7 @@ import {
 } from "./provider-collection.mjs";
 import { cloudflareCpuCollector } from "./provider-cloudflare-cpu.mjs";
 import { deisletCpuCollector } from "./provider-deislet-cpu.mjs";
+import { runProvider, ProviderRunError } from "./provider-run.mjs";
 
 const PROTOCOL_VERSION = "edge-canon.provider-adapter/v1";
 const OPERATIONS = new Set(["inspect", "preflight", "prepare", "deploy", "invoke", "collect", "cleanup", "run"]);
@@ -195,6 +196,17 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
   fail(fs.statSync(request.evidenceDirectory, { throwIfNoEntry: false })?.isDirectory(), "EC_ADAPTER_REQUEST_INVALID", "evidenceDirectory is not a directory");
   fail(fs.statSync(request.canonicalArtifact.path, { throwIfNoEntry: false }) !== undefined, "EC_ADAPTER_REQUEST_INVALID", "canonical artifact does not exist");
 
+  if (request.operation === "run") {
+    const credentialNames = manifest.credentialEnvironment.run;
+    safeEnvironment(hostEnvironment, credentialNames);
+    return runProvider({
+      request,
+      manifest,
+      credentials: credentialNames.map((name) => hostEnvironment[name]),
+      phase: (_name, phaseRequest) => runAdapter({ manifestPath, request: phaseRequest, hostEnvironment }),
+    });
+  }
+
   const environment = safeEnvironment(
     hostEnvironment,
     manifest.credentialEnvironment[request.operation],
@@ -251,7 +263,7 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
 }
 
 function failureResult(request, manifest, error) {
-  const code = error instanceof AdapterError || error instanceof AdapterProcessError || error instanceof ProviderArtifactError || error instanceof ProviderDeploymentError || error instanceof ProviderInvocationError || error instanceof ProviderCollectionError
+  const code = error instanceof AdapterError || error instanceof AdapterProcessError || error instanceof ProviderArtifactError || error instanceof ProviderDeploymentError || error instanceof ProviderInvocationError || error instanceof ProviderCollectionError || error instanceof ProviderRunError
     ? error.code
     : "EC_ADAPTER_INTERNAL";
   return {
@@ -279,9 +291,13 @@ export async function adapterMain(manifestUrl, argv = process.argv.slice(2)) {
     request = readJson(argv[1], "request");
     const result = await runAdapter({ manifestPath, request });
     process.stdout.write(`${JSON.stringify(result)}\n`);
-    return 0;
+    return adapterExitCode(result);
   } catch (error) {
     process.stdout.write(`${JSON.stringify(failureResult(request, manifest, error))}\n`);
     return 1;
   }
+}
+
+export function adapterExitCode(result) {
+  return result?.outcome === "succeeded" ? 0 : 1;
 }

@@ -99,6 +99,14 @@ version 和 URL。调用供应商工具前必须先记录 `deploying`；超时�
 在 Control 删除回执确认全部节点卸载成功后才视为完成。EdgeOne CLI 1.6.32 和已确认的公开 API
 尚未提供非交互项目删除契约，因此其 cleanup 必须继续标为 pending，不能调用未公开接口冒充实现。
 
+`run` 使用独立的 `schemas/conformance-provider-run-state.schema.json` 状态文件和排他锁协调全部阶段。
+它在进入每个阶段前、取得阶段结果后以及形成终态时都以 `0600` 原子落盘；状态绑定 operation、
+backend、标准 commit、suite 和 canonical artifact 摘要。崩溃恢复只继续第一个尚未记录结果的阶段，
+不会重放已经完成的远端操作；各阶段自身的部署、调用和收集状态继续负责处理“已发送、未确认”的
+不确定窗口。只要曾进入部署阶段，后续任何失败都必须尝试 cleanup。主流程失败而 cleanup 成功时保留
+原失败；cleanup 为 `failed`、`indeterminate` 或抛出无法确认的错误时，整次 run 都返回
+`indeterminate` 且 `retrySafe=false`。终态 run 可重复读取而不会再次执行任何阶段。
+
 `invoke` 与部署、清理共用同一把 operation 锁，并在第一个被测 HTTP 请求前建立符合
 `schemas/conformance-provider-invocation-state.schema.json` 的 `0600` 状态。状态绑定部署 identity
 摘要、两级产物摘要、精确标准版本及固定调用计划。每个步骤先把 `currentStep` 原子落盘，再发请求；
@@ -159,4 +167,4 @@ Deislet 的 T012 响应由 runtime 在清除应用可写的 `x-deis-*` 后盖章
 `DEIS_TELEMETRY_AUTH_SECRET` 只经环境传入子进程。响应 ID 缺失、查询多义、身份不符、
 属性缺失或无效都使 collection 失败，不能以 `duration_us` 代替。
 
-manifest 为 `complete` 的必要条件是：八个操作均为 `implemented`、该 suite 全部用例均为 `implemented` 且无 blocker、三个 adapter 都通过真实测试账户运行，并能把 exact standard commit、canonical/derived artifact digest、provider deployment identity 和原始执行证据关联起来。仅完成 inspect/preflight 或本地 mock 仍是 `draft`。
+manifest 为 `complete` 的必要条件是：八个操作均为 `implemented`、该 suite 全部用例均为 `implemented` 且无 blocker、三个 adapter 都通过真实测试账户运行，并能把 exact standard commit、canonical/derived artifact digest、provider deployment identity 和原始执行证据关联起来。Cloudflare 与 Deislet 现已实现可恢复的八阶段 run，但尚无真实账户证据；EdgeOne 的 collect、cleanup 和 run 仍为 pending。仅完成本地或 mock 验证仍是 `draft`。

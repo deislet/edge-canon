@@ -31,7 +31,7 @@
     "invoke": ["derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "telemetryUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "collect": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "telemetryUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "cleanup": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "telemetryUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
-    "run": []
+    "run": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "telemetryUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"]
   },
   "operations": {
     "inspect": {"status": "implemented", "remoteSideEffects": false},
@@ -41,7 +41,7 @@
     "invoke": {"status": "implemented", "remoteSideEffects": true},
     "collect": {"status": "implemented", "remoteSideEffects": false},
     "cleanup": {"status": "implemented", "remoteSideEffects": true},
-    "run": {"status": "pending", "remoteSideEffects": true}
+    "run": {"status": "implemented", "remoteSideEffects": true}
   },
   "caseCoverage": [
     {"id": "EC-WEB-T001", "status": "pending", "blockers": ["observation collection and real-provider evidence remain pending"]},
@@ -68,7 +68,7 @@
     "cleanupAfterRunFailure": true
   },
   "limitations": [
-    "Inspect, preflight, deterministic prepare, collision-checked deploy, at-most-once invocation, exact trace-ID CPU collection and identity-bound cleanup are executable; run orchestration remains pending and this manifest is not conformance evidence.",
+    "Inspect, preflight, deterministic prepare, collision-checked deploy, at-most-once invocation, exact trace-ID CPU collection, identity-bound cleanup and recoverable run orchestration are executable; this draft manifest is not conformance evidence.",
     "No Deislet test account or exact deployment observation is recorded."
   ]
 }

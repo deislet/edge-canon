@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/conformance-provider-run-state.schema.json",
+  "title": "Edge Canon provider run state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "stateFormat", "operationId", "backendId", "standardVersion", "suiteId",
+    "canonicalArtifactSha256", "status", "currentPhase", "phaseResults", "observationsPath",
+    "evidenceRefs", "failure", "createdAt", "updatedAt"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "stateFormat": {"const": "edge-canon.provider-run-state/v1"},
+    "operationId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "backendId": {"enum": ["deislet", "cloudflare-workers-pages", "tencent-edgeone-makers"]},
+    "standardVersion": {"type": "string", "pattern": "^edge-canon\\.next@[0-9a-f]{40}$"},
+    "suiteId": {"const": "EC-WEB"},
+    "canonicalArtifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"enum": ["running", "succeeded", "failed", "indeterminate"]},
+    "currentPhase": {"type": ["string", "null"], "enum": ["preflight", "prepare", "deploy", "invoke", "collect", "cleanup", null]},
+    "phaseResults": {
+      "type": "array",
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phase", "completedAt", "result"],
+        "properties": {
+          "phase": {"enum": ["preflight", "prepare", "deploy", "invoke", "collect", "cleanup"]},
+          "completedAt": {"type": "string", "format": "date-time"},
+          "result": {"$ref": "conformance-provider-adapter-result.schema.json"}
+        }
+      }
+    },
+    "observationsPath": {"type": ["string", "null"], "minLength": 1},
+    "evidenceRefs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 2048}},
+    "failure": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message"],
+          "properties": {
+            "code": {"type": "string", "pattern": "^EC_ADAPTER_[A-Z0-9_]+$"},
+            "message": {"type": "string", "minLength": 1, "maxLength": 2048}
+          }
+        }
+      ]
+    },
+    "createdAt": {"type": "string", "format": "date-time"},
+    "updatedAt": {"type": "string", "format": "date-time"}
+  }
+}
