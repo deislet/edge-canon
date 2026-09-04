@@ -4,8 +4,8 @@
   "standardId": "edge-canon.next",
   "suiteId": "EC-ARTIFACT",
   "status": "draft-non-certifying",
-  "observedAt": "2026-09-04T18:47:11+08:00",
-  "artifactSha256": "b2bae4403adb7d6a95f0d9bdb0cae13b6138482b012f00f4efbe0675f2c74d2a",
+  "observedAt": "2026-09-05T04:30:17+08:00",
+  "artifactSha256": "c263c279082011e4494ca04d95b429f88513ab2283e47fac7aae4665b7b012b6",
   "referenceImplementationPath": "conformance/harness/canonical-build-artifact/fixture.mjs",
   "referenceImplementationSha256": "32d58c81d483afdd3b3f5d558d67bd382ad75be6666b13419f4c7cc9f763c8ea",
   "observations": [
@@ -15,8 +15,8 @@
       "architecture": "x86_64",
       "nodeVersion": "v22.21.1",
       "outcome": "pass",
-      "caseCount": 8,
-      "artifactSha256": "b2bae4403adb7d6a95f0d9bdb0cae13b6138482b012f00f4efbe0675f2c74d2a"
+      "caseCount": 9,
+      "artifactSha256": "c263c279082011e4494ca04d95b429f88513ab2283e47fac7aae4665b7b012b6"
     },
     {
       "platform": "macos",
@@ -24,22 +24,23 @@
       "architecture": "arm64",
       "nodeVersion": "v26.0.0",
       "outcome": "pass",
-      "caseCount": 8,
-      "artifactSha256": "b2bae4403adb7d6a95f0d9bdb0cae13b6138482b012f00f4efbe0675f2c74d2a"
+      "caseCount": 9,
+      "artifactSha256": "c263c279082011e4494ca04d95b429f88513ab2283e47fac7aae4665b7b012b6"
     },
     {
       "platform": "windows",
-      "osVersion": "10.0.26100.9168",
+      "osVersion": "10.0.26100",
       "architecture": "AMD64",
       "nodeVersion": "v24.16.0",
       "outcome": "pass",
-      "caseCount": 8,
-      "artifactSha256": "b2bae4403adb7d6a95f0d9bdb0cae13b6138482b012f00f4efbe0675f2c74d2a"
+      "caseCount": 9,
+      "artifactSha256": "c263c279082011e4494ca04d95b429f88513ab2283e47fac7aae4665b7b012b6"
     }
   ],
   "limitations": [
     "This is reference-harness evidence, not provider conformance or certification evidence.",
-    "The exact standard pin is the prior proposal commit 6a8768559372fb749650c9ef355d80524d3590ff; the reference builder bytes are bound separately.",
+    "The exact standard pin is de27fc1ca30139bca1254810f218a8b4d9256333; the reference builder bytes are bound separately.",
+    "Raw Linux, macOS, and Windows observation SHA-256 values are 53f04507f89bc7a86c1ec51ca69bb9a331380f844e5e554363cfb4277ad52bbe, de8407c59ecaff04925aba5295349e5fc726ac5ca682bbaa6674fb849bcfaa03, and 7d75d44d7f5d762d47e52ea2f8020e2b2139d4bc98d5b2a068e40d620fd5db98; runner and module-graph validator SHA-256 values are 81289e2334c54b9fa93fda202bc60d4b95ce16701c917d641eb136831a39a415 and 918a12d64daa31e4dfb6979a463d85d7a36f264b228f91b707f9a15886b6b3cb.",
     "Real framework adapters and provider-derived artifacts have not yet run this suite."
   ]
 }
