@@ -82,6 +82,7 @@ def validate_schema_documents() -> None:
         "conformance/harness/streams-websockets-background-work/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/cases/node-npm-subset.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/node-npm-subset/harness.json": "schemas/conformance-harness.schema.json",
+        "conformance/evidence/node-npm-subset-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/cases/web-platform-apis.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/web-platform-apis/harness.json": "schemas/conformance-harness.schema.json",
@@ -535,6 +536,7 @@ def main() -> int:
         validate_platform_evidence("conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json", kit)
         validate_platform_evidence("conformance/evidence/routing-static-assets-platforms-2026-09-04.json", kit)
         validate_platform_evidence("conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json", kit)
+        validate_platform_evidence("conformance/evidence/node-npm-subset-platforms-2026-09-04.json", kit)
         validate_platform_evidence("conformance/evidence/web-platform-apis-platforms-2026-09-04.json", kit)
     except (KeyError, TypeError, ValidationError) as error:
         print(f"governance validation failed: {error}", file=sys.stderr)

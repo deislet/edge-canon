@@ -35,3 +35,7 @@ package-lock v3 是首版唯一规范 lock 输入。registry dependency 必须�
 4. build resolver 实现 package-lock v3、registry auth、integrity、conditional exports/imports、CJS transform 与内容寻址缓存；
 5. 将 Cloudflare partial/stub 与 Deno/Node version drift 纳入持续差异探测；
 6. 资源、secret、cache poisoning、archive escape 和 package manager failure 全部取得故障注入证据。
+
+## Reference portability evidence
+
+2026-09-04 的 Linux x86_64、macOS arm64 与 Windows AMD64 同源执行结果保存在 [`node-npm-subset-platforms-2026-09-04.json`](../../conformance/evidence/node-npm-subset-platforms-2026-09-04.json)。三套环境均使用校验过的官方 Node.js 24.20.0 distribution，通过 15 个 Draft case，并生成同一 capability-lock identity 与同一 runner digest。该记录只证明 reference harness 和固定 Node 语义基线的跨开发机可复验性，不是 Cloudflare、EdgeOne 或 Deislet provider conformance。

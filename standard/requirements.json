@@ -94,7 +94,7 @@
       "conformance": {"suiteId": "EC-WEBAPI", "fixtureStatus": "draft", "oracleStatus": "draft", "harnessStatus": "draft"}
     },
     {
-      "id": "node-npm-subset", "definitionStatus": "draft", "draftPath": "standard/requirements/node-npm-subset.zh.md", "evidencePaths": ["standard/evidence/node-npm-subset-baseline.zh.md"],
+      "id": "node-npm-subset", "definitionStatus": "draft", "draftPath": "standard/requirements/node-npm-subset.zh.md", "evidencePaths": ["standard/evidence/node-npm-subset-baseline.zh.md", "conformance/evidence/node-npm-subset-platforms-2026-09-04.json"],
       "dimensions": {
         "api": {"status": "draft", "clauseIds": ["EC-NODE-API-001", "EC-NODE-API-002", "EC-NODE-API-003", "EC-NODE-API-004", "EC-NODE-API-005", "EC-NODE-API-006"]},
         "errors": {"status": "draft", "clauseIds": ["EC-NODE-ERR-001", "EC-NODE-ERR-002", "EC-NODE-ERR-003", "EC-NODE-ERR-004", "EC-NODE-ERR-005"]},
