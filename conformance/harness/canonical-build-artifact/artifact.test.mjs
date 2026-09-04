@@ -10,8 +10,14 @@ test("reference runner produces a passing EC-ARTIFACT observation", async () => 
   assert.deepEqual(verifyDocument(observation), {
     suiteId: "EC-ARTIFACT",
     status: "pass",
-    caseIds: Array.from({ length: 8 }, (_, index) => `EC-ARTIFACT-T${String(index + 1).padStart(3, "0")}`),
+    caseIds: Array.from({ length: 9 }, (_, index) => `EC-ARTIFACT-T${String(index + 1).padStart(3, "0")}`),
   });
+});
+
+test("oracle rejects an external module accepted by an implementation", () => {
+  const tampered = structuredClone(observation);
+  tampered.cases[8].data.external[0].code = null;
+  assert.throws(() => verifyDocument(tampered), /external module edge/);
 });
 
 test("oracle rejects a skipped mutation", () => {

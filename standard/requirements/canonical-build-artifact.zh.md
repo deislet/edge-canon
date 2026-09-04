@@ -22,11 +22,13 @@ canonical artifact identity 为根清单规范字节的 SHA-256。文件集合�
 - **EC-ARTIFACT-API-002**：根清单必须使用 `edge-canon.build-output/v1`，以 JCS 规范字节写入，并锁定 `edge-canon.next@<40-lowercase-hex-commit>` 形式的精确标准版本；canonical artifact identity 必须等于根清单规范字节的 SHA-256。
 - **EC-ARTIFACT-API-003**：`content.files` 必须按 UTF-8 路径字节序严格升序列出除根清单以外的每个普通文件且恰好一次，并记录准确 size、SHA-256 和 media type；`content.rootSha256` 必须按本文件定义的 v1 文件集合算法计算。
 - **EC-ARTIFACT-API-004**：`documents` 中每项必须引用 `content.files` 内同一路径和同一摘要；完成态产物至少索引 `runtime-entrypoints`、`sbom`、`provenance` 与 `validation-report` 四种文档，且同一 kind/path 组合不得重复。
+- **EC-ARTIFACT-API-005**：从 `runtime-entrypoints` 可达的每条运行时 module edge 必须在构建期闭包为 `content.files` 中的相对模块路径，或另一能力锁逐项选中的标准 runtime module specifier。bare package 与 `npm:`、`jsr:`、`http:`、`https:`、`data:`、`file:` 等外部解析形式可以作为受控构建输入，但不得残留在完成态 module graph；provider packager、部署端和运行时不得联网解析、读取宿主文件或转向供应商 package resolver 补全它们。
 
 ## 3. 错误
 
 - **EC-ARTIFACT-ERR-001**：验证失败必须产生稳定的 `EC_ARTIFACT_*` 失败代码和不含文件内容、secret value 或主机绝对路径的说明；不得把异常、JSON parser stack 或操作系统错误直接作为标准错误输出。
 - **EC-ARTIFACT-ERR-002**：清单非规范、字段未知、文件缺失、存在未列文件、摘要/大小不符、文档引用不符或文件类型不允许时，验证必须失败；实现不得修补、忽略或按供应商默认值解释后继续派生部署产物。
+- **EC-ARTIFACT-ERR-003**：module graph 中残留外部/bare edge 必须以 `EC_ARTIFACT_MODULE_EXTERNAL` 失败，指向缺失或越出产物的相对 edge 必须以 `EC_ARTIFACT_MODULE_MISSING` 失败；两者都必须发生在完成态发布和 provider 派生前，且错误不得回显 URL credential、registry token 或宿主绝对路径。
 
 ## 4. 并发、一致性与顺序
 

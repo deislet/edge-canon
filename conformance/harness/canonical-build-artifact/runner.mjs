@@ -8,8 +8,9 @@ import { fileURLToPath } from "node:url";
 import { canonicalJsonBytes } from "./canonical-json.mjs";
 import { buildFixture } from "./fixture.mjs";
 import { ArtifactValidationError, validateArtifact } from "./validator.mjs";
+import { ModuleGraphValidationError, validateRuntimeModuleGraph } from "./module-graph.mjs";
 
-const CASE_IDS = Array.from({ length: 8 }, (_, index) => `EC-ARTIFACT-T${String(index + 1).padStart(3, "0")}`);
+const CASE_IDS = Array.from({ length: 9 }, (_, index) => `EC-ARTIFACT-T${String(index + 1).padStart(3, "0")}`);
 
 function sha256(bytes) {
   return crypto.createHash("sha256").update(bytes).digest("hex");
@@ -239,6 +240,38 @@ export async function runSuite(options = {}) {
       migratedIdentity: migrated.artifactSha256,
       sourceMutated: sourceBefore.artifactSha256 !== sourceAfter.artifactSha256,
       lineageRecorded: provenance.predicate.buildDefinition.resolvedDependencies.some((item) => item.digest?.sha256 === sourceBefore.artifactSha256),
+    }));
+
+    const validGraph = validateRuntimeModuleGraph([
+      { path: "functions/main.js", imports: ["./dependency.js", "node:buffer"] },
+      { path: "functions/dependency.js", imports: [] },
+    ], ["node:buffer"]);
+    const graphFailure = (specifier) => {
+      try {
+        validateRuntimeModuleGraph([{ path: "functions/main.js", imports: [specifier] }]);
+        return { code: null, message: null };
+      } catch (error) {
+        if (!(error instanceof ModuleGraphValidationError)) throw error;
+        return { code: error.code, message: error.message };
+      }
+    };
+    const external = [
+      "bare-package",
+      "npm:package@1",
+      "jsr:@scope/package@1",
+      "http://example.invalid/module.js",
+      "https://user:EC_MODULE_SECRET@example.invalid/module.js",
+      "data:text/javascript,export default 1",
+      "file:///host/module.js",
+    ].map((specifier) => ({ variant: specifier.split(":", 1)[0], ...graphFailure(specifier) }));
+    const missing = ["./missing.js", "../../outside.js"]
+      .map((specifier) => ({ variant: specifier, ...graphFailure(specifier) }));
+    cases.push(record(CASE_IDS[8], {
+      validGraph,
+      external: external.map(({ variant, code }) => ({ variant, code })),
+      missing: missing.map(({ variant, code }) => ({ variant, code })),
+      credentialLeaked: [...external, ...missing]
+        .some((value) => value.message?.includes("EC_MODULE_SECRET")),
     }));
 
     return {

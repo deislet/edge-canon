@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const EXPECTED_CASES = Array.from({ length: 8 }, (_, index) => `EC-ARTIFACT-T${String(index + 1).padStart(3, "0")}`);
+const EXPECTED_CASES = Array.from({ length: 9 }, (_, index) => `EC-ARTIFACT-T${String(index + 1).padStart(3, "0")}`);
 const SHA256 = /^[0-9a-f]{64}$/;
 const EXACT_STANDARD_VERSION = /^edge-canon\.next@[0-9a-f]{40}$/;
 
@@ -80,6 +80,14 @@ const VERIFIERS = {
     requireValue(SHA256.test(data.sourceIdentity) && SHA256.test(data.migratedIdentity) && data.sourceIdentity !== data.migratedIdentity, "T008 migration did not create a new identity");
     requireValue(data.sourceMutated === false && data.lineageRecorded === true, "T008 migration mutated its input or lost lineage");
   },
+  "EC-ARTIFACT-T009"(data) {
+    exactKeys(data, ["validGraph", "external", "missing", "credentialLeaked"], "T009 data");
+    exactKeys(data.validGraph, ["moduleCount", "fileEdges", "runtimeEdges", "closed"], "T009 valid graph");
+    requireValue(JSON.stringify(data.validGraph) === JSON.stringify({ moduleCount: 2, fileEdges: 1, runtimeEdges: 1, closed: true }), "T009 valid graph did not close over artifact/runtime modules");
+    requireValue(data.external.length === 7 && data.external.every((value) => value.code === "EC_ARTIFACT_MODULE_EXTERNAL"), "T009 external module edge was accepted or used a divergent code");
+    requireValue(data.missing.length === 2 && data.missing.every((value) => value.code === "EC_ARTIFACT_MODULE_MISSING"), "T009 missing module edge was accepted or used a divergent code");
+    requireValue(data.credentialLeaked === false, "T009 diagnostic leaked URL credentials");
+  },
 };
 
 export function verifyDocument(document) {
@@ -99,7 +107,7 @@ export function verifyDocument(document) {
     requireValue(Array.isArray(item.evidenceRefs) && new Set(item.evidenceRefs).size === item.evidenceRefs.length && item.evidenceRefs.every((value) => typeof value === "string" && value.length > 0), `${item.id} evidence references are invalid`);
     byId.set(item.id, item);
   }
-  requireValue(byId.size === EXPECTED_CASES.length && EXPECTED_CASES.every((id) => byId.has(id)), "draft harness requires exactly eight artifact cases");
+  requireValue(byId.size === EXPECTED_CASES.length && EXPECTED_CASES.every((id) => byId.has(id)), "draft harness requires exactly nine artifact cases");
   for (const id of EXPECTED_CASES) VERIFIERS[id](byId.get(id).data, document);
   return { suiteId: "EC-ARTIFACT", status: "pass", caseIds: [...EXPECTED_CASES] };
 }

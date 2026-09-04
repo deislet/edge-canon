@@ -69,6 +69,14 @@
       "clauseIds": ["EC-ARTIFACT-UPG-001", "EC-ARTIFACT-UPG-002"],
       "fixture": {"scenario": "把格式改为 v2、把标准版本改为 next/短 commit，并从合法 v1 生成一个新 identity 的迁移副本", "requirements": ["version mutation set", "read-only source artifact", "migration lineage evidence"]},
       "oracle": {"observations": ["version failure codes", "source identity", "migrated identity", "source mutation"], "assertions": ["未知 major 和非精确版本在读取语义文档前失败", "迁移不修改源产物", "迁移产物具有新 identity 并记录 lineage"]}
+    },
+    {
+      "id": "EC-ARTIFACT-T009",
+      "title": "运行时 module graph 在产物内闭包",
+      "kind": "security",
+      "clauseIds": ["EC-ARTIFACT-API-005", "EC-ARTIFACT-ERR-003"],
+      "fixture": {"scenario": "验证产物内相对 edge 与已锁定标准 runtime module，并注入 bare、URL scheme、缺失及越界 module edge", "requirements": ["runtime module inventory", "selected runtime module list", "external and missing mutation set"]},
+      "oracle": {"observations": ["closed graph", "external failure codes", "missing failure codes", "credential leakage"], "assertions": ["合法 graph 只解析到产物文件或精确 runtime module", "所有外部与 bare edge 以统一代码失败", "缺失和越界相对 edge 以统一代码失败", "诊断不泄漏 URL credential"]}
     }
   ]
 }

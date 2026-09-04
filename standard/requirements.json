@@ -176,8 +176,8 @@
         "conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json"
       ],
       "dimensions": {
-        "api": {"status": "draft", "clauseIds": ["EC-ARTIFACT-API-001", "EC-ARTIFACT-API-002", "EC-ARTIFACT-API-003", "EC-ARTIFACT-API-004"]},
-        "errors": {"status": "draft", "clauseIds": ["EC-ARTIFACT-ERR-001", "EC-ARTIFACT-ERR-002"]},
+        "api": {"status": "draft", "clauseIds": ["EC-ARTIFACT-API-001", "EC-ARTIFACT-API-002", "EC-ARTIFACT-API-003", "EC-ARTIFACT-API-004", "EC-ARTIFACT-API-005"]},
+        "errors": {"status": "draft", "clauseIds": ["EC-ARTIFACT-ERR-001", "EC-ARTIFACT-ERR-002", "EC-ARTIFACT-ERR-003"]},
         "concurrency-consistency-ordering": {"status": "draft", "clauseIds": ["EC-ARTIFACT-CON-001", "EC-ARTIFACT-CON-002"]},
         "lifecycle": {"status": "draft", "clauseIds": ["EC-ARTIFACT-LIFE-001"]},
         "minimum-resource-guarantees": {"status": "pending", "clauseIds": []},

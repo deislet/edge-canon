@@ -7,7 +7,8 @@
   "executionKind": "local-reference",
   "fixturePath": "conformance/harness/canonical-build-artifact/fixture.mjs",
   "fixtureDependencyPaths": [
-    "conformance/harness/canonical-build-artifact/canonical-json.mjs"
+    "conformance/harness/canonical-build-artifact/canonical-json.mjs",
+    "conformance/harness/canonical-build-artifact/module-graph.mjs"
   ],
   "calibrationPath": null,
   "oraclePath": "conformance/harness/canonical-build-artifact/oracle.mjs",
@@ -24,6 +25,7 @@
     "EC-ARTIFACT-T005",
     "EC-ARTIFACT-T006",
     "EC-ARTIFACT-T007",
-    "EC-ARTIFACT-T008"
+    "EC-ARTIFACT-T008",
+    "EC-ARTIFACT-T009"
   ]
 }
