@@ -25,10 +25,10 @@
   },
   "requiredConfiguration": {
     "inspect": [],
-    "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
-    "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
-    "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
-    "invoke": ["derivedDirectory", "projectName", "compatibilityDate", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
+    "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "invoke": ["derivedDirectory", "projectName", "compatibilityDate", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "collect": [],
     "cleanup": [],
     "run": []

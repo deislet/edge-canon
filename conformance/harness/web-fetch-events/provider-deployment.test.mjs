@@ -5,7 +5,7 @@ import test from "node:test";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
-import { buildCanonicalArtifact } from "./canonical-artifact.mjs";
+import { buildCanonicalArtifact, sha256 } from "./canonical-artifact.mjs";
 import { runAdapter } from "./provider-adapter-cli.mjs";
 import {
   cleanupProvider,
@@ -62,6 +62,8 @@ async function harness(context, backendId, operationId) {
       controlledOriginUrl: "https://origin.invalid",
       connectionBarrierOriginUrl: "https://barrier.invalid",
       cpuIterations: 10_000,
+      calibratedCpuMilliseconds: 9,
+      calibratedWorkSha256: sha256(fs.readFileSync(path.join(root, "canonical", "cpu-workload.mjs"))),
     },
   };
   await runAdapter({ manifestPath: manifestPath(backendId), request, hostEnvironment: {} });

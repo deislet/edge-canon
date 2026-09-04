@@ -14,6 +14,10 @@ const CANONICAL_FILES = [
     repositoryPath: "conformance/harness/web-fetch-events/fixture.mjs",
     artifactPath: "fixture.mjs",
   },
+  {
+    repositoryPath: "conformance/harness/web-fetch-events/oracle.mjs",
+    artifactPath: "oracle.mjs",
+  },
 ];
 
 function fail(condition, message) {

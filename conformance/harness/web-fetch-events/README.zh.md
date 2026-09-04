@@ -1,6 +1,6 @@
 # EC-WEB 可执行 harness 草案
 
-本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight`、确定性 `prepare`、身份绑定 `deploy` 与统一的 at-most-once `invoke`，Cloudflare 和 Deislet 还实现了可核验 `cleanup`。`collect`、全流程 `run`、EdgeOne 公开清理路径与真实账户证据仍未完成，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
+本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight`、确定性 `prepare`、身份绑定 `deploy` 与统一的 at-most-once `invoke`，Cloudflare 和 Deislet 还实现了可核验 `cleanup`。仓库同时提供了带持久化证据 sink、受控 origin 和连接 barrier 的认证 harness service。`collect`、全流程 `run`、EdgeOne 公开清理路径与真实账户证据仍未完成，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
 
 ## 固定边界
 
@@ -29,6 +29,20 @@ node conformance/harness/web-fetch-events/canonical-artifact.mjs \
 会在 request 的 `workDirectory` 内生成并验证 provider 派生目录；相同输入可安全重入，不同
 内容不会被覆盖。
 
-T012 先在 adapter 所在执行机运行 `node conformance/harness/web-fetch-events/calibrate-cpu.mjs`，把输出的 iterations 注入 `CPU_ITERATIONS`；`measuredCpuMilliseconds` 必须来自后端自身 CPU 计量，adapter 还须保存校准工作负载摘要和 fresh execution environment 证据，wall time 不可代替。T013 固定为 48 个直接 fetch 加一个发生一次跳转的 fetch，即 49 次 API 调用、50 个计入预算的子请求。T014 的受控 origin 必须在放行响应头前保存已有连接数，不能从最终成功数倒推并发。T015 发送第 `i` 个 octet 为 `i % 251` 的 1,000,000-octet body，固定 SHA-256 为 `2c030d49ec131bfbbb446ad21e7a2f12cdb4f2f4f3fda3ac709dd2e68a4646c7`；请求不得携带 `Content-Encoding`，并必须声明准确的 `Content-Length: 1000000`。
+T012 先在 adapter 所在执行机运行 `node conformance/harness/web-fetch-events/calibrate-cpu.mjs`，把输出的 `iterations`、`calibratedCpuMilliseconds` 和 `calibratedWorkSha256` 原样写入 adapter 配置；派生产物会再次核对工作负载摘要。`measuredCpuMilliseconds` 必须来自后端自身的单次 invocation CPU 计量，adapter 还须保存 fresh execution environment 证据，wall time 不可代替。T013 固定为 48 个直接 fetch 加一个发生一次跳转的 fetch，即 49 次 API 调用、50 个计入预算的子请求。T014 的受控 origin 必须在放行响应头前保存已有连接数，不能从最终成功数倒推并发。T015 发送第 `i` 个 octet 为 `i % 251` 的 1,000,000-octet body，固定 SHA-256 为 `2c030d49ec131bfbbb446ad21e7a2f12cdb4f2f4f3fda3ac709dd2e68a4646c7`；请求不得携带 `Content-Encoding`，并必须声明准确的 `Content-Length: 1000000`。
+
+## Harness service
+
+`harness-service.mjs` 把三个测试服务合并到同一地址，令 T013/T014 的服务端事实和 wrapper 发送的生命周期事件可由 `collect` 独立读取。令牌只能经环境变量提供；状态目录必须是本次 operation 独占的绝对路径：
+
+```bash
+EDGE_CANON_EVIDENCE_TOKEN='<至少 32 位 URL-safe 随机值>' \
+node conformance/harness/web-fetch-events/harness-service.mjs \
+  --state-directory /absolute/private/operation-evidence \
+  --host 127.0.0.1 \
+  --port 0
+```
+
+stdout 只输出三个可填入 adapter 配置的 URL。默认只监听回环 HTTP，适合本机测试；边缘平台需要访问时，必须在它前面配置 HTTPS 反向代理并限制网络入口，不能把明文 HTTP 或令牌放到公网。`GET/POST /events` 和全部 `__edge-canon/control` 路径都要求 `Authorization: Bearer <token>`。服务将事件追加到权限为 `0600` 的 NDJSON，逐条 `fsync`，重启时重新验证完整记录；同一 `(backendId, invocationId, eventSequence)` 永不接受第二次写入。一次 operation 不得复用已有事件或已触发的 origin/barrier 状态。
 
 `sample-pass.json` 只用于 oracle 自测，不是任何后端的运行证据。后续仍必须为三个一等后端各自实现 adapter 并真实运行全部用例，才能把 harness 标为 Complete。

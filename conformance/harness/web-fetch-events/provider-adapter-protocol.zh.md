@@ -128,6 +128,13 @@ origin status 至少返回 `totalRequestCount`；barrier status 返回互不重�
 `waitingSlots`、`startedSlots`、`cancelledSlots`。T014 只有在独立控制面已经观察到至少六条连接等待
 响应头后才释放 barrier。管理面或网络结果不确定同样使本次 invoke 不可重放。
 
+仓库内 `harness-service.mjs` 是这组路径的参考实现。它默认只允许回环 HTTP；供真实边缘部署访问时
+必须置于 HTTPS 终止代理之后并限制网络入口。Bearer token 只经环境变量送入进程，不得出现在参数、
+URL 或日志。证据 sink 对每个 wrapper event 要求从 0 开始连续递增的 `eventSequence`，并以
+`(backendId, invocationId, eventSequence)` 为不可重复身份；持久化记录逐条落盘，服务重启后仍拒绝
+重复事件。`invoke` 在建立本地状态、发出首个 handler 请求之前必须通过认证 GET 证明 sink 为空，
+从而禁止跨 operation 混用证据。
+
 ## 证据和完成条件
 
 `evidenceDirectory` 必须是本次 operation 独占目录，证据文件使用 `0600`，引用只能指向该目录内的不可变文件或访问受控的远端记录。adapter 输出原始 observation，不增加 `pass`、`compliant` 或 semantic waiver。

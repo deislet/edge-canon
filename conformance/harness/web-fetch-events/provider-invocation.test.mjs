@@ -52,6 +52,8 @@ async function setupHarness(context, operationId) {
       controlledOriginUrl: "https://origin.test",
       connectionBarrierOriginUrl: "https://barrier.test",
       cpuIterations: 10_000,
+      calibratedCpuMilliseconds: 9,
+      calibratedWorkSha256: sha256(fs.readFileSync(path.join(root, "canonical", "cpu-workload.mjs"))),
     },
   };
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
@@ -102,8 +104,14 @@ function standardError() {
 function fullFetchDouble() {
   let providerCalls = 0;
   let controlCalls = 0;
+  let sinkCalls = 0;
   const fetchImpl = async (input, options = {}) => {
     const url = new URL(input);
+    if (url.hostname === "evidence.test") {
+      sinkCalls += 1;
+      assert.equal(options.headers.authorization, "Bearer evidence_token_123456789012345678901234");
+      return json({ schemaVersion: 1, records: [] });
+    }
     if (url.hostname === "origin.test" || url.hostname === "barrier.test") {
       controlCalls += 1;
       if (url.pathname.endsWith("/origin/status")) {
@@ -184,7 +192,7 @@ function fullFetchDouble() {
   };
   return {
     fetchImpl,
-    counts: () => ({ providerCalls, controlCalls }),
+    counts: () => ({ providerCalls, controlCalls, sinkCalls }),
   };
 }
 
@@ -196,7 +204,7 @@ test("invoke executes the exact provider-neutral plan once and binds immutable r
   assert.equal(first.outcome, "succeeded");
   assert.equal(first.data.state.status, "invoked");
   assert.equal(first.data.state.completedSteps.length, 16);
-  assert.deepEqual(double.counts(), { providerCalls: 28, controlCalls: 5 });
+  assert.deepEqual(double.counts(), { providerCalls: 28, controlCalls: 5, sinkCalls: 1 });
   assert.equal(fs.statSync(first.data.statePath).mode & 0o777, 0o600);
   const evidencePath = path.join(setup.request.evidenceDirectory, first.data.state.rawEvidenceFile);
   assert.equal(fs.statSync(evidencePath).mode & 0o777, 0o600);
@@ -212,14 +220,17 @@ test("invoke executes the exact provider-neutral plan once and binds immutable r
   const repeated = await invokeProvider({ ...setup, environment, fetchImpl: double.fetchImpl });
   assert.equal(repeated.outcome, "succeeded");
   assert.equal(repeated.mutatedRemoteState, false);
-  assert.deepEqual(double.counts(), { providerCalls: 28, controlCalls: 5 });
+  assert.deepEqual(double.counts(), { providerCalls: 28, controlCalls: 5, sinkCalls: 1 });
 });
 
 test("an uncertain HTTP exchange is persisted and never replayed", async (context) => {
   const setup = await setupHarness(context, "invoke-indeterminate");
   const environment = { EDGE_CANON_EVIDENCE_TOKEN: "evidence_token_123456789012345678901234" };
   let calls = 0;
-  const fetchImpl = async () => {
+  const fetchImpl = async (input) => {
+    if (new URL(input).hostname === "evidence.test") {
+      return json({ schemaVersion: 1, records: [] });
+    }
     calls += 1;
     throw new Error("socket outcome is unknown");
   };

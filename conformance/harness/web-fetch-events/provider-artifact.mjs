@@ -5,7 +5,7 @@ import { serializeArtifactManifest, sha256 } from "./canonical-artifact.mjs";
 
 const SHA256 = /^[0-9a-f]{64}$/;
 const PROJECT_NAME = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
-const EXPECTED_CANONICAL_FILES = ["cpu-workload.mjs", "fixture.mjs"];
+const EXPECTED_CANONICAL_FILES = ["cpu-workload.mjs", "fixture.mjs", "oracle.mjs"];
 const DERIVED_MANIFEST = "edge-canon-derived-artifact.json";
 
 export class ProviderArtifactError extends Error {
@@ -205,8 +205,12 @@ function standardContext(request, nativeEnvironment, nativeWaitUntil) {
   const applicationRequest = new Request(request, { headers: applicationHeaders });
   let closed = false;
   let registeredBackgroundTaskCount = 0;
+  let eventSequence = 0;
   function deliver(event, fields) {
-    const delivery = emitEvidence(event, fields, evidenceToken, evidenceEnabled);
+    const delivery = emitEvidence(event, {
+      ...fields,
+      eventSequence: eventSequence++,
+    }, evidenceToken, evidenceEnabled);
     try {
       nativeWaitUntil(delivery);
     } catch {
@@ -219,6 +223,7 @@ function standardContext(request, nativeEnvironment, nativeWaitUntil) {
       return emitEvidence("record", {
         invocationId,
         marker: String(marker).slice(0, 256),
+        eventSequence: eventSequence++,
       }, evidenceToken, evidenceEnabled);
     },
   });
@@ -361,6 +366,7 @@ function providerFiles(backendId, canonical, configuration) {
   const files = new Map([
     ["canonical/cpu-workload.mjs", canonical.contents.get("cpu-workload.mjs")],
     ["canonical/fixture.mjs", canonical.contents.get("fixture.mjs")],
+    ["canonical/oracle.mjs", canonical.contents.get("oracle.mjs")],
   ]);
   if (backendId === "cloudflare-workers-pages") {
     files.set("src/index.mjs", Buffer.from(`${wrapperPrelude(backendId, configuration)}export default {
@@ -463,6 +469,19 @@ export function validateHarnessConfiguration(input) {
     "EC_ADAPTER_CONFIGURATION_INVALID",
     "cpuIterations must be an integer between 1 and 100000000",
   );
+  fail(
+    Number.isFinite(configuration.calibratedCpuMilliseconds)
+      && configuration.calibratedCpuMilliseconds >= 8
+      && configuration.calibratedCpuMilliseconds <= 10,
+    "EC_ADAPTER_CONFIGURATION_INVALID",
+    "calibratedCpuMilliseconds must be between 8 and 10",
+  );
+  fail(
+    typeof configuration.calibratedWorkSha256 === "string"
+      && SHA256.test(configuration.calibratedWorkSha256),
+    "EC_ADAPTER_CONFIGURATION_INVALID",
+    "calibratedWorkSha256 must be a SHA-256 digest",
+  );
   return configuration;
 }
 
@@ -484,6 +503,11 @@ function validatePrepareConfiguration(request) {
 }
 
 function buildExpected(request, manifest, canonical, configuration) {
+  fail(
+    configuration.calibratedWorkSha256 === canonical.manifest.files.find(({ path: filePath }) => filePath === "cpu-workload.mjs")?.sha256,
+    "EC_ADAPTER_CONFIGURATION_INVALID",
+    "calibratedWorkSha256 differs from the pinned canonical workload",
+  );
   const generated = providerFiles(manifest.backendId, canonical, configuration);
   const files = [...generated.files.entries()]
     .map(([relativePath, bytes]) => ({ path: relativePath, size: bytes.byteLength, sha256: sha256(bytes) }))
@@ -498,6 +522,9 @@ function buildExpected(request, manifest, canonical, configuration) {
     inputs: {
       projectName: configuration.projectName,
       compatibilityDate: configuration.compatibilityDate,
+      cpuIterations: configuration.cpuIterations,
+      calibratedCpuMilliseconds: configuration.calibratedCpuMilliseconds,
+      calibratedWorkSha256: configuration.calibratedWorkSha256,
     },
     entrypoint: generated.entrypoint,
     files,

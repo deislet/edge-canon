@@ -25,12 +25,12 @@
   },
   "requiredConfiguration": {
     "inspect": [],
-    "preflight": ["toolExecutable", "toolSourceRevision", "toolSha256", "controlUrl", "runtimeUrl", "environmentName", "projectName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
-    "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
-    "deploy": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
-    "invoke": ["derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
+    "preflight": ["toolExecutable", "toolSourceRevision", "toolSha256", "controlUrl", "runtimeUrl", "environmentName", "projectName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "deploy": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "invoke": ["derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "collect": [],
-    "cleanup": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
+    "cleanup": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "run": []
   },
   "operations": {

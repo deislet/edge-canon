@@ -12,6 +12,9 @@ import { ProviderArtifactError } from "./provider-artifact.mjs";
 const repositoryRoot = path.resolve(fileURLToPath(new URL("../../..", import.meta.url)));
 const revision = execFileSync("git", ["-C", repositoryRoot, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 const standardVersion = `edge-canon.next@${revision}`;
+const calibratedWorkSha256 = sha256(execFileSync("git", [
+  "-C", repositoryRoot, "show", `${revision}:conformance/harness/web-fetch-events/cpu-workload.mjs`,
+]));
 const providers = [
   {
     backendId: "cloudflare-workers-pages",
@@ -70,6 +73,8 @@ function prepareRequest(root, canonical, provider, suffix = "one") {
       controlledOriginUrl: "https://origin.invalid",
       connectionBarrierOriginUrl: "https://barrier.invalid",
       cpuIterations: 10_000,
+      calibratedCpuMilliseconds: 9,
+      calibratedWorkSha256,
     },
   };
 }
@@ -84,7 +89,7 @@ test("canonical artifact is made from exact Git bytes with a stable digest", (co
   const manifest = JSON.parse(manifestBytes);
   assert.equal(canonical.canonicalArtifactSha256, sha256(manifestBytes));
   assert.equal(manifest.standardVersion, standardVersion);
-  assert.deepEqual(manifest.files.map((file) => file.path), ["cpu-workload.mjs", "fixture.mjs"]);
+  assert.deepEqual(manifest.files.map((file) => file.path), ["cpu-workload.mjs", "fixture.mjs", "oracle.mjs"]);
   for (const file of manifest.files) {
     const committed = execFileSync("git", ["-C", repositoryRoot, "show", `${revision}:conformance/harness/web-fetch-events/${file.path}`]);
     assert.deepEqual(fs.readFileSync(path.join(root, "canonical", file.path)), committed);

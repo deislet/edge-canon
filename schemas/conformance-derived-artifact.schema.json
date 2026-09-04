@@ -18,10 +18,13 @@
     "inputs": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["projectName", "compatibilityDate"],
+      "required": ["projectName", "compatibilityDate", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
       "properties": {
         "projectName": {"type": "string", "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"},
-        "compatibilityDate": {"type": "string", "format": "date"}
+        "compatibilityDate": {"type": "string", "format": "date"},
+        "cpuIterations": {"type": "integer", "minimum": 1, "maximum": 100000000},
+        "calibratedCpuMilliseconds": {"type": "number", "minimum": 8, "maximum": 10},
+        "calibratedWorkSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       }
     },
     "entrypoint": {"type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))[^\\\\]+$"},

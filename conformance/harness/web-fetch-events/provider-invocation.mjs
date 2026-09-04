@@ -424,6 +424,33 @@ async function controlExchange(origin, suffix, token, fetchImpl, timeoutMs, meth
   }
 }
 
+async function assertEvidenceSinkEmpty(url, token, fetchImpl, timeoutMs) {
+  const controller = new AbortController();
+  const deadlineAt = Date.now() + timeoutMs;
+  try {
+    const response = await beforeDeadline(fetchImpl(url, {
+      method: "GET",
+      headers: { authorization: `Bearer ${token}`, accept: "application/json" },
+      redirect: "error",
+      signal: controller.signal,
+    }), deadlineAt, controller);
+    fail(response.ok, "EC_ADAPTER_HARNESS_SERVICE_FAILED", `evidence sink returned HTTP ${response.status}`);
+    const result = await readBody(response, 64 * 1024, deadlineAt, controller);
+    let document;
+    try {
+      document = JSON.parse(result.bytes.toString("utf8"));
+    } catch {
+      throw new ProviderInvocationError("EC_ADAPTER_HARNESS_SERVICE_FAILED", "evidence sink returned invalid JSON");
+    }
+    fail(document?.schemaVersion === 1 && Array.isArray(document.records), "EC_ADAPTER_HARNESS_SERVICE_FAILED", "evidence sink response shape differs");
+    fail(document.records.length === 0, "EC_ADAPTER_EVIDENCE_CONFLICT", "operation evidence sink is not empty before invocation");
+  } catch (error) {
+    controller.abort();
+    if (error instanceof ProviderInvocationError) throw error;
+    throw new ProviderInvocationError("EC_ADAPTER_HARNESS_SERVICE_FAILED", "evidence sink query failed");
+  }
+}
+
 function validSlots(value, label) {
   fail(Array.isArray(value), "EC_ADAPTER_HARNESS_SERVICE_FAILED", `${label} is not an array`);
   fail(value.every((slot) => Number.isSafeInteger(slot) && slot >= 0 && slot <= 6), "EC_ADAPTER_HARNESS_SERVICE_FAILED", `${label} contains an invalid slot`);
@@ -626,6 +653,13 @@ export async function invokeProvider({ request, manifest, environment, fetchImpl
         false,
       );
     }
+
+    await assertEvidenceSinkEmpty(
+      request.configuration.evidenceSinkUrl,
+      environment.EDGE_CANON_EVIDENCE_TOKEN,
+      fetchImpl,
+      Math.min(manifest.security.timeoutSeconds * 1_000, 30_000),
+    );
 
     const evidenceStatus = fs.lstatSync(evidencePath, { throwIfNoEntry: false });
     fail(!evidenceStatus, "EC_ADAPTER_EVIDENCE_CONFLICT", "invocation evidence exists without its bound state");

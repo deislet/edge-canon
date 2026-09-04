@@ -106,6 +106,8 @@ test("Cloudflare preflight verifies the package lock and keeps credentials out o
       controlledOriginUrl: "https://origin.invalid",
       connectionBarrierOriginUrl: "https://barrier.invalid",
       cpuIterations: 10_000,
+      calibratedCpuMilliseconds: 9,
+      calibratedWorkSha256: "a".repeat(64),
     },
   };
   const manifestPath = fileURLToPath(new URL(
