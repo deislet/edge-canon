@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../schemas/conformance-harness.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-WEB",
+  "status": "draft",
+  "fixturePath": "conformance/harness/web-fetch-events/fixture.mjs",
+  "oraclePath": "conformance/harness/web-fetch-events/oracle.mjs",
+  "observationSchema": "schemas/conformance-observations.schema.json",
+  "providerProtocol": "conformance/harness/web-fetch-events/README.zh.md",
+  "coveredCaseIds": [
+    "EC-WEB-T001",
+    "EC-WEB-T002",
+    "EC-WEB-T003",
+    "EC-WEB-T004",
+    "EC-WEB-T005"
+  ],
+  "providerAdapters": []
+}

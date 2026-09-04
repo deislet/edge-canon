@@ -69,11 +69,15 @@ type RequestHandler =
 
 后台集合能继续多长时间属于最低资源保证，本草案尚未规定。因此“接受任务”不等同于无限执行保证。
 
-## 7. 最低资源保证（发布阻断）
+## 7. 最低资源保证（Draft，仍阻断发布）
 
-本维度仍为 `pending`。必须基于参考后端可长期兑现的公开保证，至少确定 CPU、wall time、响应 body、请求/响应大小、内存、子请求、并发以及 `waitUntil` 宽限期的最低值和超限错误，才能分配条款标识。供应商套餐上限不能直接写成标准保证。
+- **EC-WEB-LIMIT-001**：一次 HTTP 调用必须获得至少 10 ms 应用 CPU 执行预算；等待网络、存储或其他异步 I/O 的时间不得计入该预算。10 ms 是应用可依赖的最低值，不是超出后仍会继续执行的保证；偶发宽限和更高套餐预算不进入标准语义。conformance 必须同时读取后端计量证据，不能用 wall time 猜测 CPU。
+- **EC-WEB-LIMIT-002**：在不存在网络、权限或目标服务失败时，一次调用必须允许前 50 次外部 `fetch` 子请求开始执行。一次重定向跳转计作一次新的子请求。应用不得依赖第 51 次及以后的调用能执行。
+- **EC-WEB-LIMIT-003**：一次调用必须允许至少 6 个外部 `fetch` 同时处于等待响应头状态。超过该数值的请求可以排队，但不得取消、改写或抢占前 6 个请求；应用不得依赖第 7 个请求立即开始连接。
 
-当前公开事实与空白已记录在[最低资源保证证据基线](../evidence/web-fetch-events-resource-baseline.zh.md)。基线政策已经确定：取每个参考供应商面向一般用户开放的最低免费档或入门档共同可兑现的保证，不允许用更高付费档抬高标准。CPU 等部分数值可以直接比较，但公开证据空白、精确计量和超限语义仍未解决，所以本维度继续阻断发布。
+这三条已有两家参考产品的官方数值交集，因此从 `pending` 进入 Draft；它们仍需三个一等后端的压力与故障 fixture，且不能把供应商原生错误页当成标准错误。
+
+当前公开事实与空白已记录在[最低资源保证证据基线](../evidence/web-fetch-events-resource-baseline.zh.md)。基线政策已经确定：取每个参考供应商面向一般用户开放的最低免费档或入门档共同可兑现的保证，不允许用更高付费档抬高标准。请求/响应 body 的精确字节口径、HTTP wall time、内存归属、`waitUntil` 宽限及超限后已开始响应流的处理仍未解决，所以本维度继续阻断发布。
 
 ## 8. 安全与隔离
 
@@ -96,7 +100,7 @@ type RequestHandler =
 
 本草案进入 `normative-complete` 前至少还需：
 
-1. 按最低免费/入门档共同保证完成 `minimum-resource-guarantees`，并把更高套餐容量与最低标准分开；
+1. 完成其余 `minimum-resource-guarantees` 空白，并用三个后端的压力/故障 fixture 验证现有 Draft 下限及超限行为；
 2. 完成所引用的 `web-platform-apis`、`environment-secrets`、`logical-resource-bindings` 与 canonical artifact 类型；
 3. 将当前机器可读用例实现为可在三个一等后端运行的同源 fixture 和 provider-independent oracle；
 4. 用真实部署验证错误响应、流式生命周期、后台集合和断连隔离，不以本地 mock 代替；

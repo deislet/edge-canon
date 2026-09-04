@@ -93,6 +93,30 @@
       "clauseIds": ["EC-WEB-UPG-001", "EC-WEB-UPG-002"],
       "fixture": {"scenario": "从同一锁定版本 canonical artifact 为三个一等后端派生产物并运行本 suite", "requirements": ["artifact identity evidence", "three first-class backend harnesses"]},
       "oracle": {"observations": ["pinned standard version", "derived artifact lineage", "suite outcome"], "assertions": ["所有派生产物指向同一精确标准版本", "后端 harness 使用同一断言集且没有语义 waiver"]}
+    },
+    {
+      "id": "EC-WEB-T012",
+      "title": "最低 CPU 预算不以 wall time 冒充",
+      "kind": "boundary",
+      "clauseIds": ["EC-WEB-LIMIT-001"],
+      "fixture": {"scenario": "运行经本机校准且后端计量不超过 10 ms 的纯 CPU 工作，并读取供应商或运行时 CPU 计量证据", "requirements": ["calibrated CPU workload", "backend CPU evidence", "fresh execution environment"]},
+      "oracle": {"observations": ["HTTP terminal state", "measured CPU time", "work completion sentinel", "resource failure code"], "assertions": ["计量不超过 10 ms 的工作产生完成标记", "不使用 wall time 代替 CPU time", "调用不因 CPU 预算提前终止"]}
+    },
+    {
+      "id": "EC-WEB-T013",
+      "title": "前五十次外部 fetch 均可开始",
+      "kind": "boundary",
+      "clauseIds": ["EC-WEB-LIMIT-002"],
+      "fixture": {"scenario": "向受控目标顺序发起 49 个直接外部 fetch 和一个产生单次重定向的 fetch，使调用与重定向跳转合计恰为 50 个子请求", "requirements": ["controlled external origin", "redirect counter", "subrequest start evidence"]},
+      "oracle": {"observations": ["fetch start count", "origin request count", "redirect hop count", "failure codes"], "assertions": ["标准计数把重定向跳转视为子请求", "预算内的全部子请求均开始且不是资源上限失败"]}
+    },
+    {
+      "id": "EC-WEB-T014",
+      "title": "六个等待响应头的外连可并发",
+      "kind": "boundary",
+      "clauseIds": ["EC-WEB-LIMIT-003"],
+      "fixture": {"scenario": "六个受控目标在 barrier 后才发送响应头，第七个请求同时登记但不作为最低保证", "requirements": ["six connection barrier", "connection start evidence", "seventh probe request"]},
+      "oracle": {"observations": ["connections waiting before barrier", "request cancellation", "response markers"], "assertions": ["barrier 释放前至少六个不同外连已在等待响应头", "前六个没有被第七个取消、改写或抢占", "测试不要求第七个立即连接"]}
     }
   ]
 }

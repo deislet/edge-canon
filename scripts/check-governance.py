@@ -235,6 +235,37 @@ def validate_cases(relative_path: str, standard_id: str, suite_id: str, clause_o
     return covered
 
 
+def validate_harness(
+    relative_path: str,
+    standard_id: str,
+    suite_id: str,
+    harness_status: str,
+    case_ids: set[str],
+) -> None:
+    manifest = load_json(relative_path)
+    require(manifest.get("schemaVersion") == 1, f"{relative_path}: schemaVersion must be 1")
+    require(manifest.get("standardId") == standard_id, f"{relative_path}: standardId mismatch")
+    require(manifest.get("suiteId") == suite_id, f"{relative_path}: suiteId mismatch")
+    require(manifest.get("status") == harness_status, f"{relative_path}: status differs from kit")
+    require(
+        manifest.get("observationSchema") == "schemas/conformance-observations.schema.json",
+        f"{relative_path}: observation schema must be the shared schema",
+    )
+    for key in ("fixturePath", "oraclePath", "observationSchema", "providerProtocol"):
+        target = manifest.get(key)
+        require(isinstance(target, str) and target, f"{relative_path}: {key} is missing")
+        require((ROOT / target).is_file(), f"{relative_path}: {key} does not exist: {target}")
+    covered = manifest.get("coveredCaseIds", [])
+    require(covered and len(covered) == len(set(covered)), f"{relative_path}: covered case IDs must be present and unique")
+    require(set(covered) <= case_ids, f"{relative_path}: harness names an unknown case")
+    adapters = manifest.get("providerAdapters", [])
+    require(len(adapters) == len(set(adapters)), f"{relative_path}: duplicate provider adapter")
+    require(set(adapters) <= FIRST_CLASS, f"{relative_path}: unknown first-class provider adapter")
+    if harness_status == "complete":
+        require(set(covered) == case_ids, f"{relative_path}: complete harness must cover every case")
+        require(set(adapters) == FIRST_CLASS, f"{relative_path}: complete harness needs every first-class adapter")
+
+
 def validate_kit(contract: dict, requirements: dict, kit: dict, clause_owner: dict[str, str]) -> None:
     require(kit.get("schemaVersion") == 1, "kit schemaVersion must be 1")
     require(kit.get("standardId") == contract.get("contractId"), "kit standardId does not match contract")
@@ -258,17 +289,32 @@ def validate_kit(contract: dict, requirements: dict, kit: dict, clause_owner: di
         for key in ("fixtureStatus", "oracleStatus", "harnessStatus"):
             require(suite.get(key) == expected.get(key), f"{family_id}: {key} differs from requirements")
         cases_path = suite.get("casesPath")
+        harness_path = suite.get("harnessPath")
         statuses = [suite[key] for key in ("fixtureStatus", "oracleStatus", "harnessStatus")]
         if all(value == "planned" for value in statuses):
             require(cases_path is None, f"{family_id}: fully planned suite must not claim case definitions")
+            require(harness_path is None, f"{family_id}: planned harness must not claim an implementation")
             continue
         require(isinstance(cases_path, str) and cases_path, f"{family_id}: started suite needs casesPath")
         require((ROOT / cases_path).is_file(), f"{family_id}: casesPath does not exist")
         covered = validate_cases(cases_path, contract["contractId"], suite["id"], clause_owner, family_id)
         case_file = load_json(cases_path)
         require(case_file.get("status") == kit.get("status"), f"{family_id}: cases status differs from kit")
+        case_ids = {case["id"] for case in case_file["cases"]}
         expected_clauses = {clause_id for clause_id, owner in clause_owner.items() if owner == family_id}
         require(covered == expected_clauses, f"{family_id}: draft cases must cover every defined clause")
+        if suite["harnessStatus"] == "planned":
+            require(harness_path is None, f"{family_id}: planned harness must not claim an implementation")
+        else:
+            require(isinstance(harness_path, str) and harness_path, f"{family_id}: started harness needs harnessPath")
+            require((ROOT / harness_path).is_file(), f"{family_id}: harnessPath does not exist")
+            validate_harness(
+                harness_path,
+                contract["contractId"],
+                suite["id"],
+                suite["harnessStatus"],
+                case_ids,
+            )
 
     if contract.get("releaseStatus") in {"release-candidate", "standard"}:
         incomplete = [
@@ -331,6 +377,8 @@ def main() -> int:
         load_json("schemas/requirements-registry.schema.json")
         load_json("schemas/conformance-kit.schema.json")
         load_json("schemas/conformance-cases.schema.json")
+        load_json("schemas/conformance-harness.schema.json")
+        load_json("schemas/conformance-observations.schema.json")
         load_json("schemas/conformance-registry.schema.json")
         validate_contract(contract)
         clause_owner = validate_requirements(contract, requirements)

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/conformance-observations.schema.json",
+  "title": "Raw observations consumed by an Edge Canon oracle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "standardId", "suiteId", "backend", "artifactSha256", "cases"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "standardId": {"type": "string", "minLength": 1},
+    "suiteId": {"type": "string", "pattern": "^EC-[A-Z0-9-]+$"},
+    "backend": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "implementationVersion", "standardVersion"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"},
+        "implementationVersion": {"type": "string", "minLength": 1, "maxLength": 256},
+        "standardVersion": {"type": "string", "minLength": 1, "maxLength": 256}
+      }
+    },
+    "artifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "cases": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "observedAt", "data", "evidenceRefs"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^EC-[A-Z0-9-]+-T[0-9]{3}$"},
+          "observedAt": {"type": "string", "format": "date-time"},
+          "data": {"type": "object"},
+          "evidenceRefs": {
+            "type": "array", "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+          }
+        }
+      }
+    }
+  }
+}

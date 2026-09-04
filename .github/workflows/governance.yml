@@ -11,9 +11,14 @@ jobs:
   governance-records:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
       - name: Validate contract, requirements, conformance kit, and registry
         run: python3 scripts/check-governance.py
+      - name: Execute draft conformance oracles
+        run: node --test conformance/harness/web-fetch-events/*.test.mjs

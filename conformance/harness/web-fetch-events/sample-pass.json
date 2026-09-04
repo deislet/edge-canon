@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-WEB",
+  "backend": {
+    "id": "oracle.self-test",
+    "implementationVersion": "1",
+    "standardVersion": "edge-canon.next"
+  },
+  "artifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "cases": [
+    {"id": "EC-WEB-T001", "observedAt": "2026-09-04T00:00:00Z", "data": {"buildSucceeded": true, "defaultEntrypointCount": 1, "status": 200, "body": "edge-canon-sync"}, "evidenceRefs": ["self-test:T001"]},
+    {"id": "EC-WEB-T002", "observedAt": "2026-09-04T00:00:00Z", "data": {"status": 200, "contextKeys": ["env", "params", "request", "waitUntil"], "contextObjectIdentityUnique": true, "environment": "edge-canon-env", "parameter": "edge-canon-param", "backgroundEvidence": "background-complete"}, "evidenceRefs": ["self-test:T002"]},
+    {"id": "EC-WEB-T003", "observedAt": "2026-09-04T00:00:00Z", "data": {"entrypointCount": 1, "exchanges": [{"method": "GET", "requestBody": "", "responseBody": "GET:"}, {"method": "POST", "requestBody": "post-body", "responseBody": "POST:post-body"}, {"method": "PURGE", "requestBody": "purge-body", "responseBody": "PURGE:purge-body"}]}, "evidenceRefs": ["self-test:T003"]},
+    {"id": "EC-WEB-T004", "observedAt": "2026-09-04T00:00:00Z", "data": {"attempts": [{"mode": "sync", "status": 500, "contentType": "text/plain; charset=utf-8", "cacheControl": "no-store", "body": "Internal Server Error\n", "failureCode": "EC_HANDLER_THROWN", "originHitCount": 0, "leakedSentinel": false}, {"mode": "async", "status": 500, "contentType": "text/plain; charset=utf-8", "cacheControl": "no-store", "body": "Internal Server Error\n", "failureCode": "EC_HANDLER_THROWN", "originHitCount": 0, "leakedSentinel": false}]}, "evidenceRefs": ["self-test:T004"]},
+    {"id": "EC-WEB-T005", "observedAt": "2026-09-04T00:00:00Z", "data": {"attempts": [{"mode": "undefined", "status": 500, "contentType": "text/plain; charset=utf-8", "cacheControl": "no-store", "body": "Internal Server Error\n", "failureCode": "EC_HANDLER_RESULT_INVALID", "originHitCount": 0, "leakedSentinel": false}, {"mode": "string", "status": 500, "contentType": "text/plain; charset=utf-8", "cacheControl": "no-store", "body": "Internal Server Error\n", "failureCode": "EC_HANDLER_RESULT_INVALID", "originHitCount": 0, "leakedSentinel": false}, {"mode": "object", "status": 500, "contentType": "text/plain; charset=utf-8", "cacheControl": "no-store", "body": "Internal Server Error\n", "failureCode": "EC_HANDLER_RESULT_INVALID", "originHitCount": 0, "leakedSentinel": false}]}, "evidenceRefs": ["self-test:T005"]}
+  ]
+}

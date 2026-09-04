@@ -2,7 +2,7 @@
 
 [`registry.json`](registry.json) 是后端实现证据与认证状态的唯一机器可读入口。平台矩阵可以解释能力差异，但不能自行产生合规或支持声明。
 
-[`kit.json`](kit.json) 是标准测试集索引。它把能力族连接到 provider-independent 用例；当前只有 `EC-WEB` 存在草案用例，且所有 provider harness 仍为 `planned`。机器可读用例不是执行证据，不能据此提高任何后端的成熟度或认证状态。
+[`kit.json`](kit.json) 是标准测试集索引。它把能力族连接到 provider-independent 用例；当前只有 `EC-WEB` 存在草案用例，并已有覆盖 T001–T005 的统一 fixture、原始 observation 格式和可执行 oracle。三个一等后端 adapter 仍为空，其余用例仍未执行化，因此 harness 只是 `draft`。机器可读用例和 oracle 自测不是后端执行证据，不能据此提高任何后端的成熟度或认证状态。
 
 证据成熟度依次为：
 
@@ -19,6 +19,7 @@
 
 ```bash
 python3 scripts/check-governance.py
+node --test conformance/harness/web-fetch-events/*.test.mjs
 ```
 
-该校验只使用 Python 标准库，检查契约、逐条要求、测试集与实现 registry 的交叉约束；JSON Schema 仍是外部工具和生成客户端使用的公开格式定义。
+治理校验只使用 Python 标准库，检查契约、逐条要求、测试集、harness manifest 与实现 registry 的交叉约束；Node 测试执行当前 fixture/oracle 草案的正反自证。JSON Schema 仍是外部工具和生成客户端使用的公开格式定义。

@@ -17,14 +17,15 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "familyId", "fixtureStatus", "oracleStatus", "harnessStatus", "casesPath"],
+        "required": ["id", "familyId", "fixtureStatus", "oracleStatus", "harnessStatus", "casesPath", "harnessPath"],
         "properties": {
           "id": {"type": "string", "pattern": "^EC-[A-Z0-9-]+$"},
           "familyId": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
           "fixtureStatus": {"enum": ["planned", "draft", "complete"]},
           "oracleStatus": {"enum": ["planned", "draft", "complete"]},
           "harnessStatus": {"enum": ["planned", "draft", "complete"]},
-          "casesPath": {"type": ["string", "null"]}
+          "casesPath": {"type": ["string", "null"]},
+          "harnessPath": {"type": ["string", "null"]}
         }
       }
     }
