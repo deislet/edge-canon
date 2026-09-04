@@ -40,7 +40,10 @@
       "id": "routing-static-assets",
       "definitionStatus": "draft",
       "draftPath": "standard/requirements/routing-static-assets.zh.md",
-      "evidencePaths": ["standard/evidence/routing-static-assets-baseline.zh.md"],
+      "evidencePaths": [
+        "standard/evidence/routing-static-assets-baseline.zh.md",
+        "conformance/evidence/routing-static-assets-platforms-2026-09-04.json"
+      ],
       "dimensions": {
         "api": {"status": "draft", "clauseIds": ["EC-ROUTING-API-001", "EC-ROUTING-API-002", "EC-ROUTING-API-003", "EC-ROUTING-API-004", "EC-ROUTING-API-005", "EC-ROUTING-API-006"]},
         "errors": {"status": "draft", "clauseIds": ["EC-ROUTING-ERR-001", "EC-ROUTING-ERR-002"]},

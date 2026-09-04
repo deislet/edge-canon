@@ -1,0 +1,46 @@
+{
+  "$schema": "../../schemas/conformance-platform-evidence.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-ROUTING",
+  "status": "draft-non-certifying",
+  "observedAt": "2026-09-04T19:23:52+08:00",
+  "artifactSha256": "84b02e12a92bba9bfcde81478cabe1e4c7846b26f4d576c7a108e30e32a4b89a",
+  "referenceImplementationPath": "conformance/harness/routing-static-assets/reference-router.mjs",
+  "referenceImplementationSha256": "e8e08b7daa580e061e0107e986d9aa299a3812a205f048e526b1b1359021e1e3",
+  "observations": [
+    {
+      "platform": "linux",
+      "osVersion": "Linux 6.8.0-124-generic",
+      "architecture": "x86_64",
+      "nodeVersion": "v22.21.1",
+      "outcome": "pass",
+      "caseCount": 11,
+      "artifactSha256": "84b02e12a92bba9bfcde81478cabe1e4c7846b26f4d576c7a108e30e32a4b89a"
+    },
+    {
+      "platform": "macos",
+      "osVersion": "macOS 26.6 (Darwin 25.6.0)",
+      "architecture": "arm64",
+      "nodeVersion": "v26.0.0",
+      "outcome": "pass",
+      "caseCount": 11,
+      "artifactSha256": "84b02e12a92bba9bfcde81478cabe1e4c7846b26f4d576c7a108e30e32a4b89a"
+    },
+    {
+      "platform": "windows",
+      "osVersion": "Windows 10.0.26100",
+      "architecture": "AMD64",
+      "nodeVersion": "v24.16.0",
+      "outcome": "pass",
+      "caseCount": 11,
+      "artifactSha256": "84b02e12a92bba9bfcde81478cabe1e4c7846b26f4d576c7a108e30e32a4b89a"
+    }
+  ],
+  "limitations": [
+    "This is reference-harness evidence, not provider conformance or certification evidence.",
+    "The exact standard pin is commit 7d4151721f99e4619c34ba2aaaa32facadc86ab2; the reference router bytes are bound separately.",
+    "Provider-derived routing files and live Cloudflare, EdgeOne, and Deislet deployments have not yet run this suite.",
+    "Atomic activation is exercised with immutable reference snapshots; real deployment activation and cache-staleness fault injection remain pending."
+  ]
+}

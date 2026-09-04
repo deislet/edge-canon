@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": [
     "schemaVersion", "standardId", "suiteId", "status", "observedAt",
-    "artifactSha256", "referenceImplementationSha256", "observations", "limitations"
+    "artifactSha256", "referenceImplementationPath", "referenceImplementationSha256", "observations", "limitations"
   ],
   "properties": {
     "$schema": {"type": "string"},
@@ -16,6 +16,7 @@
     "status": {"const": "draft-non-certifying"},
     "observedAt": {"type": "string", "format": "date-time"},
     "artifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "referenceImplementationPath": {"type": "string", "minLength": 1, "maxLength": 1024},
     "referenceImplementationSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "observations": {
       "type": "array",

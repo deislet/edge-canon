@@ -6,6 +6,7 @@
   "status": "draft-non-certifying",
   "observedAt": "2026-09-04T18:47:11+08:00",
   "artifactSha256": "b2bae4403adb7d6a95f0d9bdb0cae13b6138482b012f00f4efbe0675f2c74d2a",
+  "referenceImplementationPath": "conformance/harness/canonical-build-artifact/fixture.mjs",
   "referenceImplementationSha256": "32d58c81d483afdd3b3f5d558d67bd382ad75be6666b13419f4c7cc9f763c8ea",
   "observations": [
     {

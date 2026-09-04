@@ -41,3 +41,7 @@ Cloudflare Workers Static Assets 与 Tencent EdgeOne Makers 都能把静态文�
 - [Tencent EdgeOne edgeone.json](https://pages.edgeone.ai/document/edgeone-json)
 - [Tencent EdgeOne Build Output Configuration](https://pages.edgeone.ai/document/building-output-configuration)
 - [Tencent EdgeOne custom 404](https://pages.edgeone.ai/document/custom-404-page)
+
+## Reference harness 跨平台记录
+
+2026-09-04 的 Linux、macOS 与 Windows 同源执行结果保存在 [`routing-static-assets-platforms-2026-09-04.json`](../../conformance/evidence/routing-static-assets-platforms-2026-09-04.json)。三套环境均通过 11 个 Draft case，并生成同一 routing artifact identity；该记录只证明 reference harness 的可移植性，不是 provider 合规证据。

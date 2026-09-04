@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
@@ -78,6 +79,7 @@ def validate_schema_documents() -> None:
         "conformance/cases/routing-static-assets.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/routing-static-assets/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
+        "conformance/evidence/routing-static-assets-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/harness/web-fetch-events/sample-pass.json": "schemas/conformance-observations.schema.json",
         "conformance/harness/web-fetch-events/provider-adapters/deislet/adapter.json": "schemas/conformance-provider-adapter.schema.json",
         "conformance/harness/web-fetch-events/provider-adapters/cloudflare-workers-pages/adapter.json": "schemas/conformance-provider-adapter.schema.json",
@@ -480,7 +482,7 @@ def validate_registry(contract: dict, registry: dict) -> None:
             require(backend.get("role") == "first-class", f"{backend_id}: experimental backend cannot be supported")
 
 
-def validate_platform_evidence(relative_path: str) -> None:
+def validate_platform_evidence(relative_path: str, kit: dict) -> None:
     evidence = load_json(relative_path)
     observations = evidence.get("observations", [])
     platforms = [item.get("platform") for item in observations]
@@ -495,6 +497,20 @@ def validate_platform_evidence(relative_path: str) -> None:
     )
     case_counts = {item.get("caseCount") for item in observations}
     require(len(case_counts) == 1, f"{relative_path}: platform case counts differ")
+    suites = {suite["id"]: suite for suite in kit.get("suites", [])}
+    suite = suites.get(evidence.get("suiteId"))
+    require(suite is not None and suite.get("casesPath"), f"{relative_path}: evidence suite has no case document")
+    expected_case_count = len(load_json(suite["casesPath"]).get("cases", []))
+    require(case_counts == {expected_case_count}, f"{relative_path}: evidence case count differs from its suite")
+    implementation_path = evidence.get("referenceImplementationPath")
+    require(isinstance(implementation_path, str), f"{relative_path}: reference implementation path is missing")
+    implementation = ROOT / implementation_path
+    require(implementation.is_file(), f"{relative_path}: reference implementation does not exist")
+    implementation_sha256 = hashlib.sha256(implementation.read_bytes()).hexdigest()
+    require(
+        implementation_sha256 == evidence.get("referenceImplementationSha256"),
+        f"{relative_path}: reference implementation digest differs",
+    )
 
 
 def main() -> int:
@@ -508,7 +524,8 @@ def main() -> int:
         clause_owner = validate_requirements(contract, requirements)
         validate_kit(contract, requirements, kit, clause_owner)
         validate_registry(contract, registry)
-        validate_platform_evidence("conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json")
+        validate_platform_evidence("conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json", kit)
+        validate_platform_evidence("conformance/evidence/routing-static-assets-platforms-2026-09-04.json", kit)
     except (KeyError, TypeError, ValidationError) as error:
         print(f"governance validation failed: {error}", file=sys.stderr)
         return 1
