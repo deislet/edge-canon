@@ -25,6 +25,7 @@ import {
   ProviderCollectionError,
 } from "./provider-collection.mjs";
 import { cloudflareCpuCollector } from "./provider-cloudflare-cpu.mjs";
+import { deisletCpuCollector } from "./provider-deislet-cpu.mjs";
 
 const PROTOCOL_VERSION = "edge-canon.provider-adapter/v1";
 const OPERATIONS = new Set(["inspect", "preflight", "prepare", "deploy", "invoke", "collect", "cleanup", "run"]);
@@ -203,8 +204,13 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
     return invokeProvider({ request, manifest, environment });
   }
   if (request.operation === "collect") {
-    fail(manifest.backendId === "cloudflare-workers-pages", "EC_ADAPTER_OPERATION_UNIMPLEMENTED", "backend has no exact single-invocation CPU collector");
-    return collectProvider({ request, manifest, environment, cpuCollector: cloudflareCpuCollector });
+    const collectors = {
+      "cloudflare-workers-pages": cloudflareCpuCollector,
+      deislet: deisletCpuCollector,
+    };
+    fail(Object.hasOwn(collectors, manifest.backendId), "EC_ADAPTER_OPERATION_UNIMPLEMENTED", "backend has no exact single-invocation CPU collector");
+    if (manifest.tool.distribution === "workspace-binary") verifyWorkspaceTool(manifest, request.configuration);
+    return collectProvider({ request, manifest, environment, cpuCollector: collectors[manifest.backendId] });
   }
   const tool = manifest.tool.distribution === "npm"
     ? verifyNpmTool(manifest, request.configuration)

@@ -152,4 +152,11 @@ Observability Telemetry API 的 `cloudflare-workers` events view。派生产物�
 核对 `$workers.scriptVersion.id`。Ray 缺失、多条 CPU event、版本冲突、API 结果不完整或只存在
 `wallTimeMs` 都使 CPU 证据不可用，不能改用聚合值或耗时差值。
 
+Deislet 的 T012 响应由 runtime 在清除应用可写的 `x-deis-*` 后盖章
+`x-deis-trace-id`，其 invocation trace 以 `attributes.cpu_time_us` 保存运行线程 OS CPU
+时钟的整数微秒值。adapter 通过固定 revision 与摘要的原生 `deis trace --json
+--trace-id` 轮询 `telemetryUrl`，并核对唯一记录的应用、环境、HTTP 类型和状态码；
+`DEIS_TELEMETRY_AUTH_SECRET` 只经环境传入子进程。响应 ID 缺失、查询多义、身份不符、
+属性缺失或无效都使 collection 失败，不能以 `duration_us` 代替。
+
 manifest 为 `complete` 的必要条件是：八个操作均为 `implemented`、该 suite 全部用例均为 `implemented` 且无 blocker、三个 adapter 都通过真实测试账户运行，并能把 exact standard commit、canonical/derived artifact digest、provider deployment identity 和原始执行证据关联起来。仅完成 inspect/preflight 或本地 mock 仍是 `draft`。

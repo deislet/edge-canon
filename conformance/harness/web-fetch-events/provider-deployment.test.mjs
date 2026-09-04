@@ -335,6 +335,7 @@ test("Deislet deploy maps its standard credential and cleanup uses the protected
   Object.assign(setup.request.configuration, {
     controlUrl: "http://127.0.0.1:18085",
     runtimeUrl: "http://127.0.0.1:18088",
+    telemetryUrl: "http://127.0.0.1:18089",
     environmentName: "conformance",
   });
   const hostEnvironment = {
@@ -402,6 +403,7 @@ test("Deislet cleanup remains indeterminate when a runtime node did not unload t
   Object.assign(setup.request.configuration, {
     controlUrl: "http://127.0.0.1:18085",
     runtimeUrl: "http://127.0.0.1:18088",
+    telemetryUrl: "http://127.0.0.1:18089",
     environmentName: "conformance",
   });
   const hostEnvironment = {

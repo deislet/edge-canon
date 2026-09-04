@@ -415,6 +415,7 @@ export function validateDeploymentConfiguration(request, manifest) {
   if (manifest.backendId === "deislet") {
     safeUrl(request.configuration.controlUrl, "controlUrl");
     safeUrl(request.configuration.runtimeUrl, "runtimeUrl");
+    safeUrl(request.configuration.telemetryUrl, "telemetryUrl");
     fail(NAME.test(request.configuration.environmentName), "EC_ADAPTER_CONFIGURATION_INVALID", "environmentName is invalid");
   }
   if (manifest.backendId === "tencent-edgeone-makers") {

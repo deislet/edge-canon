@@ -11,7 +11,7 @@
     "distribution": "workspace-binary",
     "binary": "deis",
     "version": "0.1.0",
-    "sourceRevision": "eeb9dc4bb186bef3b703da976ce3e5e9fee1b5c5"
+    "sourceRevision": "1ddc7b206b4c4ed62f658d79ddd22cfba3599dbb"
   },
   "credentialEnvironment": {
     "inspect": [],
@@ -19,18 +19,18 @@
     "prepare": [],
     "deploy": ["DEIS_DEPLOY_TOKEN"],
     "invoke": ["EDGE_CANON_EVIDENCE_TOKEN"],
-    "collect": ["DEIS_ADMIN_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"],
+    "collect": ["DEIS_TELEMETRY_AUTH_SECRET", "EDGE_CANON_EVIDENCE_TOKEN"],
     "cleanup": ["DEIS_ADMIN_TOKEN"],
-    "run": ["DEIS_DEPLOY_TOKEN", "DEIS_ADMIN_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"]
+    "run": ["DEIS_DEPLOY_TOKEN", "DEIS_ADMIN_TOKEN", "DEIS_TELEMETRY_AUTH_SECRET", "EDGE_CANON_EVIDENCE_TOKEN"]
   },
   "requiredConfiguration": {
     "inspect": [],
-    "preflight": ["toolExecutable", "toolSourceRevision", "toolSha256", "controlUrl", "runtimeUrl", "environmentName", "projectName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "preflight": ["toolExecutable", "toolSourceRevision", "toolSha256", "controlUrl", "runtimeUrl", "telemetryUrl", "environmentName", "projectName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
-    "deploy": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
-    "invoke": ["derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
-    "collect": [],
-    "cleanup": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "deploy": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "telemetryUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "invoke": ["derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "telemetryUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "collect": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "telemetryUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
+    "cleanup": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "telemetryUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations", "calibratedCpuMilliseconds", "calibratedWorkSha256"],
     "run": []
   },
   "operations": {
@@ -39,7 +39,7 @@
     "prepare": {"status": "implemented", "remoteSideEffects": false},
     "deploy": {"status": "implemented", "remoteSideEffects": true},
     "invoke": {"status": "implemented", "remoteSideEffects": true},
-    "collect": {"status": "pending", "remoteSideEffects": false},
+    "collect": {"status": "implemented", "remoteSideEffects": false},
     "cleanup": {"status": "implemented", "remoteSideEffects": true},
     "run": {"status": "pending", "remoteSideEffects": true}
   },
@@ -55,7 +55,7 @@
     {"id": "EC-WEB-T009", "status": "pending", "blockers": ["late-registration sink collection and real-provider evidence remain pending"]},
     {"id": "EC-WEB-T010", "status": "pending", "blockers": ["disconnect background sink collection and real-provider evidence remain pending"]},
     {"id": "EC-WEB-T011", "status": "pending", "blockers": ["oracle digest and backend implementation version collection remain pending"]},
-    {"id": "EC-WEB-T012", "status": "pending", "blockers": ["backend CPU telemetry collection and real-provider evidence remain pending"]},
+    {"id": "EC-WEB-T012", "status": "pending", "blockers": ["real-provider evidence remains pending"]},
     {"id": "EC-WEB-T013", "status": "pending", "blockers": ["authenticated controlled-origin service, collection and live evidence remain pending"]},
     {"id": "EC-WEB-T014", "status": "pending", "blockers": ["authenticated connection-barrier service, collection and live evidence remain pending"]},
     {"id": "EC-WEB-T015", "status": "pending", "blockers": ["invocation-count sink collection and real-provider evidence remain pending"]}
@@ -68,7 +68,7 @@
     "cleanupAfterRunFailure": true
   },
   "limitations": [
-    "Inspect, preflight, deterministic prepare, collision-checked deploy, at-most-once invocation and identity-bound cleanup are executable; collection remains pending and this manifest is not conformance evidence.",
+    "Inspect, preflight, deterministic prepare, collision-checked deploy, at-most-once invocation, exact trace-ID CPU collection and identity-bound cleanup are executable; run orchestration remains pending and this manifest is not conformance evidence.",
     "No Deislet test account or exact deployment observation is recorded."
   ]
 }

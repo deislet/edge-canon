@@ -1,11 +1,11 @@
 # EC-WEB 可执行 harness 草案
 
-本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight`、确定性 `prepare`、身份绑定 `deploy` 与统一的 at-most-once `invoke`，Cloudflare 和 Deislet 还实现了可核验 `cleanup`。仓库同时提供了带持久化证据 sink、受控 origin 和连接 barrier 的认证 harness service，以及把这些原始事实确定性转换为 observation 的 provider-neutral collector；Cloudflare `collect` 已接入按 Ray ID 查询的单次 invocation CPU 证据。Deislet/EdgeOne 的单次 CPU 证据源、全流程 `run`、EdgeOne 公开清理路径与真实账户证据仍未全部完成，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
+本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight`、确定性 `prepare`、身份绑定 `deploy` 与统一的 at-most-once `invoke`，Cloudflare 和 Deislet 还实现了可核验 `cleanup`。仓库同时提供了带持久化证据 sink、受控 origin 和连接 barrier 的认证 harness service，以及把这些原始事实确定性转换为 observation 的 provider-neutral collector；Cloudflare `collect` 已接入按 Ray ID 查询的单次 invocation CPU 证据，Deislet `collect` 已接入按平台盖章 trace ID 查询的 OS 线程 CPU 证据。EdgeOne 的单次 CPU 证据源、全流程 `run`、EdgeOne 公开清理路径与真实账户证据仍未全部完成，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
 
 ## 固定边界
 
 1. 每个 adapter 部署同一份 `fixture.mjs` 及其相对模块依赖，不能改写 handler、工作负载或断言。
-2. adapter 可以在内部调用固定版本的官方 CLI 或 API，例如 Wrangler、EdgeOne CLI/API 或 Deislet CLI；它只负责打包、部署、调用、读取结构化执行证据和清理。当前锁为 Wrangler 4.129.0、EdgeOne CLI 1.6.32，以及 Deislet source revision `eeb9dc4bb186bef3b703da976ce3e5e9fee1b5c5`；锁本身不是 live evidence。
+2. adapter 可以在内部调用固定版本的官方 CLI 或 API，例如 Wrangler、EdgeOne CLI/API 或 Deislet CLI；它只负责打包、部署、调用、读取结构化执行证据和清理。当前锁为 Wrangler 4.129.0、EdgeOne CLI 1.6.32，以及 Deislet source revision `1ddc7b206b4c4ed62f658d79ddd22cfba3599dbb`；锁本身不是 live evidence。
 3. adapter 输出符合 `schemas/conformance-observations.schema.json` 的原始观察，不能输出自行判定的 pass/fail。
 4. `oracle.mjs` 是唯一结果判定器。运行：
 
@@ -48,5 +48,7 @@ stdout 只输出三个可填入 adapter 配置的 URL。默认只监听回环 HT
 `provider-collection.mjs` 只接受已经完整落盘并绑定部署身份的 invocation。它复核固定请求计划、响应摘要和 96 条预期 wrapper 事件，保存 sink 快照与后端单次 CPU 原件，再生成 15 条 observation。snapshot、CPU 原件、observations 和 collection state 都使用确定性文件名、`0600` 权限与 SHA-256 绑定；崩溃后只会复用逐字节一致的既有文件。collector 不调用 oracle，也不写 `pass`/`compliant`；语义是否通过仍由 canonical `oracle.mjs` 唯一决定。
 
 Cloudflare 派生产物按[官方 Query Builder 要求](https://developers.cloudflare.com/workers/observability/query-builder/)显式启用 Workers Observability、invocation logs 和 100% head sampling。T012 原始 HTTP 证据保存 `cf-ray`；collector 使用 `CLOUDFLARE_ACCOUNT_ID` 与仅经环境传入的 `CLOUDFLARE_API_TOKEN` 调用[官方 Workers Observability Telemetry API](https://developers.cloudflare.com/api/resources/workers/subresources/observability/subresources/telemetry/methods/query/)，以 Ray ID 和本 operation 独占的脚本名过滤，轮询至拿到唯一包含 `$workers.cpuTimeMs` 的 fetch event。若结果缺失、版本冲突或同一条件出现多个 CPU event，collection 失败而不会退化成 wall time。用于真实运行的 token 需要账户级 `Workers Observability Write` 权限。
+
+Deislet runtime 会先清除应用响应写入的整个 `x-deis-*` 命名空间，再以 `x-deis-trace-id` 盖章其日志和 invocation trace 使用的同一 ID；trace 的 `attributes.cpu_time_us` 来自运行线程的 OS CPU 时钟。collector 调用固定 revision 与 SHA-256 的原生 `deis trace --json --trace-id`，凭证只通过 `DEIS_TELEMETRY_AUTH_SECRET` 环境变量进入进程，并复核唯一记录的应用、环境、类型和 HTTP 状态。ID 缺失、记录多于一条、身份不符、CPU 属性缺失或非整数均使证据不可用；`duration_us` 永远不能替代 CPU。配置必须显式给出 `telemetryUrl`，且只能是 HTTPS 或 loopback HTTP。
 
 `sample-pass.json` 只用于 oracle 自测，不是任何后端的运行证据。后续仍必须为三个一等后端各自实现 adapter 并真实运行全部用例，才能把 harness 标为 Complete。

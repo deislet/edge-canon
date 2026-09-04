@@ -252,7 +252,7 @@ function transportHeaders(request, manifest, environment, caseId, variant, evide
 
 function selectedHeaders(headers) {
   const result = {};
-  for (const name of ["cache-control", "cf-ray", "content-encoding", "content-length", "content-type"]) {
+  for (const name of ["cache-control", "cf-ray", "content-encoding", "content-length", "content-type", "x-deis-trace-id"]) {
     const value = headers.get(name);
     if (value !== null) result[name] = value.slice(0, 1024);
   }
