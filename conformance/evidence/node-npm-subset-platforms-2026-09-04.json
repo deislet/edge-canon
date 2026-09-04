@@ -4,22 +4,22 @@
   "standardId": "edge-canon.next",
   "suiteId": "EC-NODE",
   "status": "draft-non-certifying",
-  "observedAt": "2026-09-04T18:20:51Z",
-  "artifactSha256": "caf7e75ab6f7f36f5db6fcf1c0621a8d3ff51cf45ca9e59505a6bf672a96b7f8",
+  "observedAt": "2026-09-04T19:21:34Z",
+  "artifactSha256": "953a3f21bea7f8aabb13e328d386a6c11643596ab67be6c957b3163bddca76ca",
   "referenceImplementationPath": "conformance/harness/node-npm-subset/runner.mjs",
-  "referenceImplementationSha256": "992d8b6133da59f1b8b9a0cecd0334ec12ea9877d704c6c4378af265f3b281d7",
+  "referenceImplementationSha256": "58574f1694f9cfa1551138bb86903378d89e63599500ea717ccb19f27a2e5d1f",
   "observations": [
-    {"platform":"linux","osVersion":"Linux 6.8.0-124-generic","architecture":"x86_64","nodeVersion":"v24.20.0","outcome":"pass","caseCount":15,"artifactSha256":"caf7e75ab6f7f36f5db6fcf1c0621a8d3ff51cf45ca9e59505a6bf672a96b7f8"},
-    {"platform":"macos","osVersion":"macOS 26.6 (Darwin 25.6.0)","architecture":"arm64","nodeVersion":"v24.20.0","outcome":"pass","caseCount":15,"artifactSha256":"caf7e75ab6f7f36f5db6fcf1c0621a8d3ff51cf45ca9e59505a6bf672a96b7f8"},
-    {"platform":"windows","osVersion":"Microsoft Windows 11 Pro 10.0.26100","architecture":"AMD64","nodeVersion":"v24.20.0","outcome":"pass","caseCount":15,"artifactSha256":"caf7e75ab6f7f36f5db6fcf1c0621a8d3ff51cf45ca9e59505a6bf672a96b7f8"}
+    {"platform":"linux","osVersion":"Linux 6.8.0-124-generic","architecture":"x86_64","nodeVersion":"v24.20.0","outcome":"pass","caseCount":15,"artifactSha256":"953a3f21bea7f8aabb13e328d386a6c11643596ab67be6c957b3163bddca76ca"},
+    {"platform":"macos","osVersion":"macOS 26.6 (Darwin 25.6.0)","architecture":"arm64","nodeVersion":"v24.20.0","outcome":"pass","caseCount":15,"artifactSha256":"953a3f21bea7f8aabb13e328d386a6c11643596ab67be6c957b3163bddca76ca"},
+    {"platform":"windows","osVersion":"Microsoft Windows 11 Pro 10.0.26100","architecture":"AMD64","nodeVersion":"v24.20.0","outcome":"pass","caseCount":15,"artifactSha256":"953a3f21bea7f8aabb13e328d386a6c11643596ab67be6c957b3163bddca76ca"}
   ],
   "limitations": [
     "This is reference-harness evidence, not provider conformance or certification evidence.",
-    "The exact standard pin is commit a808399821e0f2489d6fc9dd12e25ac2d1af9846; the reference runner bytes are bound separately.",
+    "The exact standard pin is commit 7609c4aa01c193efd32ecc1e1555441a60f452c5; the reference runner bytes are bound separately.",
     "All three executions used the official Node.js v24.20.0 distribution; Linux archive SHA-256 was 2f2c0da162318f0de47665410c7c8c2ed3d36c8f3105de4bbc61176c70a7cbf2, macOS archive SHA-256 was 40e5607e5ecb3db9192723776da2d75d966260fc74a7a9e731c1bd67dda96bc8, and Windows archive SHA-256 was 6cac9ffbca8f6a47091e4b5c772e0606049c3871cb67d900c0cedde630e545ba; each was checked against Node.js SHASUMS256.txt.",
     "The synthetic package resolver and CommonJS transformer establish the draft contract and negative boundaries; they are not a production npm client or a claim that any provider packager implements them.",
     "The 16-package and 1,048,576-octet result proves local reference portability only; Cloudflare, EdgeOne, and Deislet live build and runtime limits remain pending.",
     "No private registry credential or provider account was used; authentication redaction and package-cache isolation still require end-to-end fault injection.",
-    "The selected Node exports were executed in the reference runtime, but upstream Node test-suite coverage and three provider runtime executions remain release blockers."
+    "The selected Node exports were executed in the reference runtime. The shared runtime subset T001-T007/T012 also passed local Cloudflare workerd 1.20260903.1, but that is development evidence rather than a remote provider run; upstream Node test-suite coverage plus Cloudflare remote, EdgeOne, and Deislet provider executions remain release blockers."
   ]
 }
