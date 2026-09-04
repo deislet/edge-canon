@@ -10,6 +10,7 @@ yarn-error.log
 # Build artifacts
 dist/
 coverage/
+.edge-canon-adapter-test-*/
 
 # Local env
 .env

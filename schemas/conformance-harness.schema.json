@@ -7,8 +7,9 @@
   "required": [
     "schemaVersion", "standardId", "suiteId", "status", "fixturePath", "fixtureDependencyPaths",
     "calibrationPath",
-    "oraclePath", "observationSchema", "providerProtocol", "coveredCaseIds",
-    "providerAdapters"
+    "oraclePath", "observationSchema", "providerProtocol", "providerAdapterSchema",
+    "providerAdapterRequestSchema", "providerAdapterResultSchema", "coveredCaseIds",
+    "providerAdapterPaths", "providerAdapters"
   ],
   "properties": {
     "$schema": {"type": "string"},
@@ -25,6 +26,9 @@
     "oraclePath": {"type": "string", "minLength": 1},
     "observationSchema": {"type": "string", "minLength": 1},
     "providerProtocol": {"type": "string", "minLength": 1},
+    "providerAdapterSchema": {"type": "string", "minLength": 1},
+    "providerAdapterRequestSchema": {"type": "string", "minLength": 1},
+    "providerAdapterResultSchema": {"type": "string", "minLength": 1},
     "coveredCaseIds": {
       "type": "array", "minItems": 1, "uniqueItems": true,
       "items": {"type": "string", "pattern": "^EC-[A-Z0-9-]+-T[0-9]{3}$"}
@@ -32,6 +36,10 @@
     "providerAdapters": {
       "type": "array", "uniqueItems": true,
       "items": {"enum": ["deislet", "cloudflare-workers-pages", "tencent-edgeone-makers"]}
+    },
+    "providerAdapterPaths": {
+      "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
     }
   }
 }

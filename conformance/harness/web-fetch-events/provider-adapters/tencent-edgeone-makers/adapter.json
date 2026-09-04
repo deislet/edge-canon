@@ -1,0 +1,55 @@
+{
+  "$schema": "../../../../../schemas/conformance-provider-adapter.schema.json",
+  "schemaVersion": 1,
+  "protocolVersion": "edge-canon.provider-adapter/v1",
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-WEB",
+  "backendId": "tencent-edgeone-makers",
+  "status": "draft",
+  "entrypoint": "conformance/harness/web-fetch-events/provider-adapters/tencent-edgeone-makers/adapter.mjs",
+  "tool": {
+    "distribution": "npm",
+    "package": "edgeone",
+    "version": "1.6.32",
+    "integrity": "sha512-rTogxIKXHd0CAQJD0ikNgP4CwfVafCXIDBqmKXoOkDCbX5FOzOsGcKKlDhcT1jXEi6f+TV+4kCSV/IouIeaXuA=="
+  },
+  "credentialEnvironment": ["EDGEONE_PAGES_API_TOKEN"],
+  "requiredConfiguration": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName", "deploymentEnvironment", "area"],
+  "operations": {
+    "inspect": {"status": "implemented", "remoteSideEffects": false},
+    "preflight": {"status": "implemented", "remoteSideEffects": false},
+    "prepare": {"status": "pending", "remoteSideEffects": false},
+    "deploy": {"status": "pending", "remoteSideEffects": true},
+    "invoke": {"status": "pending", "remoteSideEffects": true},
+    "collect": {"status": "pending", "remoteSideEffects": false},
+    "cleanup": {"status": "pending", "remoteSideEffects": true},
+    "run": {"status": "pending", "remoteSideEffects": true}
+  },
+  "caseCoverage": [
+    {"id": "EC-WEB-T001", "status": "pending", "blockers": ["prepare, deploy, invoke and evidence collection are not implemented"]},
+    {"id": "EC-WEB-T002", "status": "pending", "blockers": ["background evidence sink and dynamic route driver are not implemented"]},
+    {"id": "EC-WEB-T003", "status": "pending", "blockers": ["multi-method invocation driver is not implemented"]},
+    {"id": "EC-WEB-T004", "status": "pending", "blockers": ["structured runtime failure evidence is not implemented"]},
+    {"id": "EC-WEB-T005", "status": "pending", "blockers": ["structured invalid-result evidence is not implemented"]},
+    {"id": "EC-WEB-T006", "status": "pending", "blockers": ["concurrent invocation driver is not implemented"]},
+    {"id": "EC-WEB-T007", "status": "pending", "blockers": ["stream lifecycle capture is not implemented"]},
+    {"id": "EC-WEB-T008", "status": "pending", "blockers": ["background settlement evidence is not implemented"]},
+    {"id": "EC-WEB-T009", "status": "pending", "blockers": ["closed lifecycle evidence is not implemented"]},
+    {"id": "EC-WEB-T010", "status": "pending", "blockers": ["disconnect-capable invocation driver is not implemented"]},
+    {"id": "EC-WEB-T011", "status": "pending", "blockers": ["canonical and derived artifact lineage is not implemented"]},
+    {"id": "EC-WEB-T012", "status": "pending", "blockers": ["EdgeOne CPU measurement collection is not implemented"]},
+    {"id": "EC-WEB-T013", "status": "pending", "blockers": ["controlled redirect origin evidence is not implemented"]},
+    {"id": "EC-WEB-T014", "status": "pending", "blockers": ["controlled connection barrier evidence is not implemented"]}
+  ],
+  "security": {
+    "shell": false,
+    "secretsInArguments": false,
+    "maxOutputBytes": 1048576,
+    "timeoutSeconds": 300,
+    "cleanupAfterRunFailure": true
+  },
+  "limitations": [
+    "Only inspect and preflight are executable; this manifest is not deployment or conformance evidence.",
+    "No EdgeOne test account or exact deployment observation is recorded."
+  ]
+}

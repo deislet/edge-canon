@@ -1,11 +1,11 @@
 # EC-WEB 可执行 harness 草案
 
-本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T014`，状态仍是 Draft；没有任何完成真实部署取证的 provider adapter，因此不能产生 conformance-passed 证据。
+本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T014`，状态仍是 Draft；三个 adapter 只有受约束的 manifest 和 `inspect`/`preflight`，尚无任何一个完成真实部署取证，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
 
 ## 固定边界
 
 1. 每个 adapter 部署同一份 `fixture.mjs` 及其相对模块依赖，不能改写 handler、工作负载或断言。
-2. adapter 可以在内部调用固定版本的官方 CLI 或 API，例如 Wrangler、EdgeOne CLI/API 或 Deislet CLI；它只负责打包、部署、调用、读取结构化执行证据和清理。
+2. adapter 可以在内部调用固定版本的官方 CLI 或 API，例如 Wrangler、EdgeOne CLI/API 或 Deislet CLI；它只负责打包、部署、调用、读取结构化执行证据和清理。当前锁为 Wrangler 4.129.0、EdgeOne CLI 1.6.32，以及 Deislet source revision `54cbe6e44abbef48fa7e0efcbb0241b4d95d77d4`；锁本身不是 live evidence。
 3. adapter 输出符合 `schemas/conformance-observations.schema.json` 的原始观察，不能输出自行判定的 pass/fail。
 4. `oracle.mjs` 是唯一结果判定器。运行：
 

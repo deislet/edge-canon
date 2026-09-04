@@ -11,7 +11,10 @@
   "calibrationPath": "conformance/harness/web-fetch-events/calibrate-cpu.mjs",
   "oraclePath": "conformance/harness/web-fetch-events/oracle.mjs",
   "observationSchema": "schemas/conformance-observations.schema.json",
-  "providerProtocol": "conformance/harness/web-fetch-events/README.zh.md",
+  "providerProtocol": "conformance/harness/web-fetch-events/provider-adapter-protocol.zh.md",
+  "providerAdapterSchema": "schemas/conformance-provider-adapter.schema.json",
+  "providerAdapterRequestSchema": "schemas/conformance-provider-adapter-request.schema.json",
+  "providerAdapterResultSchema": "schemas/conformance-provider-adapter-result.schema.json",
   "coveredCaseIds": [
     "EC-WEB-T001",
     "EC-WEB-T002",
@@ -27,6 +30,11 @@
     "EC-WEB-T012",
     "EC-WEB-T013",
     "EC-WEB-T014"
+  ],
+  "providerAdapterPaths": [
+    "conformance/harness/web-fetch-events/provider-adapters/deislet/adapter.json",
+    "conformance/harness/web-fetch-events/provider-adapters/cloudflare-workers-pages/adapter.json",
+    "conformance/harness/web-fetch-events/provider-adapters/tencent-edgeone-makers/adapter.json"
   ],
   "providerAdapters": []
 }

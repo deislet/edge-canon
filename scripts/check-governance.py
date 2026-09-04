@@ -59,6 +59,14 @@ def require(condition: bool, message: str) -> None:
 
 
 def validate_schema_documents() -> None:
+    for schema_path in sorted((ROOT / "schemas").glob("*.json")):
+        relative = schema_path.relative_to(ROOT).as_posix()
+        schema = load_json(relative)
+        try:
+            jsonschema.Draft202012Validator.check_schema(schema)
+        except jsonschema.SchemaError as error:
+            raise ValidationError(f"{relative}: invalid JSON Schema: {error.message}") from error
+
     documents = {
         "standard/contract.json": "schemas/standard-contract.schema.json",
         "standard/requirements.json": "schemas/requirements-registry.schema.json",
@@ -66,12 +74,14 @@ def validate_schema_documents() -> None:
         "conformance/cases/web-fetch-events.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/web-fetch-events/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/harness/web-fetch-events/sample-pass.json": "schemas/conformance-observations.schema.json",
+        "conformance/harness/web-fetch-events/provider-adapters/deislet/adapter.json": "schemas/conformance-provider-adapter.schema.json",
+        "conformance/harness/web-fetch-events/provider-adapters/cloudflare-workers-pages/adapter.json": "schemas/conformance-provider-adapter.schema.json",
+        "conformance/harness/web-fetch-events/provider-adapters/tencent-edgeone-makers/adapter.json": "schemas/conformance-provider-adapter.schema.json",
         "conformance/registry.json": "schemas/conformance-registry.schema.json",
     }
     for relative, schema_relative in documents.items():
         schema = load_json(schema_relative)
         try:
-            jsonschema.Draft202012Validator.check_schema(schema)
             jsonschema.Draft202012Validator(
                 schema,
                 format_checker=jsonschema.FormatChecker(),
@@ -278,7 +288,15 @@ def validate_harness(
         manifest.get("observationSchema") == "schemas/conformance-observations.schema.json",
         f"{relative_path}: observation schema must be the shared schema",
     )
-    for key in ("fixturePath", "oraclePath", "observationSchema", "providerProtocol"):
+    for key in (
+        "fixturePath",
+        "oraclePath",
+        "observationSchema",
+        "providerProtocol",
+        "providerAdapterSchema",
+        "providerAdapterRequestSchema",
+        "providerAdapterResultSchema",
+    ):
         target = manifest.get(key)
         require(isinstance(target, str) and target, f"{relative_path}: {key} is missing")
         require((ROOT / target).is_file(), f"{relative_path}: {key} does not exist: {target}")
@@ -301,6 +319,35 @@ def validate_harness(
     adapters = manifest.get("providerAdapters", [])
     require(len(adapters) == len(set(adapters)), f"{relative_path}: duplicate provider adapter")
     require(set(adapters) <= FIRST_CLASS, f"{relative_path}: unknown first-class provider adapter")
+
+    adapter_paths = manifest.get("providerAdapterPaths", [])
+    require(len(adapter_paths) == len(set(adapter_paths)), f"{relative_path}: duplicate provider adapter path")
+    adapter_manifests = []
+    for adapter_path in adapter_paths:
+        require(isinstance(adapter_path, str) and adapter_path, f"{relative_path}: invalid provider adapter path")
+        require((ROOT / adapter_path).is_file(), f"{relative_path}: provider adapter does not exist: {adapter_path}")
+        adapter = load_json(adapter_path)
+        adapter_manifests.append(adapter)
+        require(adapter.get("standardId") == standard_id, f"{adapter_path}: standardId mismatch")
+        require(adapter.get("suiteId") == suite_id, f"{adapter_path}: suiteId mismatch")
+        require(adapter.get("protocolVersion") == "edge-canon.provider-adapter/v1", f"{adapter_path}: protocolVersion mismatch")
+        entrypoint = adapter.get("entrypoint")
+        require(isinstance(entrypoint, str) and (ROOT / entrypoint).is_file(), f"{adapter_path}: entrypoint does not exist")
+        coverage = adapter.get("caseCoverage", [])
+        coverage_ids = [item.get("id") for item in coverage]
+        require(len(coverage_ids) == len(set(coverage_ids)), f"{adapter_path}: duplicate case coverage")
+        require(set(coverage_ids) == case_ids, f"{adapter_path}: case coverage differs from suite")
+        complete = adapter.get("status") == "complete"
+        if complete:
+            require(all(item.get("status") == "implemented" and not item.get("blockers") for item in coverage), f"{adapter_path}: complete adapter has incomplete cases")
+            require(all(item.get("status") == "implemented" for item in adapter.get("operations", {}).values()), f"{adapter_path}: complete adapter has incomplete operations")
+            require(not adapter.get("limitations"), f"{adapter_path}: complete adapter still has limitations")
+
+    adapter_ids = [adapter.get("backendId") for adapter in adapter_manifests]
+    require(len(adapter_ids) == len(set(adapter_ids)), f"{relative_path}: duplicate adapter backend")
+    require(set(adapter_ids) == FIRST_CLASS, f"{relative_path}: adapter manifests must cover every first-class backend")
+    completed_ids = {adapter["backendId"] for adapter in adapter_manifests if adapter.get("status") == "complete"}
+    require(set(adapters) == completed_ids, f"{relative_path}: completed provider adapter list differs from manifests")
     if harness_status == "complete":
         require(set(covered) == case_ids, f"{relative_path}: complete harness must cover every case")
         require(set(adapters) == FIRST_CLASS, f"{relative_path}: complete harness needs every first-class adapter")

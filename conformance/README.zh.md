@@ -2,7 +2,7 @@
 
 [`registry.json`](registry.json) 是后端实现证据与认证状态的唯一机器可读入口。平台矩阵可以解释能力差异，但不能自行产生合规或支持声明。
 
-[`kit.json`](kit.json) 是标准测试集索引。它把能力族连接到 provider-independent 用例；当前只有 `EC-WEB` 存在草案用例，并已有覆盖 T001–T005 的统一 fixture、原始 observation 格式和可执行 oracle。三个一等后端 adapter 仍为空，其余用例仍未执行化，因此 harness 只是 `draft`。机器可读用例和 oracle 自测不是后端执行证据，不能据此提高任何后端的成熟度或认证状态。
+[`kit.json`](kit.json) 是标准测试集索引。它把能力族连接到 provider-independent 用例；当前只有 `EC-WEB` 存在草案用例，并已有覆盖 T001–T014 的统一 fixture、原始 observation 格式和可执行 oracle。三个一等后端已有受 schema 和治理约束的 Draft manifest，以及可执行的安全 `inspect`/`preflight`，但准备、真实部署、调用、取证和清理仍未实现，完成 adapter 列表因此仍为空。其余 14 个能力族也尚未执行化，所以 harness 只是 `draft`。机器可读用例、oracle 自测和工具 preflight 不是后端执行证据，不能据此提高任何后端的成熟度或认证状态。
 
 证据成熟度依次为：
 
@@ -22,4 +22,4 @@ python3 scripts/check-governance.py
 node --test conformance/harness/web-fetch-events/*.test.mjs
 ```
 
-治理校验只使用 Python 标准库，检查契约、逐条要求、测试集、harness manifest 与实现 registry 的交叉约束；Node 测试执行当前 fixture/oracle 草案的正反自证。JSON Schema 仍是外部工具和生成客户端使用的公开格式定义。
+治理校验使用固定版本的 JSON Schema validator，检查契约、逐条要求、测试集、harness、三个 adapter manifest 与实现 registry 的交叉约束；Node 测试执行当前 fixture/oracle 草案的正反自证和 adapter 子进程安全边界。JSON Schema 同时是 adapter request/result 和外部生成客户端使用的公开格式定义。

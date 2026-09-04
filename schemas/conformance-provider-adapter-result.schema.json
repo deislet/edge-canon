@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/conformance-provider-adapter-result.schema.json",
+  "title": "Edge Canon conformance provider adapter result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "protocolVersion", "operation", "operationId", "backendId",
+    "outcome", "mutatedRemoteState", "retrySafe", "data", "evidenceRefs", "failure"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "protocolVersion": {"const": "edge-canon.provider-adapter/v1"},
+    "operation": {"enum": ["inspect", "preflight", "prepare", "deploy", "invoke", "collect", "cleanup", "run"]},
+    "operationId": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "backendId": {"enum": ["deislet", "cloudflare-workers-pages", "tencent-edgeone-makers"]},
+    "outcome": {"enum": ["succeeded", "failed", "indeterminate"]},
+    "mutatedRemoteState": {"type": "boolean"},
+    "retrySafe": {"type": "boolean"},
+    "data": {"type": "object"},
+    "evidenceRefs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 2048}
+    },
+    "failure": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message"],
+          "properties": {
+            "code": {"type": "string", "pattern": "^EC_ADAPTER_[A-Z0-9_]+$"},
+            "message": {"type": "string", "minLength": 1, "maxLength": 2048}
+          }
+        }
+      ]
+    }
+  }
+}
