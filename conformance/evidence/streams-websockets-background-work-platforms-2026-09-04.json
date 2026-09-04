@@ -4,10 +4,10 @@
   "standardId": "edge-canon.next",
   "suiteId": "EC-STREAM",
   "status": "draft-non-certifying",
-  "observedAt": "2026-09-04T19:54:04Z",
-  "artifactSha256": "eb1f03412db732617720430a3aa49210fb9036c56b98c6d520eac9710c5ce546",
+  "observedAt": "2026-09-04T20:12:44Z",
+  "artifactSha256": "f35331489a058479c05280e107285ba55129ee382cbf7eab4ae15a8c428035d7",
   "referenceImplementationPath": "conformance/harness/streams-websockets-background-work/runner.mjs",
-  "referenceImplementationSha256": "ac2eab0265fc40ef3bb62828fded058055c5c216c136c1d06b0ac13db72e629c",
+  "referenceImplementationSha256": "054367d1eea85f3b86f5aa12bf85ab157025664e1c256ffc98822f6ce820d7d5",
   "observations": [
     {
       "platform": "linux",
@@ -16,7 +16,7 @@
       "nodeVersion": "v22.21.1",
       "outcome": "pass",
       "caseCount": 13,
-      "artifactSha256": "eb1f03412db732617720430a3aa49210fb9036c56b98c6d520eac9710c5ce546"
+      "artifactSha256": "f35331489a058479c05280e107285ba55129ee382cbf7eab4ae15a8c428035d7"
     },
     {
       "platform": "macos",
@@ -25,7 +25,7 @@
       "nodeVersion": "v26.0.0",
       "outcome": "pass",
       "caseCount": 13,
-      "artifactSha256": "eb1f03412db732617720430a3aa49210fb9036c56b98c6d520eac9710c5ce546"
+      "artifactSha256": "f35331489a058479c05280e107285ba55129ee382cbf7eab4ae15a8c428035d7"
     },
     {
       "platform": "windows",
@@ -34,15 +34,15 @@
       "nodeVersion": "v24.16.0",
       "outcome": "pass",
       "caseCount": 13,
-      "artifactSha256": "eb1f03412db732617720430a3aa49210fb9036c56b98c6d520eac9710c5ce546"
+      "artifactSha256": "f35331489a058479c05280e107285ba55129ee382cbf7eab4ae15a8c428035d7"
     }
   ],
   "limitations": [
     "This is reference-harness evidence, not provider conformance or certification evidence.",
-    "The exact standard pin is commit 2ea29fe3e946f7efc3faabd98457a9780fc1a5a1; the reference runner bytes are bound separately.",
+    "The exact standard pin is commit 412eb2d56218df1750996385c801188c1454cde5; the reference runner bytes are bound separately.",
     "The direct ReadableStream and WritableStream constructors used to build internal fault fixtures are harness infrastructure, not part of the portable application surface.",
     "The 65,536-octet result proves local reference portability only; Cloudflare, EdgeOne, and Deislet live response streaming and disconnect behavior remain pending.",
-    "No WebSocket runtime behavior was tested because WebSocket termination is absent from the reference-vendor application-runtime intersection; the source-policy fixture consumes scope-resolved semantic analysis and rejects provider-global references without treating comments, strings, erased types, or local same-name bindings as APIs.",
+    "No WebSocket messaging behavior was tested because WebSocket termination is absent from the reference-vendor application-runtime intersection; the source-policy fixture consumes scope-resolved semantic analysis and the runtime fixture seals WebSocket, WebSocketPair, and WebSocketServer as non-writable, non-enumerable, non-configurable undefined properties before application evaluation.",
     "Background-work tests prove all-settled association and no implicit retry in the reference runtime; provider grace periods, crash cancellation, and durable delivery are not certified."
   ]
 }
