@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import fs from "node:fs";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { runCpuWorkload } from "./cpu-workload.mjs";
 
 const MINIMUM_MILLISECONDS = 8;
@@ -57,7 +57,7 @@ export function calibrate() {
   };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(process.argv[1])) {
   try {
     process.stdout.write(`${JSON.stringify(calibrate(), null, 2)}\n`);
   } catch (error) {

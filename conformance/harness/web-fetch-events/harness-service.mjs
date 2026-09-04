@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const TOKEN = /^[A-Za-z0-9_-]{32,256}$/;
 const INVOCATION_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
@@ -392,7 +392,7 @@ async function main(argv) {
   })}\n`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(process.argv[1])) {
   main(process.argv.slice(2)).catch((error) => {
     process.stderr.write(`${error instanceof HarnessServiceError ? error.code : "EC_HARNESS_INTERNAL"}: ${error.message}\n`);
     process.exitCode = 1;

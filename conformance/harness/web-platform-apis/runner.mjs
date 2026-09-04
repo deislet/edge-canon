@@ -1,7 +1,8 @@
 import crypto from "node:crypto";
 import http from "node:http";
 import { execFileSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { API_BASELINE_DATE, CAPACITY_BODY_BYTE, SHA256_ABC, URL_VECTORS, capabilityLock } from "./fixture.mjs";
 import { captureContractFailure, deriveProviderConfiguration, validateCapabilityLock } from "./reference-runtime.mjs";
 
@@ -393,7 +394,7 @@ async function main(outputPath, standardVersion) {
   } else process.stdout.write(output);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1])) {
   main(process.argv[2], process.argv[3]).catch((error) => {
     process.stderr.write(`EC-WEBAPI runner failed: ${error.stack ?? error.message}\n`);
     process.exitCode = 1;

@@ -3,7 +3,8 @@ import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { canonicalJsonBytes } from "./canonical-json.mjs";
 import { buildFixture } from "./fixture.mjs";
 import { ArtifactValidationError, validateArtifact } from "./validator.mjs";
@@ -262,7 +263,7 @@ async function main() {
   process.stdout.write(`${JSON.stringify(document, null, 2)}\n`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1])) {
   main().catch((error) => {
     process.stderr.write(`EC-ARTIFACT runner failed: ${error.code ?? "EC_ARTIFACT_RUNNER_FAILED"}: ${error.message}\n`);
     process.exitCode = 1;

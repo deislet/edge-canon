@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const EXPECTED_CASES = [
   "EC-WEB-T001",
@@ -370,7 +370,7 @@ function main(path) {
   process.stdout.write(`${JSON.stringify(verifyDocument(document), null, 2)}\n`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(process.argv[1])) {
   try {
     main(process.argv[2]);
   } catch (error) {

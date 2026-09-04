@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { capacityDocument, fixtureDocument, fixtureFiles } from "./fixture.mjs";
 import { RoutingError, resolveRequest, validateRoutingDocument } from "./reference-router.mjs";
 
@@ -316,7 +317,7 @@ async function main() {
   process.stdout.write(`${JSON.stringify(await runSuite(), null, 2)}\n`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1])) {
   main().catch((error) => {
     process.stderr.write(`EC-ROUTING runner failed: ${error.code ?? "EC_ROUTING_RUNNER_FAILED"}: ${error.message}\n`);
     process.exitCode = 1;

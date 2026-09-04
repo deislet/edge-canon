@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const SHA256 = /^[0-9a-f]{64}$/;
 const EXACT_STANDARD = /^edge-canon\.next@[0-9a-f]{40}$/;
@@ -190,7 +190,7 @@ function main(file) {
   process.stdout.write(`${JSON.stringify(verifyDocument(JSON.parse(fs.readFileSync(file, "utf8"))), null, 2)}\n`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(process.argv[1])) {
   try { main(process.argv[2]); }
   catch (error) {
     process.stderr.write(`EC-WEBAPI oracle failed: ${error.message}\n`);
