@@ -60,6 +60,10 @@ suite、入口文件，以及按路径排序的每个文件的字节数和 SHA-2
 `edge-functions/[[default]].js`；Deislet 生成标准 catch-all 路由 `functions/[[all]].js` 与
 `.config.json`。适配层把 `request`、`env`、`params` 和 `waitUntil` 组成同一个四键 context，
 `EVIDENCE.record` 只产生带固定前缀的结构化日志，供后续 `collect` 收集，不能参与 oracle 判定。
+同一层还实现标准而非供应商自行决定的运行边界：同步抛出、Promise 拒绝和非 `Response` 返回
+被转换为固定非泄漏 500；每个 `waitUntil` Promise 独立跟踪拒绝；响应 body 关闭、报错或取消时
+关闭前台生命周期；关闭后的 `waitUntil` 同步抛出带 `EC_WAIT_UNTIL_CLOSED` 的 `TypeError`。
+日志只记录稳定代码、operation invocation ID 和有界 fixture marker，不记录异常消息或栈。
 
 ## 部署身份和恢复
 

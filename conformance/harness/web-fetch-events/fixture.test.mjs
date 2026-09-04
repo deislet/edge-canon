@@ -38,6 +38,7 @@ test("fixture exercises the four context fields and async settlement", async () 
   const response = await handler(call.value);
   assert.deepEqual(await response.json(), {
     contextKeys: ["env", "params", "request", "waitUntil"],
+    contextObjectIdentityUnique: true,
     environment: "edge-canon-env",
     parameter: "edge-canon-param",
   });

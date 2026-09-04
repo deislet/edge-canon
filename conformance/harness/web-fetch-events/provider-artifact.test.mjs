@@ -110,21 +110,99 @@ for (const provider of providers) {
     );
 
     const module = await import(`${pathToFileURL(path.join(firstRequest.configuration.derivedDirectory, provider.entrypoint)).href}?test=${provider.backendId}`);
-    const background = [];
-    const nativeContext = {
-      request: new Request("https://conformance.invalid/context"),
-      env: { TEST_VALUE: "portable-value" },
-      waitUntil(promise) {
-        background.push(Promise.resolve(promise));
-      },
+    const evidence = [];
+    const originalLog = console.log;
+    console.log = (line, ...rest) => {
+      if (typeof line === "string" && line.startsWith("EDGE_CANON_EVIDENCE ")) {
+        evidence.push(JSON.parse(line.slice("EDGE_CANON_EVIDENCE ".length)));
+      } else {
+        originalLog(line, ...rest);
+      }
     };
-    const response = await provider.invoke(module, nativeContext);
-    assert.deepEqual(await response.json(), {
-      contextKeys: ["env", "params", "request", "waitUntil"],
-      environment: "portable-value",
-      parameter: "edge-canon-param",
-    });
-    await Promise.all(background);
+    let invocationSequence = 0;
+    async function invoke(pathname, options = {}) {
+      invocationSequence += 1;
+      const invocationId = `${provider.backendId}-${invocationSequence}`;
+      const background = [];
+      const headers = new Headers(options.headers);
+      headers.set("x-edge-canon-invocation-id", invocationId);
+      const nativeContext = {
+        request: new Request(`https://conformance.invalid${pathname}`, { ...options, headers }),
+        env: { TEST_VALUE: "portable-value" },
+        waitUntil(promise) {
+          background.push(Promise.resolve(promise));
+        },
+      };
+      return {
+        background,
+        invocationId,
+        response: await provider.invoke(module, nativeContext),
+      };
+    }
+    try {
+      const contextInvocation = await invoke("/context");
+      assert.deepEqual(await contextInvocation.response.json(), {
+        contextKeys: ["env", "params", "request", "waitUntil"],
+        contextObjectIdentityUnique: true,
+        environment: "portable-value",
+        parameter: "edge-canon-param",
+      });
+      await Promise.all(contextInvocation.background);
+
+      for (const [pathname, failureCode] of [
+        ["/throw-sync", "EC_HANDLER_THROWN"],
+        ["/throw-async", "EC_HANDLER_THROWN"],
+        ["/invalid-undefined", "EC_HANDLER_RESULT_INVALID"],
+        ["/invalid-string", "EC_HANDLER_RESULT_INVALID"],
+        ["/invalid-object", "EC_HANDLER_RESULT_INVALID"],
+      ]) {
+        const failed = await invoke(pathname);
+        assert.equal(failed.response.status, 500);
+        assert.equal(failed.response.headers.get("content-type"), "text/plain; charset=utf-8");
+        assert.equal(failed.response.headers.get("cache-control"), "no-store");
+        assert.equal(await failed.response.text(), "Internal Server Error\n");
+        assert.ok(evidence.some((entry) =>
+          entry.invocationId === failed.invocationId && entry.failureCode === failureCode));
+      }
+
+      const streamed = await invoke("/stream");
+      const reader = streamed.response.body.getReader();
+      const decoder = new TextDecoder();
+      const chunks = [];
+      while (true) {
+        const result = await reader.read();
+        if (result.done) break;
+        chunks.push(decoder.decode(result.value));
+      }
+      assert.deepEqual(chunks, ["stream-one", "stream-two", "stream-three"]);
+      const streamEvents = evidence.filter((entry) => entry.invocationId === streamed.invocationId);
+      assert.ok(streamEvents.findIndex((entry) => entry.event === "handler-settled")
+        < streamEvents.findIndex((entry) => entry.event === "lifecycle-closed"));
+      assert.equal(streamEvents.find((entry) => entry.event === "lifecycle-closed").terminalState, "closed");
+
+      const backgroundInvocation = await invoke("/background");
+      assert.equal(await backgroundInvocation.response.text(), "background-response");
+      await Promise.all(backgroundInvocation.background);
+      const backgroundEvidence = evidence.filter((entry) => entry.invocationId === backgroundInvocation.invocationId);
+      assert.deepEqual(
+        backgroundEvidence.filter((entry) => entry.event === "record").map((entry) => entry.marker),
+        ["background-first", "background-third"],
+      );
+      assert.equal(
+        backgroundEvidence.filter((entry) => entry.failureCode === "EC_BACKGROUND_REJECTED").length,
+        1,
+      );
+
+      const captured = await invoke("/capture-wait-until");
+      assert.equal(await captured.response.text(), "wait-until-captured");
+      const late = await invoke("/late-wait-until");
+      assert.deepEqual(await late.response.json(), { exceptionType: "TypeError" });
+      assert.ok(evidence.some((entry) =>
+        entry.invocationId === captured.invocationId && entry.failureCode === "EC_WAIT_UNTIL_CLOSED"));
+      assert.equal(captured.background.length, 0);
+    } finally {
+      console.log = originalLog;
+    }
   });
 }
 

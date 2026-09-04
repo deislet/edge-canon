@@ -139,37 +139,178 @@ function jsonFile(value) {
 function wrapperPrelude(backendId) {
   return `import handler from "../canonical/fixture.mjs";
 
-const EVIDENCE = Object.freeze({
-  record(marker) {
-    console.log("EDGE_CANON_EVIDENCE " + JSON.stringify({
+const BACKEND_ID = "${backendId}";
+const INVOCATION_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+
+function emitEvidence(event, fields) {
+  try {
+    console.log("EDGE_CANON_EVIDENCE " + JSON.stringify(Object.assign({
       schemaVersion: 1,
-      backendId: "${backendId}",
-      event: "record",
-      marker: String(marker),
-    }));
-    return Promise.resolve();
-  },
-});
+      backendId: BACKEND_ID,
+      event,
+    }, fields)));
+  } catch {
+    // collect observes missing evidence; evidence transport cannot alter HTTP output.
+  }
+}
+
+function standardFailureResponse() {
+  return new Response("Internal Server Error\\n", {
+    status: 500,
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
+}
 
 function standardContext(request, nativeEnvironment, nativeWaitUntil) {
   if (typeof nativeWaitUntil !== "function") {
     throw new TypeError("provider context does not expose waitUntil");
   }
+  const suppliedInvocationId = request.headers.get("x-edge-canon-invocation-id");
+  const invocationId = INVOCATION_ID.test(suppliedInvocationId ?? "")
+    ? suppliedInvocationId
+    : null;
+  let closed = false;
+  let registeredBackgroundTaskCount = 0;
+  const evidence = Object.freeze({
+    record(marker) {
+      emitEvidence("record", {
+        invocationId,
+        marker: String(marker).slice(0, 256),
+      });
+      return Promise.resolve();
+    },
+  });
   const env = Object.assign({}, nativeEnvironment ?? {});
   Object.defineProperty(env, "EVIDENCE", {
-    value: EVIDENCE,
+    value: evidence,
     enumerable: true,
     configurable: false,
     writable: false,
   });
-  return {
+  const context = {
     request,
     env,
     params: { name: "edge-canon-param" },
     waitUntil(promise) {
-      return nativeWaitUntil(promise);
+      if (closed) {
+        emitEvidence("failure", { invocationId, failureCode: "EC_WAIT_UNTIL_CLOSED" });
+        const error = new TypeError("waitUntil cannot register work after the response lifecycle closed");
+        Object.defineProperty(error, "code", { value: "EC_WAIT_UNTIL_CLOSED" });
+        throw error;
+      }
+      registeredBackgroundTaskCount += 1;
+      const taskNumber = registeredBackgroundTaskCount;
+      emitEvidence("background-registered", { invocationId, taskNumber });
+      const tracked = Promise.resolve(promise).catch(() => {
+        emitEvidence("failure", {
+          invocationId,
+          taskNumber,
+          failureCode: "EC_BACKGROUND_REJECTED",
+        });
+      });
+      nativeWaitUntil(tracked);
     },
   };
+  emitEvidence("invocation-start", {
+    invocationId,
+    method: request.method,
+    pathname: new URL(request.url).pathname,
+  });
+  return {
+    context,
+    close(terminalState) {
+      if (closed) return;
+      closed = true;
+      emitEvidence("lifecycle-closed", {
+        invocationId,
+        registeredBackgroundTaskCount,
+        terminalState,
+      });
+    },
+    invocationId,
+  };
+}
+
+function lifecycleResponse(response, lifecycle) {
+  if (response.body === null) {
+    lifecycle.close("no-body");
+    return response;
+  }
+  let reader;
+  try {
+    reader = response.body.getReader();
+  } catch {
+    lifecycle.close("errored");
+    throw new TypeError("handler response body cannot be consumed");
+  }
+  const body = new ReadableStream({
+    async pull(controller) {
+      try {
+        const result = await reader.read();
+        if (result.done) {
+          lifecycle.close("closed");
+          controller.close();
+        } else {
+          controller.enqueue(result.value);
+        }
+      } catch (error) {
+        lifecycle.close("errored");
+        controller.error(error);
+      }
+    },
+    async cancel(reason) {
+      try {
+        await reader.cancel(reason);
+      } finally {
+        lifecycle.close("cancelled");
+      }
+    },
+  });
+  return new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
+}
+
+async function dispatchHandler(request, nativeEnvironment, nativeWaitUntil) {
+  let lifecycle;
+  try {
+    lifecycle = standardContext(request, nativeEnvironment, nativeWaitUntil);
+  } catch {
+    emitEvidence("failure", { invocationId: null, failureCode: "EC_PROVIDER_CONTEXT_INVALID" });
+    return standardFailureResponse();
+  }
+  let result;
+  try {
+    result = await handler(lifecycle.context);
+  } catch {
+    emitEvidence("failure", {
+      invocationId: lifecycle.invocationId,
+      failureCode: "EC_HANDLER_THROWN",
+    });
+    result = standardFailureResponse();
+  }
+  if (!(result instanceof Response)) {
+    emitEvidence("failure", {
+      invocationId: lifecycle.invocationId,
+      failureCode: "EC_HANDLER_RESULT_INVALID",
+    });
+    result = standardFailureResponse();
+  }
+  emitEvidence("handler-settled", { invocationId: lifecycle.invocationId });
+  try {
+    return lifecycleResponse(result, lifecycle);
+  } catch {
+    emitEvidence("failure", {
+      invocationId: lifecycle.invocationId,
+      failureCode: "EC_HANDLER_RESULT_INVALID",
+    });
+    return lifecycleResponse(standardFailureResponse(), lifecycle);
+  }
 }
 
 `;
@@ -183,7 +324,7 @@ function providerFiles(backendId, canonical, { projectName, compatibilityDate })
   if (backendId === "cloudflare-workers-pages") {
     files.set("src/index.mjs", Buffer.from(`${wrapperPrelude(backendId)}export default {
   fetch(request, env, executionContext) {
-    return handler(standardContext(request, env, executionContext.waitUntil.bind(executionContext)));
+    return dispatchHandler(request, env, executionContext.waitUntil.bind(executionContext));
   },
 };
 `, "utf8"));
@@ -198,11 +339,11 @@ function providerFiles(backendId, canonical, { projectName, compatibilityDate })
   }
   if (backendId === "tencent-edgeone-makers") {
     files.set("edge-functions/[[default]].js", Buffer.from(`${wrapperPrelude(backendId)}export default function onRequest(context) {
-  return handler(standardContext(
+  return dispatchHandler(
     context.request,
     context.env,
     context.waitUntil.bind(context),
-  ));
+  );
 }
 `, "utf8"));
     files.set("edgeone.json", jsonFile({ name: projectName }));
@@ -216,11 +357,11 @@ function providerFiles(backendId, canonical, { projectName, compatibilityDate })
   }
   if (backendId === "deislet") {
     files.set("functions/[[all]].js", Buffer.from(`${wrapperPrelude(backendId)}export default function onRequest(context) {
-  return handler(standardContext(
+  return dispatchHandler(
     context.request,
     context.env,
     context.waitUntil.bind(context),
-  ));
+  );
 }
 `, "utf8"));
     files.set(".config.json", jsonFile({

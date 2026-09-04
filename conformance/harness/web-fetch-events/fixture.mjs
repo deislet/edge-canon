@@ -35,10 +35,13 @@ export default function handler(context) {
     case "/sync":
       return new Response("edge-canon-sync");
     case "/context": {
+      const contextObjectIdentityUnique = !seenContexts.has(context);
+      seenContexts.add(context);
       context.waitUntil(context.env.EVIDENCE.record("background-complete"));
       return Promise.resolve(
         json({
           contextKeys: Object.keys(context).sort(),
+          contextObjectIdentityUnique,
           environment: context.env.TEST_VALUE,
           parameter: context.params.name,
         }),
