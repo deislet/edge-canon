@@ -84,7 +84,9 @@ const VERIFIERS = {
     exactKeys(data, ["version", "nodeVersion", "platform", "env", "visibleFields", "builtin"], "T012 data");
     requireValue(data.version === "v24.20.0" && data.nodeVersion === "24.20.0" && data.platform === "linux", "T012 process normalization differs");
     requireValue(data.env.A.TENANT === "A" && data.env.A.SHARED === "changed-a" && data.env.B.TENANT === "B" && data.env.B.SHARED === "initial", "T012 env snapshots crossed invocations");
-    requireValue(equal(data.visibleFields, ["env", "getBuiltinModule", "nextTick", "platform", "version", "versions"]) && data.builtin === "node:path", "T012 process facade leaks or misses fields");
+    requireValue(equal(data.visibleFields, ["env", "getBuiltinModule", "nextTick", "platform", "version", "versions"]), "T012 process facade leaks or misses fields");
+    exactKeys(data.builtin, ["pathJoin", "fields", "unsupportedIsUndefined"], "T012 builtin facade");
+    requireValue(data.builtin.pathJoin === "edge/canon" && equal(data.builtin.fields, BUILTIN_MODULES["node:path"].slice().sort()) && data.builtin.unsupportedIsUndefined === true, "T012 getBuiltinModule does not return the selected module facade");
   },
   "EC-NODE-T013"(data) {
     exactKeys(data, ["sanitized", "credentialLeaked", "unsafe", "cache"], "T013 data");

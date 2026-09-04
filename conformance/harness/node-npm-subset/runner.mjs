@@ -209,7 +209,19 @@ export async function runSuite(options = {}) {
   const processA = createProcessFacade({ TENANT: "A", SHARED: "initial" });
   const processB = createProcessFacade({ TENANT: "B", SHARED: "initial" });
   processA.env.SHARED = "changed-a";
-  cases.push(record(CASE_IDS[11], { version: processA.version, nodeVersion: processA.versions.node, platform: processA.platform, env: { A: { ...processA.env }, B: { ...processB.env } }, visibleFields: Object.keys(processA).sort(), builtin: processA.getBuiltinModule("path") }));
+  const selectedPath = processA.getBuiltinModule("path");
+  cases.push(record(CASE_IDS[11], {
+    version: processA.version,
+    nodeVersion: processA.versions.node,
+    platform: processA.platform,
+    env: { A: { ...processA.env }, B: { ...processB.env } },
+    visibleFields: Object.keys(processA).sort(),
+    builtin: {
+      pathJoin: selectedPath.join("edge", "canon"),
+      fields: Object.keys(selectedPath).sort(),
+      unsupportedIsUndefined: processA.getBuiltinModule("fs") === undefined,
+    },
+  }));
 
   const credentialUrl = "https://token-user:secret-pass@registry.example.invalid/@scope/pkg/-/pkg-1.0.0.tgz";
   const sanitized = sanitizeRegistryUrl(credentialUrl);

@@ -175,7 +175,25 @@ export function cacheKey(packageRecord, transformerVersion = "ec-cjs-1") {
 
 export function createProcessFacade(environment = {}) {
   const env = Object.assign(Object.create(null), environment);
-  return Object.freeze({ env, getBuiltinModule(name) { return canonicalBuiltin(name); }, nextTick: process.nextTick.bind(process), platform: "linux", version: `v${NODE_BASELINE}`, versions: Object.freeze({ node: NODE_BASELINE }) });
+  const selected = new Map();
+  let facade;
+  function getBuiltinModule(name) {
+    if (typeof name !== "string") return undefined;
+    const canonicalName = name.startsWith("node:") ? name : `node:${name}`;
+    const exports = BUILTIN_MODULES[canonicalName];
+    if (exports === undefined) return undefined;
+    if (canonicalName === "node:process") return facade;
+    if (selected.has(canonicalName)) return selected.get(canonicalName);
+    const native = process.getBuiltinModule(canonicalName);
+    if (native === undefined) return undefined;
+    const module = Object.create(null);
+    for (const name of exports) Object.defineProperty(module, name, { value: native[name], enumerable: true });
+    Object.freeze(module);
+    selected.set(canonicalName, module);
+    return module;
+  }
+  facade = Object.freeze({ env, getBuiltinModule, nextTick: process.nextTick.bind(process), platform: "linux", version: `v${NODE_BASELINE}`, versions: Object.freeze({ node: NODE_BASELINE }) });
+  return facade;
 }
 
 export function deriveProviderConfiguration(lock, providerId) {
