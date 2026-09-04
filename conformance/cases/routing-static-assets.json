@@ -1,0 +1,76 @@
+{
+  "$schema": "../../schemas/conformance-cases.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-ROUTING",
+  "status": "draft",
+  "executionModel": "provider-independent-oracle",
+  "cases": [
+    {
+      "id": "EC-ROUTING-T001", "title": "redirect、rewrite、asset、function 与 fallback 使用固定管线", "kind": "normal",
+      "clauseIds": ["EC-ROUTING-API-001", "EC-ROUTING-CON-001"],
+      "fixture": {"scenario": "构造各阶段重叠命中并记录唯一终态", "requirements": ["ordered route arrays", "asset/function collision", "stage trace"]},
+      "oracle": {"observations": ["selected rule", "stage trace", "terminal target"], "assertions": ["redirect 最先终止", "rewrite 只执行一次", "同路径 asset 胜过 function", "阶段内首个规则获胜"]}
+    },
+    {
+      "id": "EC-ROUTING-T002", "title": "pathname 区分大小写且参数与 query 语义固定", "kind": "boundary",
+      "clauseIds": ["EC-ROUTING-API-002"],
+      "fixture": {"scenario": "测试 exact、:name、末尾 splat、大小写差异和不同 query", "requirements": ["normalized path inputs", "parameter capture", "query variants"]},
+      "oracle": {"observations": ["matches", "parameters", "query handling"], "assertions": ["大小写不同不命中", "单段参数不跨 slash", "splat 只在末尾贪婪捕获", "query 不改变 source 命中"]}
+    },
+    {
+      "id": "EC-ROUTING-T003", "title": "GET 与 HEAD 绑定同一静态字节", "kind": "normal",
+      "clauseIds": ["EC-ROUTING-API-003"],
+      "fixture": {"scenario": "对同一显式 asset 发出 identity GET 和 HEAD", "requirements": ["content-addressed asset", "known media type", "GET and HEAD client"]},
+      "oracle": {"observations": ["status", "headers", "body digest"], "assertions": ["GET body 与文件摘要相同", "HEAD header 与 GET 相同且 body 为空", "不声明 Range、压缩或 ETag 行为"]}
+    },
+    {
+      "id": "EC-ROUTING-T004", "title": "301/302 redirect 与 query policy 确定", "kind": "normal",
+      "clauseIds": ["EC-ROUTING-API-004"],
+      "fixture": {"scenario": "执行内部参数 redirect、外部 HTTPS redirect 和 preserve/discard query", "requirements": ["literal destinations", "two status codes", "query-bearing requests"]},
+      "oracle": {"observations": ["status", "Location", "later stage count"], "assertions": ["状态和 Location 精确", "query policy 精确", "redirect 后没有读取 asset 或执行函数"]}
+    },
+    {
+      "id": "EC-ROUTING-T005", "title": "rewrite 保留方法/body 且不链式执行", "kind": "boundary",
+      "clauseIds": ["EC-ROUTING-API-005", "EC-ROUTING-FAIL-002"],
+      "fixture": {"scenario": "POST 经一次 rewrite 命中 asset/function，并构造第二条可继续命中的 rewrite", "requirements": ["POST body sentinel", "overlapping rewrite", "explicit fallback"]},
+      "oracle": {"observations": ["rewrite count", "final pathname", "method/body", "origin hit count"], "assertions": ["只执行第一条 rewrite 一次", "方法和 body 未变", "未命中只进显式 fallback且不回源"]}
+    },
+    {
+      "id": "EC-ROUTING-T006", "title": "静态 header 使用首条规则且拒绝注入", "kind": "security",
+      "clauseIds": ["EC-ROUTING-API-006", "EC-ROUTING-SEC-002"],
+      "fixture": {"scenario": "让两个 header rule 命中同一 asset，并注入 CRLF、Set-Cookie 与请求派生 authority", "requirements": ["overlapping header rules", "forbidden header mutations", "external redirect mutation"]},
+      "oracle": {"observations": ["selected header rule", "function headers", "validation codes"], "assertions": ["只用首条静态 header rule", "函数响应不继承静态 header", "CRLF/禁止字段/动态 authority 全部失败"]}
+    },
+    {
+      "id": "EC-ROUTING-T007", "title": "三种显式 fallback 精确", "kind": "normal",
+      "clauseIds": ["EC-ROUTING-ERR-002"],
+      "fixture": {"scenario": "对同一未命中路径分别执行 not-found、custom-404 和 SPA 文档", "requirements": ["three fallback documents", "404 asset", "index asset"]},
+      "oracle": {"observations": ["status", "media type", "body digest", "origin hit count"], "assertions": ["空 404、静态 404 和 200 SPA 各自精确", "不按请求 header 改变", "没有隐式回源"]}
+    },
+    {
+      "id": "EC-ROUTING-T008", "title": "不安全路径和损坏 asset 在派生前失败", "kind": "security",
+      "clauseIds": ["EC-ROUTING-ERR-001", "EC-ROUTING-SEC-001", "EC-ROUTING-SEC-003", "EC-ROUTING-FAIL-001"],
+      "fixture": {"scenario": "注入无效 percent、编码 slash/backslash、dot segment、越界 filePath、link、缺失/摘要错误 asset", "requirements": ["request mutation set", "artifact mutation set", "structured diagnostics"]},
+      "oracle": {"observations": ["request status", "validation codes", "provider derivation count", "diagnostic leakage"], "assertions": ["请求混淆固定 400 且不匹配规则", "artifact 损坏稳定失败", "没有 provider 派生且诊断不泄漏"]}
+    },
+    {
+      "id": "EC-ROUTING-T009", "title": "同一版本并发解析确定且原子切换", "kind": "upgrade",
+      "clauseIds": ["EC-ROUTING-CON-002", "EC-ROUTING-LIFE-001"],
+      "fixture": {"scenario": "并发解析同一请求，同时从完整旧 route/asset 集合原子切到完整新集合", "requirements": ["immutable version snapshots", "concurrent requests", "activation barrier"]},
+      "oracle": {"observations": ["outcome digests", "observed version pairs"], "assertions": ["同一版本结果相同", "每次请求只观察 old/old 或 new/new", "没有混合 route/asset"]}
+    },
+    {
+      "id": "EC-ROUTING-T010", "title": "共同规则数量下限可验证", "kind": "boundary",
+      "clauseIds": ["EC-ROUTING-LIMIT-001", "EC-ROUTING-LIMIT-002"],
+      "fixture": {"scenario": "验证恰好 100 条 transform 和 30 条各含 30 个 header 的文档", "requirements": ["maximum-length patterns", "100 transform rules", "30 by 30 header entries"]},
+      "oracle": {"observations": ["accepted counts", "last rule outcomes"], "assertions": ["边界文档通过", "最后一条 transform 和 header rule 可命中"]}
+    },
+    {
+      "id": "EC-ROUTING-T011", "title": "未知 major 和浮动版本拒绝且迁移显式", "kind": "upgrade",
+      "clauseIds": ["EC-ROUTING-UPG-001", "EC-ROUTING-UPG-002"],
+      "fixture": {"scenario": "注入 v2、浮动标准与未知字段，并以只读 v1 生成新 identity 的迁移副本", "requirements": ["version mutations", "read-only source", "route outcome comparison"]},
+      "oracle": {"observations": ["failure codes", "source/migrated identities", "outcome diff"], "assertions": ["未知格式和浮动版本在 asset body 前失败", "迁移不改源文档且生成新 identity", "有意行为差异显式记录"]}
+    }
+  ]
+}

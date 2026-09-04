@@ -37,14 +37,21 @@
       }
     },
     {
-      "id": "routing-static-assets", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
+      "id": "routing-static-assets",
+      "definitionStatus": "draft",
+      "draftPath": "standard/requirements/routing-static-assets.zh.md",
+      "evidencePaths": ["standard/evidence/routing-static-assets-baseline.zh.md"],
       "dimensions": {
-        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
-        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
-        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
-        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+        "api": {"status": "draft", "clauseIds": ["EC-ROUTING-API-001", "EC-ROUTING-API-002", "EC-ROUTING-API-003", "EC-ROUTING-API-004", "EC-ROUTING-API-005", "EC-ROUTING-API-006"]},
+        "errors": {"status": "draft", "clauseIds": ["EC-ROUTING-ERR-001", "EC-ROUTING-ERR-002"]},
+        "concurrency-consistency-ordering": {"status": "draft", "clauseIds": ["EC-ROUTING-CON-001", "EC-ROUTING-CON-002"]},
+        "lifecycle": {"status": "draft", "clauseIds": ["EC-ROUTING-LIFE-001"]},
+        "minimum-resource-guarantees": {"status": "draft", "clauseIds": ["EC-ROUTING-LIMIT-001", "EC-ROUTING-LIMIT-002"]},
+        "security-isolation": {"status": "draft", "clauseIds": ["EC-ROUTING-SEC-001", "EC-ROUTING-SEC-002", "EC-ROUTING-SEC-003"]},
+        "failure-recovery": {"status": "draft", "clauseIds": ["EC-ROUTING-FAIL-001", "EC-ROUTING-FAIL-002"]},
+        "upgrade-migration": {"status": "draft", "clauseIds": ["EC-ROUTING-UPG-001", "EC-ROUTING-UPG-002"]}
       },
-      "conformance": {"suiteId": "EC-ROUTING", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+      "conformance": {"suiteId": "EC-ROUTING", "fixtureStatus": "draft", "oracleStatus": "draft", "harnessStatus": "draft"}
     },
     {
       "id": "streams-websockets-background-work", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],

@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../schemas/conformance-harness.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-ROUTING",
+  "status": "draft",
+  "executionKind": "local-reference",
+  "fixturePath": "conformance/harness/routing-static-assets/fixture.mjs",
+  "fixtureDependencyPaths": [],
+  "calibrationPath": null,
+  "oraclePath": "conformance/harness/routing-static-assets/oracle.mjs",
+  "observationSchema": "schemas/conformance-observations.schema.json",
+  "contractSchema": "schemas/routing-static-assets.schema.json",
+  "validatorPath": "conformance/harness/routing-static-assets/reference-router.mjs",
+  "runnerPath": "conformance/harness/routing-static-assets/runner.mjs",
+  "platforms": ["linux", "macos", "windows"],
+  "coveredCaseIds": [
+    "EC-ROUTING-T001", "EC-ROUTING-T002", "EC-ROUTING-T003",
+    "EC-ROUTING-T004", "EC-ROUTING-T005", "EC-ROUTING-T006",
+    "EC-ROUTING-T007", "EC-ROUTING-T008", "EC-ROUTING-T009",
+    "EC-ROUTING-T010", "EC-ROUTING-T011"
+  ]
+}

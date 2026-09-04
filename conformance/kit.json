@@ -6,7 +6,7 @@
   "requirementsRegistry": "standard/requirements.json",
   "suites": [
     {"id": "EC-WEB", "familyId": "web-fetch-events", "fixtureStatus": "draft", "oracleStatus": "draft", "harnessStatus": "draft", "casesPath": "conformance/cases/web-fetch-events.json", "harnessPath": "conformance/harness/web-fetch-events/harness.json"},
-    {"id": "EC-ROUTING", "familyId": "routing-static-assets", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned", "casesPath": null, "harnessPath": null},
+    {"id": "EC-ROUTING", "familyId": "routing-static-assets", "fixtureStatus": "draft", "oracleStatus": "draft", "harnessStatus": "draft", "casesPath": "conformance/cases/routing-static-assets.json", "harnessPath": "conformance/harness/routing-static-assets/harness.json"},
     {"id": "EC-STREAM", "familyId": "streams-websockets-background-work", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned", "casesPath": null, "harnessPath": null},
     {"id": "EC-WEBAPI", "familyId": "web-platform-apis", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned", "casesPath": null, "harnessPath": null},
     {"id": "EC-NODE", "familyId": "node-npm-subset", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned", "casesPath": null, "harnessPath": null},

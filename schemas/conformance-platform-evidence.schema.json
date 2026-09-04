@@ -6,17 +6,17 @@
   "additionalProperties": false,
   "required": [
     "schemaVersion", "standardId", "suiteId", "status", "observedAt",
-    "artifactSha256", "referenceBuilderSha256", "observations", "limitations"
+    "artifactSha256", "referenceImplementationSha256", "observations", "limitations"
   ],
   "properties": {
     "$schema": {"type": "string"},
     "schemaVersion": {"const": 1},
     "standardId": {"const": "edge-canon.next"},
-    "suiteId": {"const": "EC-ARTIFACT"},
+    "suiteId": {"type": "string", "pattern": "^EC-[A-Z0-9-]+$"},
     "status": {"const": "draft-non-certifying"},
     "observedAt": {"type": "string", "format": "date-time"},
     "artifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "referenceBuilderSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "referenceImplementationSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "observations": {
       "type": "array",
       "minItems": 3,
@@ -31,7 +31,7 @@
           "architecture": {"type": "string", "minLength": 1, "maxLength": 64},
           "nodeVersion": {"type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"},
           "outcome": {"const": "pass"},
-          "caseCount": {"const": 8},
+          "caseCount": {"type": "integer", "minimum": 1},
           "artifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
         }
       }

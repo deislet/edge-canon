@@ -15,7 +15,7 @@
     "standardId": {"type": "string", "minLength": 1},
     "suiteId": {"type": "string", "pattern": "^EC-[A-Z0-9-]+$"},
     "status": {"enum": ["draft", "complete"]},
-    "executionKind": {"enum": ["provider-deployment", "local-artifact"]},
+    "executionKind": {"enum": ["provider-deployment", "local-reference"]},
     "fixturePath": {"type": "string", "minLength": 1},
     "fixtureDependencyPaths": {
       "type": "array", "uniqueItems": true,
@@ -34,7 +34,7 @@
     "providerInvocationStateSchema": {"type": "string", "minLength": 1},
     "providerCollectionStateSchema": {"type": "string", "minLength": 1},
     "canonicalArtifactBuilder": {"type": "string", "minLength": 1},
-    "artifactSchema": {"type": "string", "minLength": 1},
+    "contractSchema": {"type": "string", "minLength": 1},
     "validatorPath": {"type": "string", "minLength": 1},
     "runnerPath": {"type": "string", "minLength": 1},
     "platforms": {
@@ -67,7 +67,7 @@
         ]
       },
       "else": {
-        "required": ["artifactSchema", "validatorPath", "runnerPath", "platforms"]
+        "required": ["contractSchema", "validatorPath", "runnerPath", "platforms"]
       }
     }
   ]

@@ -75,6 +75,8 @@ def validate_schema_documents() -> None:
         "conformance/harness/web-fetch-events/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/cases/canonical-build-artifact.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/canonical-build-artifact/harness.json": "schemas/conformance-harness.schema.json",
+        "conformance/cases/routing-static-assets.json": "schemas/conformance-cases.schema.json",
+        "conformance/harness/routing-static-assets/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/harness/web-fetch-events/sample-pass.json": "schemas/conformance-observations.schema.json",
         "conformance/harness/web-fetch-events/provider-adapters/deislet/adapter.json": "schemas/conformance-provider-adapter.schema.json",
@@ -288,7 +290,7 @@ def validate_harness(
     require(manifest.get("suiteId") == suite_id, f"{relative_path}: suiteId mismatch")
     require(manifest.get("status") == harness_status, f"{relative_path}: status differs from kit")
     execution_kind = manifest.get("executionKind")
-    require(execution_kind in {"provider-deployment", "local-artifact"}, f"{relative_path}: invalid execution kind")
+    require(execution_kind in {"provider-deployment", "local-reference"}, f"{relative_path}: invalid execution kind")
     require(
         manifest.get("observationSchema") == "schemas/conformance-observations.schema.json",
         f"{relative_path}: observation schema must be the shared schema",
@@ -310,8 +312,8 @@ def validate_harness(
         "providerCollectionStateSchema",
         "canonicalArtifactBuilder",
     )
-    artifact_paths = ("artifactSchema", "validatorPath", "runnerPath")
-    for key in provider_paths if execution_kind == "provider-deployment" else artifact_paths:
+    reference_paths = ("contractSchema", "validatorPath", "runnerPath")
+    for key in provider_paths if execution_kind == "provider-deployment" else reference_paths:
         target = manifest.get(key)
         require(isinstance(target, str) and target, f"{relative_path}: {key} is missing")
         require((ROOT / target).is_file(), f"{relative_path}: {key} does not exist: {target}")
@@ -331,10 +333,10 @@ def validate_harness(
     covered = manifest.get("coveredCaseIds", [])
     require(covered and len(covered) == len(set(covered)), f"{relative_path}: covered case IDs must be present and unique")
     require(set(covered) <= case_ids, f"{relative_path}: harness names an unknown case")
-    if execution_kind == "local-artifact":
+    if execution_kind == "local-reference":
         require(
             set(manifest.get("platforms", [])) == {"linux", "macos", "windows"},
-            f"{relative_path}: local artifact harness must cover Linux, macOS, and Windows",
+            f"{relative_path}: local reference harness must cover Linux, macOS, and Windows",
         )
         if harness_status == "complete":
             require(set(covered) == case_ids, f"{relative_path}: complete harness must cover every case")
@@ -478,6 +480,23 @@ def validate_registry(contract: dict, registry: dict) -> None:
             require(backend.get("role") == "first-class", f"{backend_id}: experimental backend cannot be supported")
 
 
+def validate_platform_evidence(relative_path: str) -> None:
+    evidence = load_json(relative_path)
+    observations = evidence.get("observations", [])
+    platforms = [item.get("platform") for item in observations]
+    require(
+        set(platforms) == {"linux", "macos", "windows"} and len(platforms) == 3,
+        f"{relative_path}: evidence must contain one result for each supported platform",
+    )
+    artifact_sha256 = evidence.get("artifactSha256")
+    require(
+        all(item.get("artifactSha256") == artifact_sha256 for item in observations),
+        f"{relative_path}: platform artifact identities differ",
+    )
+    case_counts = {item.get("caseCount") for item in observations}
+    require(len(case_counts) == 1, f"{relative_path}: platform case counts differ")
+
+
 def main() -> int:
     try:
         validate_schema_documents()
@@ -489,6 +508,7 @@ def main() -> int:
         clause_owner = validate_requirements(contract, requirements)
         validate_kit(contract, requirements, kit, clause_owner)
         validate_registry(contract, registry)
+        validate_platform_evidence("conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json")
     except (KeyError, TypeError, ValidationError) as error:
         print(f"governance validation failed: {error}", file=sys.stderr)
         return 1
