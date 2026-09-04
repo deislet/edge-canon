@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../schemas/conformance-harness.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-NODE",
+  "status": "draft",
+  "executionKind": "local-reference",
+  "fixturePath": "conformance/harness/node-npm-subset/fixture.mjs",
+  "fixtureDependencyPaths": [],
+  "calibrationPath": null,
+  "oraclePath": "conformance/harness/node-npm-subset/oracle.mjs",
+  "observationSchema": "schemas/conformance-observations.schema.json",
+  "contractSchema": "schemas/node-npm-subset.schema.json",
+  "validatorPath": "conformance/harness/node-npm-subset/reference-runtime.mjs",
+  "runnerPath": "conformance/harness/node-npm-subset/runner.mjs",
+  "platforms": ["linux", "macos", "windows"],
+  "coveredCaseIds": [
+    "EC-NODE-T001", "EC-NODE-T002", "EC-NODE-T003", "EC-NODE-T004", "EC-NODE-T005",
+    "EC-NODE-T006", "EC-NODE-T007", "EC-NODE-T008", "EC-NODE-T009", "EC-NODE-T010",
+    "EC-NODE-T011", "EC-NODE-T012", "EC-NODE-T013", "EC-NODE-T014", "EC-NODE-T015"
+  ]
+}

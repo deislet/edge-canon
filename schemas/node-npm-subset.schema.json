@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/node-npm-subset.schema.json",
+  "title": "Edge Canon Node and npm capability lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "format", "standardVersion", "baselineDate", "node", "modules", "npm", "limits", "providerExtensions"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "format": {"const": "edge-canon.node-npm/v1"},
+    "standardVersion": {"type": "string", "pattern": "^edge-canon\\.next@[0-9a-f]{40}$"},
+    "baselineDate": {"const": "2026-09-04"},
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["semanticBaseline", "handlerModel", "builtinModules", "globals", "unsupportedBuiltins"],
+      "properties": {
+        "semanticBaseline": {"const": "24.20.0"},
+        "handlerModel": {"const": "edge-canon-fetch-context"},
+        "builtinModules": {
+          "const": {
+            "node:assert": ["AssertionError", "deepEqual", "deepStrictEqual", "doesNotMatch", "doesNotReject", "doesNotThrow", "equal", "fail", "ifError", "match", "notDeepEqual", "notDeepStrictEqual", "notEqual", "notStrictEqual", "ok", "rejects", "strictEqual", "throws"],
+            "node:assert/strict": ["AssertionError", "deepEqual", "deepStrictEqual", "doesNotMatch", "doesNotReject", "doesNotThrow", "equal", "fail", "ifError", "match", "notDeepEqual", "notDeepStrictEqual", "notEqual", "notStrictEqual", "ok", "rejects", "strictEqual", "throws"],
+            "node:async_hooks": ["AsyncLocalStorage"],
+            "node:buffer": ["Buffer"],
+            "node:crypto": ["createHash", "createHmac", "randomBytes", "randomUUID", "timingSafeEqual", "webcrypto"],
+            "node:diagnostics_channel": ["channel", "hasSubscribers"],
+            "node:events": ["EventEmitter", "once"],
+            "node:path": ["basename", "delimiter", "dirname", "extname", "format", "isAbsolute", "join", "normalize", "parse", "posix", "relative", "resolve", "sep", "toNamespacedPath", "win32"],
+            "node:process": ["env", "getBuiltinModule", "nextTick", "platform", "version", "versions"],
+            "node:querystring": ["decode", "encode", "escape", "parse", "stringify", "unescape"],
+            "node:stream": ["Duplex", "PassThrough", "Readable", "Transform", "Writable", "finished", "pipeline"],
+            "node:stream/promises": ["finished", "pipeline"],
+            "node:string_decoder": ["StringDecoder"],
+            "node:timers": ["clearImmediate", "clearInterval", "clearTimeout", "setImmediate", "setInterval", "setTimeout"],
+            "node:timers/promises": ["setTimeout"],
+            "node:url": ["URL", "URLSearchParams", "domainToASCII", "domainToUnicode", "fileURLToPath", "pathToFileURL", "urlToHttpOptions"],
+            "node:util": ["callbackify", "format", "formatWithOptions", "inherits", "inspect", "promisify", "stripVTControlCharacters"],
+            "node:zlib": ["brotliCompressSync", "brotliDecompressSync", "constants", "deflateSync", "gzipSync", "gunzipSync", "inflateSync"]
+          }
+        },
+        "globals": {"const": ["Buffer", "process", "setImmediate", "clearImmediate"]},
+        "unsupportedBuiltins": {"const": "reject-before-deploy"}
+      }
+    },
+    "modules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact", "builtinSpecifier", "commonJs", "dynamicResolution", "importConditions", "requireConditions"],
+      "properties": {
+        "artifact": {"const": "esm-static-graph"},
+        "builtinSpecifier": {"const": "node-colon-canonical-bare-alias-accepted"},
+        "commonJs": {"const": "resolve-and-transform-at-build"},
+        "dynamicResolution": {"const": "reject-unless-statically-enumerated"},
+        "importConditions": {"const": ["edge-canon", "worker", "browser", "import", "default"]},
+        "requireConditions": {"const": ["edge-canon", "worker", "browser", "require", "default"]}
+      }
+    },
+    "npm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifest", "lockfile", "registries", "integrity", "lifecycleScripts", "nativeAddons", "runtimeInstall"],
+      "properties": {
+        "manifest": {"const": "package.json-selected-fields"},
+        "lockfile": {"const": "package-lock.json@3-required"},
+        "registries": {"const": "public-and-authenticated-private-build-only"},
+        "integrity": {"const": "sha512-required-for-registry-packages"},
+        "lifecycleScripts": {"const": "dependency-install-hooks-rejected"},
+        "nativeAddons": {"const": "rejected"},
+        "runtimeInstall": {"const": "forbidden"}
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixturePackages", "fixtureInstalledOctets"],
+      "properties": {
+        "fixturePackages": {"const": 16},
+        "fixtureInstalledOctets": {"const": 1048576}
+      }
+    },
+    "providerExtensions": {"const": "non-portable"}
+  }
+}

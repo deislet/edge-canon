@@ -17,7 +17,7 @@ jobs:
           python-version: '3.12'
       - uses: actions/setup-node@v5
         with:
-          node-version: '24'
+          node-version: '24.20.0'
       - name: Install the pinned governance validator
         run: python3 -m pip install --disable-pip-version-check -r scripts/governance-requirements.txt
       - name: Validate contract, requirements, conformance kit, and registry

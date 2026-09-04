@@ -14,7 +14,8 @@
 > [Web Fetch Events](standard/requirements/web-fetch-events.zh.md)、
 > [Routing 与 Static Assets](standard/requirements/routing-static-assets.zh.md)、
 > [Streams、WebSocket 与后台任务](standard/requirements/streams-websockets-background-work.zh.md)、
-> [Web Platform APIs](standard/requirements/web-platform-apis.zh.md)和
+> [Web Platform APIs](standard/requirements/web-platform-apis.zh.md)、
+> [Node/npm 版本化子集](standard/requirements/node-npm-subset.zh.md)和
 > [Canonical Build Artifact](standard/requirements/canonical-build-artifact.zh.md)。
 
 ## 文档索引

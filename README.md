@@ -14,7 +14,9 @@
 > [requirements registry](standard/requirements.json), draft
 > [conformance kit](conformance/kit.json), and
 > [implementation registry](conformance/registry.json) are proposals, not a
-> released compatibility claim.
+> released compatibility claim. Executable Draft families now include a
+> versioned [Node/npm subset](standard/requirements/node-npm-subset.zh.md)
+> pinned to an exact module/export and build-time package contract.
 
 ## Documentation
 

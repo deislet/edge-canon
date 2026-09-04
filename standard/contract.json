@@ -47,7 +47,7 @@
     {"id": "routing-static-assets", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "streams-websockets-background-work", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "web-platform-apis", "requirement": "mandatory", "definitionStatus": "draft"},
-    {"id": "node-npm-subset", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "node-npm-subset", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "ssr-streaming-ssr-isr", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "environment-secrets", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "kv-cache-sql-blob", "requirement": "mandatory", "definitionStatus": "pending"},
