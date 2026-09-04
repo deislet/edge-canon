@@ -47,6 +47,12 @@ export default function handler(context) {
         }),
       );
     }
+    case "/transport-headers":
+      return json({
+        evidenceMode: context.request.headers.get("x-edge-canon-evidence-mode"),
+        evidenceToken: context.request.headers.get("x-edge-canon-evidence-token"),
+        invocationId: context.request.headers.get("x-edge-canon-invocation-id"),
+      });
     case "/method":
       return context.request.text().then((body) =>
         new Response(`${context.request.method}:${body}`),
@@ -103,9 +109,12 @@ export default function handler(context) {
       if (!closedWaitUntil) return new Response("no prior lifecycle", { status: 409 });
       try {
         closedWaitUntil(Promise.resolve("late-registration"));
-        return json({ exceptionType: null });
+        return json({ exceptionType: null, failureCode: null });
       } catch (error) {
-        return json({ exceptionType: error?.name ?? typeof error });
+        return json({
+          exceptionType: error?.name ?? typeof error,
+          failureCode: error?.code ?? null,
+        });
       }
     }
     case "/disconnect": {

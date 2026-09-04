@@ -15,22 +15,22 @@
   },
   "credentialEnvironment": {
     "inspect": [],
-    "preflight": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
+    "preflight": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"],
     "prepare": [],
     "deploy": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
-    "invoke": [],
-    "collect": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
+    "invoke": ["EDGE_CANON_EVIDENCE_TOKEN"],
+    "collect": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"],
     "cleanup": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
-    "run": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]
+    "run": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"]
   },
   "requiredConfiguration": {
     "inspect": [],
-    "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName"],
-    "prepare": ["derivedDirectory", "projectName", "compatibilityDate"],
-    "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate"],
+    "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
+    "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
+    "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
     "invoke": [],
     "collect": [],
-    "cleanup": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate"],
+    "cleanup": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
     "run": []
   },
   "operations": {

@@ -15,19 +15,19 @@
   },
   "credentialEnvironment": {
     "inspect": [],
-    "preflight": ["EDGEONE_PAGES_API_TOKEN"],
+    "preflight": ["EDGEONE_PAGES_API_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"],
     "prepare": [],
     "deploy": ["EDGEONE_PAGES_API_TOKEN"],
-    "invoke": [],
-    "collect": ["EDGEONE_PAGES_API_TOKEN"],
+    "invoke": ["EDGE_CANON_EVIDENCE_TOKEN"],
+    "collect": ["EDGEONE_PAGES_API_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"],
     "cleanup": ["EDGEONE_PAGES_API_TOKEN"],
-    "run": ["EDGEONE_PAGES_API_TOKEN"]
+    "run": ["EDGEONE_PAGES_API_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"]
   },
   "requiredConfiguration": {
     "inspect": [],
-    "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName", "deploymentEnvironment", "area", "apiRegion"],
-    "prepare": ["derivedDirectory", "projectName", "compatibilityDate"],
-    "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "deploymentEnvironment", "area", "apiRegion"],
+    "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
+    "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
+    "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "deploymentEnvironment", "area", "apiRegion", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
     "invoke": [],
     "collect": [],
     "cleanup": [],

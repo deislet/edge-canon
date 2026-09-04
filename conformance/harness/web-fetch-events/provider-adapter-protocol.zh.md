@@ -38,6 +38,12 @@ EdgeOne CLI 1.6.32 的 `makers deploy` 同时接受 `EDGEONE_PAGES_API_TOKEN` �
 操作读取。这样一次本地产物转换不会因为机器上没有部署凭证而失败，也不会把更大的权限
 传给不需要它的进程。
 
+`prepare` 还必须固定 `evidenceSinkUrl`、`controlledOriginUrl`、
+`connectionBarrierOriginUrl` 与本机校准得到的 `cpuIterations`。三个 URL 只能是 HTTPS 或
+本机回环 HTTP，不得含用户名、密码、query 或 fragment；它们是可审计的测试基础设施地址，
+不是凭证。wrapper 只把这些固定值、`TEST_VALUE=edge-canon-env` 和 `EVIDENCE` 暴露到 fixture
+的 `env`，不透传供应商原生 env 中未被标准声明的对象或账户信息。
+
 ## 产物谱系
 
 `canonical-artifact.mjs` 从 `standardVersion` 所指 Git commit 直接读取统一 fixture 及其依赖，
@@ -64,6 +70,13 @@ suite、入口文件，以及按路径排序的每个文件的字节数和 SHA-2
 被转换为固定非泄漏 500；每个 `waitUntil` Promise 独立跟踪拒绝；响应 body 关闭、报错或取消时
 关闭前台生命周期；关闭后的 `waitUntil` 同步抛出带 `EC_WAIT_UNTIL_CLOSED` 的 `TypeError`。
 日志只记录稳定代码、operation invocation ID 和有界 fixture marker，不记录异常消息或栈。
+对于不能可靠读取边缘函数日志的后端，wrapper 同时把相同结构记录发送到派生产物中固定的
+`evidenceSinkUrl`。一次性 `EDGE_CANON_EVIDENCE_TOKEN` 只由 `invoke` 作为
+`x-edge-canon-evidence-token` 请求头送达，不进入 request JSON、argv 或产物；sink URL 不能由
+调用者改写。`x-edge-canon-invocation-id`、令牌头和证据模式头在创建标准 `Request` 前全部
+移除。CPU、50 子请求和 6 外连三个资源边界用例使用 `x-edge-canon-evidence-mode: off`，避免
+adapter 自己的日志和 sink 子请求污染被测 CPU 或网络预算；这三个用例只采用 HTTP、受控 origin、
+barrier 与后端计量的独立证据。
 
 ## 部署身份和恢复
 

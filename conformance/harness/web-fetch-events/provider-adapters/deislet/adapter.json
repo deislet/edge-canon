@@ -15,22 +15,22 @@
   },
   "credentialEnvironment": {
     "inspect": [],
-    "preflight": ["DEIS_DEPLOY_TOKEN", "DEIS_ADMIN_TOKEN"],
+    "preflight": ["DEIS_DEPLOY_TOKEN", "DEIS_ADMIN_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"],
     "prepare": [],
     "deploy": ["DEIS_DEPLOY_TOKEN"],
-    "invoke": [],
-    "collect": ["DEIS_ADMIN_TOKEN"],
+    "invoke": ["EDGE_CANON_EVIDENCE_TOKEN"],
+    "collect": ["DEIS_ADMIN_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"],
     "cleanup": ["DEIS_ADMIN_TOKEN"],
-    "run": ["DEIS_DEPLOY_TOKEN", "DEIS_ADMIN_TOKEN"]
+    "run": ["DEIS_DEPLOY_TOKEN", "DEIS_ADMIN_TOKEN", "EDGE_CANON_EVIDENCE_TOKEN"]
   },
   "requiredConfiguration": {
     "inspect": [],
-    "preflight": ["toolExecutable", "toolSourceRevision", "toolSha256", "controlUrl", "runtimeUrl", "environmentName", "projectName"],
-    "prepare": ["derivedDirectory", "projectName", "compatibilityDate"],
-    "deploy": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName"],
+    "preflight": ["toolExecutable", "toolSourceRevision", "toolSha256", "controlUrl", "runtimeUrl", "environmentName", "projectName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
+    "prepare": ["derivedDirectory", "projectName", "compatibilityDate", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
+    "deploy": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
     "invoke": [],
     "collect": [],
-    "cleanup": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName"],
+    "cleanup": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName", "evidenceSinkUrl", "controlledOriginUrl", "connectionBarrierOriginUrl", "cpuIterations"],
     "run": []
   },
   "operations": {

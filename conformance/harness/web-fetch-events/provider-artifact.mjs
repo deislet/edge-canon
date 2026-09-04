@@ -136,22 +136,43 @@ function jsonFile(value) {
   return Buffer.from(`${JSON.stringify(value, null, 2)}\n`, "utf8");
 }
 
-function wrapperPrelude(backendId) {
+function wrapperPrelude(backendId, configuration) {
   return `import handler from "../canonical/fixture.mjs";
 
 const BACKEND_ID = "${backendId}";
 const INVOCATION_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
+const EVIDENCE_TOKEN = /^[A-Za-z0-9_-]{32,256}$/;
+const EVIDENCE_SINK_URL = ${JSON.stringify(configuration.evidenceSinkUrl)};
+const HARNESS_ENVIRONMENT = Object.freeze(${JSON.stringify({
+    TEST_VALUE: "edge-canon-env",
+    CPU_ITERATIONS: String(configuration.cpuIterations),
+    CONTROLLED_ORIGIN: configuration.controlledOriginUrl,
+    CONNECTION_BARRIER_ORIGIN: configuration.connectionBarrierOriginUrl,
+  })});
 
-function emitEvidence(event, fields) {
+function emitEvidence(event, fields, token, enabled = true) {
+  if (!enabled) return Promise.resolve();
+  const record = Object.assign({
+    schemaVersion: 1,
+    backendId: BACKEND_ID,
+    event,
+  }, fields);
   try {
-    console.log("EDGE_CANON_EVIDENCE " + JSON.stringify(Object.assign({
-      schemaVersion: 1,
-      backendId: BACKEND_ID,
-      event,
-    }, fields)));
+    console.log("EDGE_CANON_EVIDENCE " + JSON.stringify(record));
   } catch {
     // collect observes missing evidence; evidence transport cannot alter HTTP output.
   }
+  if (!EVIDENCE_TOKEN.test(token ?? "")) return Promise.resolve();
+  return fetch(EVIDENCE_SINK_URL, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer " + token,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(record),
+  }).then((response) => {
+    if (!response.ok) throw new Error("evidence sink rejected the record");
+  }).catch(() => undefined);
 }
 
 function standardFailureResponse() {
@@ -169,66 +190,89 @@ function standardContext(request, nativeEnvironment, nativeWaitUntil) {
     throw new TypeError("provider context does not expose waitUntil");
   }
   const suppliedInvocationId = request.headers.get("x-edge-canon-invocation-id");
+  const suppliedEvidenceToken = request.headers.get("x-edge-canon-evidence-token");
+  const evidenceEnabled = request.headers.get("x-edge-canon-evidence-mode") !== "off";
   const invocationId = INVOCATION_ID.test(suppliedInvocationId ?? "")
     ? suppliedInvocationId
     : null;
+  const evidenceToken = EVIDENCE_TOKEN.test(suppliedEvidenceToken ?? "")
+    ? suppliedEvidenceToken
+    : null;
+  const applicationHeaders = new Headers(request.headers);
+  applicationHeaders.delete("x-edge-canon-invocation-id");
+  applicationHeaders.delete("x-edge-canon-evidence-token");
+  applicationHeaders.delete("x-edge-canon-evidence-mode");
+  const applicationRequest = new Request(request, { headers: applicationHeaders });
   let closed = false;
   let registeredBackgroundTaskCount = 0;
+  function deliver(event, fields) {
+    const delivery = emitEvidence(event, fields, evidenceToken, evidenceEnabled);
+    try {
+      nativeWaitUntil(delivery);
+    } catch {
+      // The sink request has already started; collect will reject missing evidence.
+    }
+    return delivery;
+  }
   const evidence = Object.freeze({
     record(marker) {
-      emitEvidence("record", {
+      return emitEvidence("record", {
         invocationId,
         marker: String(marker).slice(0, 256),
-      });
-      return Promise.resolve();
+      }, evidenceToken, evidenceEnabled);
     },
   });
-  const env = Object.assign({}, nativeEnvironment ?? {});
+  const env = Object.assign({}, HARNESS_ENVIRONMENT);
   Object.defineProperty(env, "EVIDENCE", {
     value: evidence,
     enumerable: true,
     configurable: false,
     writable: false,
   });
+  Object.freeze(env);
   const context = {
-    request,
+    request: applicationRequest,
     env,
     params: { name: "edge-canon-param" },
     waitUntil(promise) {
       if (closed) {
-        emitEvidence("failure", { invocationId, failureCode: "EC_WAIT_UNTIL_CLOSED" });
+        deliver("failure", { invocationId, failureCode: "EC_WAIT_UNTIL_CLOSED" });
         const error = new TypeError("waitUntil cannot register work after the response lifecycle closed");
         Object.defineProperty(error, "code", { value: "EC_WAIT_UNTIL_CLOSED" });
         throw error;
       }
       registeredBackgroundTaskCount += 1;
       const taskNumber = registeredBackgroundTaskCount;
-      emitEvidence("background-registered", { invocationId, taskNumber });
-      const tracked = Promise.resolve(promise).catch(() => {
-        emitEvidence("failure", {
+      deliver("background-registered", { invocationId, taskNumber });
+      const tracked = Promise.resolve(promise).catch(() => deliver("failure", {
           invocationId,
           taskNumber,
           failureCode: "EC_BACKGROUND_REJECTED",
-        });
-      });
+        }));
       nativeWaitUntil(tracked);
     },
   };
-  emitEvidence("invocation-start", {
+  deliver("invocation-start", {
     invocationId,
-    method: request.method,
-    pathname: new URL(request.url).pathname,
+    method: applicationRequest.method,
+    pathname: new URL(applicationRequest.url).pathname,
   });
   return {
     context,
     close(terminalState) {
       if (closed) return;
       closed = true;
-      emitEvidence("lifecycle-closed", {
+      deliver("lifecycle-closed", {
         invocationId,
         registeredBackgroundTaskCount,
         terminalState,
       });
+    },
+    failure(failureCode) {
+      deliver("failure", { invocationId, failureCode });
+    },
+    settled() {
+      deliver("handler-settled", { invocationId });
     },
     invocationId,
   };
@@ -281,34 +325,30 @@ async function dispatchHandler(request, nativeEnvironment, nativeWaitUntil) {
   try {
     lifecycle = standardContext(request, nativeEnvironment, nativeWaitUntil);
   } catch {
-    emitEvidence("failure", { invocationId: null, failureCode: "EC_PROVIDER_CONTEXT_INVALID" });
+    const delivery = emitEvidence("failure", { invocationId: null, failureCode: "EC_PROVIDER_CONTEXT_INVALID" }, null);
+    try {
+      nativeWaitUntil(delivery);
+    } catch {
+      // There is no valid provider context to retain this best-effort record.
+    }
     return standardFailureResponse();
   }
   let result;
   try {
     result = await handler(lifecycle.context);
   } catch {
-    emitEvidence("failure", {
-      invocationId: lifecycle.invocationId,
-      failureCode: "EC_HANDLER_THROWN",
-    });
+    lifecycle.failure("EC_HANDLER_THROWN");
     result = standardFailureResponse();
   }
   if (!(result instanceof Response)) {
-    emitEvidence("failure", {
-      invocationId: lifecycle.invocationId,
-      failureCode: "EC_HANDLER_RESULT_INVALID",
-    });
+    lifecycle.failure("EC_HANDLER_RESULT_INVALID");
     result = standardFailureResponse();
   }
-  emitEvidence("handler-settled", { invocationId: lifecycle.invocationId });
+  lifecycle.settled();
   try {
     return lifecycleResponse(result, lifecycle);
   } catch {
-    emitEvidence("failure", {
-      invocationId: lifecycle.invocationId,
-      failureCode: "EC_HANDLER_RESULT_INVALID",
-    });
+    lifecycle.failure("EC_HANDLER_RESULT_INVALID");
     return lifecycleResponse(standardFailureResponse(), lifecycle);
   }
 }
@@ -316,13 +356,14 @@ async function dispatchHandler(request, nativeEnvironment, nativeWaitUntil) {
 `;
 }
 
-function providerFiles(backendId, canonical, { projectName, compatibilityDate }) {
+function providerFiles(backendId, canonical, configuration) {
+  const { projectName, compatibilityDate } = configuration;
   const files = new Map([
     ["canonical/cpu-workload.mjs", canonical.contents.get("cpu-workload.mjs")],
     ["canonical/fixture.mjs", canonical.contents.get("fixture.mjs")],
   ]);
   if (backendId === "cloudflare-workers-pages") {
-    files.set("src/index.mjs", Buffer.from(`${wrapperPrelude(backendId)}export default {
+    files.set("src/index.mjs", Buffer.from(`${wrapperPrelude(backendId, configuration)}export default {
   fetch(request, env, executionContext) {
     return dispatchHandler(request, env, executionContext.waitUntil.bind(executionContext));
   },
@@ -338,7 +379,7 @@ function providerFiles(backendId, canonical, { projectName, compatibilityDate })
     return { entrypoint: "src/index.mjs", files };
   }
   if (backendId === "tencent-edgeone-makers") {
-    files.set("edge-functions/[[default]].js", Buffer.from(`${wrapperPrelude(backendId)}export default function onRequest(context) {
+    files.set("edge-functions/[[default]].js", Buffer.from(`${wrapperPrelude(backendId, configuration)}export default function onRequest(context) {
   return dispatchHandler(
     context.request,
     context.env,
@@ -356,7 +397,7 @@ function providerFiles(backendId, canonical, { projectName, compatibilityDate })
     return { entrypoint: "edge-functions/[[default]].js", files };
   }
   if (backendId === "deislet") {
-    files.set("functions/[[all]].js", Buffer.from(`${wrapperPrelude(backendId)}export default function onRequest(context) {
+    files.set("functions/[[all]].js", Buffer.from(`${wrapperPrelude(backendId, configuration)}export default function onRequest(context) {
   return dispatchHandler(
     context.request,
     context.env,
@@ -391,8 +432,42 @@ function validateCompatibilityDate(value) {
   fail(!Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value, "EC_ADAPTER_CONFIGURATION_INVALID", "compatibilityDate is not a calendar date");
 }
 
+function validateHarnessUrl(value, label) {
+  fail(typeof value === "string", "EC_ADAPTER_CONFIGURATION_INVALID", `${label} must be a URL string`);
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch (error) {
+    throw new ProviderArtifactError("EC_ADAPTER_CONFIGURATION_INVALID", `${label} is invalid: ${error.message}`);
+  }
+  const loopback = parsed.protocol === "http:"
+    && ["127.0.0.1", "[::1]", "localhost"].includes(parsed.hostname);
+  fail(parsed.protocol === "https:" || loopback, "EC_ADAPTER_CONFIGURATION_INVALID", `${label} must use HTTPS or HTTP loopback`);
+  fail(
+    !parsed.username && !parsed.password && !parsed.hash && !parsed.search,
+    "EC_ADAPTER_CONFIGURATION_INVALID",
+    `${label} must not contain credentials, a query, or a fragment`,
+  );
+  return parsed.href;
+}
+
+export function validateHarnessConfiguration(input) {
+  const configuration = { ...input };
+  configuration.evidenceSinkUrl = validateHarnessUrl(configuration.evidenceSinkUrl, "evidenceSinkUrl");
+  configuration.controlledOriginUrl = validateHarnessUrl(configuration.controlledOriginUrl, "controlledOriginUrl");
+  configuration.connectionBarrierOriginUrl = validateHarnessUrl(configuration.connectionBarrierOriginUrl, "connectionBarrierOriginUrl");
+  fail(
+    Number.isSafeInteger(configuration.cpuIterations)
+      && configuration.cpuIterations > 0
+      && configuration.cpuIterations <= 100_000_000,
+    "EC_ADAPTER_CONFIGURATION_INVALID",
+    "cpuIterations must be an integer between 1 and 100000000",
+  );
+  return configuration;
+}
+
 function validatePrepareConfiguration(request) {
-  const configuration = request.configuration;
+  const configuration = validateHarnessConfiguration(request.configuration);
   fail(PROJECT_NAME.test(configuration.projectName), "EC_ADAPTER_CONFIGURATION_INVALID", "projectName must be a portable lowercase DNS label");
   validateCompatibilityDate(configuration.compatibilityDate);
   fail(typeof configuration.derivedDirectory === "string" && path.isAbsolute(configuration.derivedDirectory), "EC_ADAPTER_CONFIGURATION_INVALID", "derivedDirectory must be absolute");

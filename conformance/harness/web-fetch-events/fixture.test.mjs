@@ -46,6 +46,21 @@ test("fixture exercises the four context fields and async settlement", async () 
   await call.background[1];
 });
 
+test("fixture can witness removal of adapter transport headers", async () => {
+  const call = context("/transport-headers", {
+    headers: {
+      "x-edge-canon-evidence-mode": "off",
+      "x-edge-canon-evidence-token": "transport-secret",
+      "x-edge-canon-invocation-id": "transport-invocation",
+    },
+  });
+  assert.deepEqual(await (await handler(call.value)).json(), {
+    evidenceMode: "off",
+    evidenceToken: "transport-secret",
+    invocationId: "transport-invocation",
+  });
+});
+
 test("fixture routes methods, throws and invalid results without a second entrypoint", async () => {
   const method = context("/method", { method: "PURGE", body: "purge-body" });
   assert.equal(await (await handler(method.value)).text(), "PURGE:purge-body");
@@ -110,7 +125,10 @@ test("fixture calls a captured waitUntil after its lifecycle is closed", async (
   assert.equal(await handler(capture.value).text(), "wait-until-captured");
   closed = true;
   const response = handler(context("/late-wait-until").value);
-  assert.deepEqual(await response.json(), { exceptionType: "TypeError" });
+  assert.deepEqual(await response.json(), {
+    exceptionType: "TypeError",
+    failureCode: null,
+  });
 });
 
 test("fixture exposes the standard calibrated CPU workload", async () => {

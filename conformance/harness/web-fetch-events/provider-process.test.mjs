@@ -102,6 +102,10 @@ test("Cloudflare preflight verifies the package lock and keeps credentials out o
       toolPackageJson: packageJson,
       toolLockPath: lockPath,
       projectName: operationProjectName("cloudflare-workers-pages", "preflight-test"),
+      evidenceSinkUrl: "https://evidence.invalid/events",
+      controlledOriginUrl: "https://origin.invalid",
+      connectionBarrierOriginUrl: "https://barrier.invalid",
+      cpuIterations: 10_000,
     },
   };
   const manifestPath = fileURLToPath(new URL(
@@ -115,12 +119,17 @@ test("Cloudflare preflight verifies the package lock and keeps credentials out o
       PATH: process.env.PATH ?? "",
       CLOUDFLARE_ACCOUNT_ID: "account-secret-canary",
       CLOUDFLARE_API_TOKEN: "token-secret-canary",
+      EDGE_CANON_EVIDENCE_TOKEN: "evidence-token-secret-canary-1234567890",
     },
   });
   assert.equal(result.outcome, "succeeded");
   assert.equal(result.data.toolVersion, "4.129.0");
-  assert.deepEqual(result.data.credentialEnvironment, ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]);
-  assert.doesNotMatch(JSON.stringify(result), /account-secret-canary|token-secret-canary/);
+  assert.deepEqual(result.data.credentialEnvironment, [
+    "CLOUDFLARE_ACCOUNT_ID",
+    "CLOUDFLARE_API_TOKEN",
+    "EDGE_CANON_EVIDENCE_TOKEN",
+  ]);
+  assert.doesNotMatch(JSON.stringify(result), /account-secret-canary|token-secret-canary|evidence-token-secret-canary/);
 
   request.operation = "invoke";
   await assert.rejects(

@@ -58,6 +58,10 @@ async function harness(context, backendId, operationId) {
       derivedDirectory,
       projectName,
       compatibilityDate: "2026-09-01",
+      evidenceSinkUrl: "https://evidence.invalid/events",
+      controlledOriginUrl: "https://origin.invalid",
+      connectionBarrierOriginUrl: "https://barrier.invalid",
+      cpuIterations: 10_000,
     },
   };
   await runAdapter({ manifestPath: manifestPath(backendId), request, hostEnvironment: {} });

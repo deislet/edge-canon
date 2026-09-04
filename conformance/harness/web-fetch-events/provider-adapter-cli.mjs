@@ -4,7 +4,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { AdapterProcessError, runProviderProcess } from "./provider-process.mjs";
-import { prepareProviderArtifact, ProviderArtifactError } from "./provider-artifact.mjs";
+import {
+  prepareProviderArtifact,
+  ProviderArtifactError,
+  validateHarnessConfiguration,
+} from "./provider-artifact.mjs";
 import {
   cleanupProvider,
   deployProvider,
@@ -81,6 +85,9 @@ function safeEnvironment(hostEnvironment, credentialNames, includeCredentials = 
   for (const name of credentialNames) {
     const value = hostEnvironment[name];
     fail(typeof value === "string" && value.length > 0, "EC_ADAPTER_CREDENTIAL_MISSING", `required credential environment ${name} is missing`);
+    if (name === "EDGE_CANON_EVIDENCE_TOKEN") {
+      fail(/^[A-Za-z0-9_-]{32,256}$/.test(value), "EC_ADAPTER_CREDENTIAL_INVALID", `${name} must contain 32 to 256 URL-safe characters`);
+    }
     if (includeCredentials) environment[name] = value;
   }
   environment.CI = "1";
@@ -165,7 +172,10 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
     fail(Object.hasOwn(request.configuration, key), "EC_ADAPTER_CONFIGURATION_MISSING", `required configuration ${key} is missing`);
   }
 
-  if (request.operation === "preflight") validateDeploymentConfiguration(request, manifest);
+  if (request.operation === "preflight") {
+    validateDeploymentConfiguration(request, manifest);
+    validateHarnessConfiguration(request.configuration);
+  }
 
   if (request.operation === "prepare") {
     return succeeded(request, manifest, prepareProviderArtifact({ request, manifest }));

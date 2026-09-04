@@ -66,6 +66,10 @@ function prepareRequest(root, canonical, provider, suffix = "one") {
       derivedDirectory: path.join(workDirectory, `derived-${suffix}`),
       projectName: "edge-canon-conformance",
       compatibilityDate: "2026-09-01",
+      evidenceSinkUrl: "https://evidence.invalid/events",
+      controlledOriginUrl: "https://origin.invalid",
+      connectionBarrierOriginUrl: "https://barrier.invalid",
+      cpuIterations: 10_000,
     },
   };
 }
@@ -126,8 +130,19 @@ for (const provider of providers) {
       const background = [];
       const headers = new Headers(options.headers);
       headers.set("x-edge-canon-invocation-id", invocationId);
+      if (options.evidenceToken) {
+        headers.set("x-edge-canon-evidence-token", options.evidenceToken);
+      }
+      if (options.evidenceMode) {
+        headers.set("x-edge-canon-evidence-mode", options.evidenceMode);
+      }
+      const {
+        evidenceMode: _evidenceMode,
+        evidenceToken: _evidenceToken,
+        ...requestOptions
+      } = options;
       const nativeContext = {
-        request: new Request(`https://conformance.invalid${pathname}`, { ...options, headers }),
+        request: new Request(`https://conformance.invalid${pathname}`, { ...requestOptions, headers }),
         env: { TEST_VALUE: "portable-value" },
         waitUntil(promise) {
           background.push(Promise.resolve(promise));
@@ -144,7 +159,7 @@ for (const provider of providers) {
       assert.deepEqual(await contextInvocation.response.json(), {
         contextKeys: ["env", "params", "request", "waitUntil"],
         contextObjectIdentityUnique: true,
-        environment: "portable-value",
+        environment: "edge-canon-env",
         parameter: "edge-canon-param",
       });
       await Promise.all(contextInvocation.background);
@@ -196,10 +211,55 @@ for (const provider of providers) {
       const captured = await invoke("/capture-wait-until");
       assert.equal(await captured.response.text(), "wait-until-captured");
       const late = await invoke("/late-wait-until");
-      assert.deepEqual(await late.response.json(), { exceptionType: "TypeError" });
+      assert.deepEqual(await late.response.json(), {
+        exceptionType: "TypeError",
+        failureCode: "EC_WAIT_UNTIL_CLOSED",
+      });
       assert.ok(evidence.some((entry) =>
         entry.invocationId === captured.invocationId && entry.failureCode === "EC_WAIT_UNTIL_CLOSED"));
-      assert.equal(captured.background.length, 0);
+      assert.equal(
+        evidence.find((entry) =>
+          entry.invocationId === captured.invocationId && entry.event === "lifecycle-closed")
+          .registeredBackgroundTaskCount,
+        0,
+      );
+
+      const originalFetch = globalThis.fetch;
+      const deliveries = [];
+      globalThis.fetch = async (url, options) => {
+        deliveries.push({ url: String(url), options });
+        return new Response(null, { status: 204 });
+      };
+      try {
+        const transport = await invoke("/transport-headers", {
+          evidenceToken: "transport_evidence_token_12345678901234567890",
+        });
+        assert.deepEqual(await transport.response.json(), {
+          evidenceMode: null,
+          evidenceToken: null,
+          invocationId: null,
+        });
+        await Promise.all(transport.background);
+        const deliveryCount = deliveries.length;
+        const uninstrumented = await invoke("/transport-headers", {
+          evidenceMode: "off",
+          evidenceToken: "transport_evidence_token_12345678901234567890",
+        });
+        assert.deepEqual(await uninstrumented.response.json(), {
+          evidenceMode: null,
+          evidenceToken: null,
+          invocationId: null,
+        });
+        await Promise.all(uninstrumented.background);
+        assert.equal(deliveries.length, deliveryCount);
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+      assert.ok(deliveries.length >= 3);
+      assert.ok(deliveries.every((delivery) => delivery.url === "https://evidence.invalid/events"));
+      assert.ok(deliveries.every((delivery) =>
+        delivery.options.headers.authorization === "Bearer transport_evidence_token_12345678901234567890"));
+      assert.doesNotMatch(JSON.stringify(evidence), /transport_evidence_token/);
     } finally {
       console.log = originalLog;
     }
