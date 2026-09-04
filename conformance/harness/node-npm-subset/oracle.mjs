@@ -55,10 +55,11 @@ const VERIFIERS = {
     requireValue(equal(data.streamError, { settlement: "reject", name: "Error", code: "E_STREAM_FIXTURE" }), "T006 stream error was changed or hidden");
   },
   "EC-NODE-T007"(data) {
-    exactKeys(data, ["scheduleOrder", "contexts", "storeAfterDisable"], "T007 data");
+    exactKeys(data, ["scheduleOrder", "contexts", "exitLifecycle", "storeAfterRun"], "T007 data");
     requireValue(equal(data.scheduleOrder, ["callback", "nextTick", "promise", "immediate"]), "T007 scheduling order differs");
     requireValue(equal(data.contexts.A, ["A", "A", "A", "A", "A"]) && equal(data.contexts.B, ["B", "B", "B", "B", "B"]), "T007 AsyncLocalStorage contexts crossed");
-    requireValue(data.storeAfterDisable === null, "T007 AsyncLocalStorage did not release context");
+    requireValue(equal(data.exitLifecycle, { exited: { store: null, sum: 5 }, restored: "outer" }), "T007 AsyncLocalStorage exit semantics differ");
+    requireValue(data.storeAfterRun === null, "T007 AsyncLocalStorage context escaped run");
   },
   "EC-NODE-T008"(data) {
     exactKeys(data, ["importTarget", "requireTarget", "fallbackTarget", "canonicalBuiltin", "moduleTypes"], "T008 data");
@@ -113,6 +114,13 @@ const VERIFIERS = {
   },
 };
 
+export function verifyCaseData(id, data) {
+  const verifier = VERIFIERS[id];
+  requireValue(verifier !== undefined, `unknown EC-NODE case ${id}`);
+  verifier(data);
+  return data;
+}
+
 export function verifyDocument(document) {
   exactKeys(document, ["schemaVersion", "standardId", "suiteId", "backend", "artifactSha256", "cases"], "observation document");
   requireValue(document.schemaVersion === 1 && document.standardId === "edge-canon.next" && document.suiteId === "EC-NODE", "observation identity differs");
@@ -127,7 +135,7 @@ export function verifyDocument(document) {
     byId.set(item.id, item);
   }
   requireValue(byId.size === EXPECTED_CASES.length && EXPECTED_CASES.every((id) => byId.has(id)), "draft harness requires exactly fifteen Node/npm cases");
-  for (const id of EXPECTED_CASES) VERIFIERS[id](byId.get(id).data);
+  for (const id of EXPECTED_CASES) verifyCaseData(id, byId.get(id).data);
   return { suiteId: "EC-NODE", status: "pass", caseIds: [...EXPECTED_CASES] };
 }
 

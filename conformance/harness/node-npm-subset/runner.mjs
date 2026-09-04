@@ -162,8 +162,17 @@ export async function runSuite(options = {}) {
     });
   }
   const [contextA, contextB] = await Promise.all([contextProbe("A", 2), contextProbe("B", 1)]);
-  als.disable();
-  cases.push(record(CASE_IDS[6], { scheduleOrder, contexts: { A: contextA, B: contextB }, storeAfterDisable: als.getStore() ?? null }));
+  const exitLifecycle = als.run({ label: "outer" }, () => {
+    const exited = als.exit((left, right) => ({ store: als.getStore() ?? null, sum: left + right }), 2, 3);
+    return { exited, restored: als.getStore().label };
+  });
+  const storeAfterRun = als.getStore() ?? null;
+  cases.push(record(CASE_IDS[6], {
+    scheduleOrder,
+    contexts: { A: contextA, B: contextB },
+    exitLifecycle,
+    storeAfterRun,
+  }));
 
   const exportsMap = { "edge-canon": "./edge.mjs", worker: "./worker.mjs", browser: "./browser.mjs", import: "./import.mjs", require: "./require.cjs", default: "./default.mjs" };
   cases.push(record(CASE_IDS[7], {

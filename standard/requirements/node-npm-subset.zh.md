@@ -31,7 +31,7 @@
 ## 3. 并发、一致性与顺序
 
 - **EC-NODE-CON-001**：`process.nextTick`、Promise job、timer 与 `setImmediate` 服从 Node 24.20.0 在同一 invocation 内的相对顺序；实现不得用 Web timer 的返回类型或队列顺序冒充 Node timer。
-- **EC-NODE-CON-002**：`AsyncLocalStorage.run/getStore/enterWith/exit/disable` 的选中语义必须跨 Promise、nextTick、timer 与 EventEmitter listener 传播；并发 invocation 的 store 不得互相可见。
+- **EC-NODE-CON-002**：`AsyncLocalStorage.run/getStore/exit` 的选中语义必须跨 Promise、nextTick、timer 与 EventEmitter listener 传播；`exit` 回调暂时离开当前 store，返回后恢复原 store；`run` 返回后 store 不再可见；并发 invocation 的 store 不得互相可见。Cloudflare Workers 明确不实现 `enterWith/disable`，因此二者不属于统一应用标准；实现不得假装它们已获得跨后端保证。
 - **EC-NODE-CON-003**：同一 manifest、lock、package bytes、capability lock 和构建选项必须产生字节相同的 module graph 与 ESM artifact；安装缓存命中、下载顺序和并发度不得改变选择的版本、条件分支或输出顺序。
 - **EC-NODE-CON-004**：Node stream `pipeline`/`finished`、EventEmitter listener 顺序、StringDecoder 多字节边界、zlib byte output 与 crypto digest 必须保持 Node 24.20.0 的正常、错误和结算顺序。
 
