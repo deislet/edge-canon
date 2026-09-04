@@ -14,11 +14,20 @@
     "integrity": "sha512-PGPvs9UPoFrwxT0VogpESSZGvZIctAuTK3wGsLLPHtHsSgS85kNdvtpa2d14UzG8gwLWD64XUGFPGG9tOXG9VQ=="
   },
   "credentialEnvironment": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
-  "requiredConfiguration": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName"],
+  "requiredConfiguration": {
+    "inspect": [],
+    "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName"],
+    "prepare": ["derivedDirectory", "projectName", "compatibilityDate"],
+    "deploy": [],
+    "invoke": [],
+    "collect": [],
+    "cleanup": [],
+    "run": []
+  },
   "operations": {
     "inspect": {"status": "implemented", "remoteSideEffects": false},
     "preflight": {"status": "implemented", "remoteSideEffects": false},
-    "prepare": {"status": "pending", "remoteSideEffects": false},
+    "prepare": {"status": "implemented", "remoteSideEffects": false},
     "deploy": {"status": "pending", "remoteSideEffects": true},
     "invoke": {"status": "pending", "remoteSideEffects": true},
     "collect": {"status": "pending", "remoteSideEffects": false},
@@ -26,7 +35,7 @@
     "run": {"status": "pending", "remoteSideEffects": true}
   },
   "caseCoverage": [
-    {"id": "EC-WEB-T001", "status": "pending", "blockers": ["prepare, deploy, invoke and evidence collection are not implemented"]},
+    {"id": "EC-WEB-T001", "status": "pending", "blockers": ["deploy, invoke and evidence collection are not implemented"]},
     {"id": "EC-WEB-T002", "status": "pending", "blockers": ["background evidence sink and dynamic route driver are not implemented"]},
     {"id": "EC-WEB-T003", "status": "pending", "blockers": ["multi-method invocation driver is not implemented"]},
     {"id": "EC-WEB-T004", "status": "pending", "blockers": ["structured runtime failure evidence is not implemented"]},
@@ -36,7 +45,7 @@
     {"id": "EC-WEB-T008", "status": "pending", "blockers": ["background settlement evidence is not implemented"]},
     {"id": "EC-WEB-T009", "status": "pending", "blockers": ["closed lifecycle evidence is not implemented"]},
     {"id": "EC-WEB-T010", "status": "pending", "blockers": ["disconnect-capable invocation driver is not implemented"]},
-    {"id": "EC-WEB-T011", "status": "pending", "blockers": ["canonical and derived artifact lineage is not implemented"]},
+    {"id": "EC-WEB-T011", "status": "pending", "blockers": ["deployment identity is not yet linked to the verified canonical and derived artifact lineage"]},
     {"id": "EC-WEB-T012", "status": "pending", "blockers": ["Cloudflare CPU measurement collection is not implemented"]},
     {"id": "EC-WEB-T013", "status": "pending", "blockers": ["controlled redirect origin evidence is not implemented"]},
     {"id": "EC-WEB-T014", "status": "pending", "blockers": ["controlled connection barrier evidence is not implemented"]},
@@ -50,7 +59,7 @@
     "cleanupAfterRunFailure": true
   },
   "limitations": [
-    "Only inspect and preflight are executable; this manifest is not deployment or conformance evidence.",
+    "Inspect, preflight and deterministic prepare are executable; this manifest is not deployment or conformance evidence.",
     "No Cloudflare test account or exact deployment observation is recorded."
   ]
 }

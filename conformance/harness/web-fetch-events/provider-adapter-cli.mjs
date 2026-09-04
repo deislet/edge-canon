@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { AdapterProcessError, runProviderProcess } from "./provider-process.mjs";
+import { prepareProviderArtifact, ProviderArtifactError } from "./provider-artifact.mjs";
 
 const PROTOCOL_VERSION = "edge-canon.provider-adapter/v1";
 const OPERATIONS = new Set(["inspect", "preflight", "prepare", "deploy", "invoke", "collect", "cleanup", "run"]);
@@ -149,9 +150,16 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
     });
   }
 
-  for (const key of manifest.requiredConfiguration) {
+  const requiredConfiguration = manifest.requiredConfiguration[request.operation];
+  fail(Array.isArray(requiredConfiguration), "EC_ADAPTER_REQUEST_INVALID", `adapter has no configuration contract for ${request.operation}`);
+  for (const key of requiredConfiguration) {
     fail(Object.hasOwn(request.configuration, key), "EC_ADAPTER_CONFIGURATION_MISSING", `required configuration ${key} is missing`);
   }
+
+  if (request.operation === "prepare") {
+    return succeeded(request, manifest, prepareProviderArtifact({ request, manifest }));
+  }
+
   fail(fs.statSync(request.workDirectory, { throwIfNoEntry: false })?.isDirectory(), "EC_ADAPTER_REQUEST_INVALID", "workDirectory is not a directory");
   fail(fs.statSync(request.evidenceDirectory, { throwIfNoEntry: false })?.isDirectory(), "EC_ADAPTER_REQUEST_INVALID", "evidenceDirectory is not a directory");
   fail(fs.statSync(request.canonicalArtifact.path, { throwIfNoEntry: false }) !== undefined, "EC_ADAPTER_REQUEST_INVALID", "canonical artifact does not exist");
@@ -188,7 +196,7 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
 }
 
 function failureResult(request, manifest, error) {
-  const code = error instanceof AdapterError || error instanceof AdapterProcessError
+  const code = error instanceof AdapterError || error instanceof AdapterProcessError || error instanceof ProviderArtifactError
     ? error.code
     : "EC_ADAPTER_INTERNAL";
   return {

@@ -296,6 +296,9 @@ def validate_harness(
         "providerAdapterSchema",
         "providerAdapterRequestSchema",
         "providerAdapterResultSchema",
+        "canonicalArtifactSchema",
+        "derivedArtifactSchema",
+        "canonicalArtifactBuilder",
     ):
         target = manifest.get(key)
         require(isinstance(target, str) and target, f"{relative_path}: {key} is missing")

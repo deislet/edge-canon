@@ -1,11 +1,11 @@
 # EC-WEB 可执行 harness 草案
 
-本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 只有受约束的 manifest 和 `inspect`/`preflight`，尚无任何一个完成真实部署取证，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
+本目录把描述性用例推进为一个可执行、供应商无关的 observation/oracle 边界。当前 fixture/oracle 已覆盖 `EC-WEB-T001` 至 `T015`，状态仍是 Draft；三个 adapter 已实现受约束的 `inspect`、`preflight` 和确定性 `prepare`，尚无任何一个完成真实部署取证，因此不能产生 conformance-passed 证据。完整进程接口和完成门槛见 [`provider-adapter-protocol.zh.md`](provider-adapter-protocol.zh.md)。
 
 ## 固定边界
 
 1. 每个 adapter 部署同一份 `fixture.mjs` 及其相对模块依赖，不能改写 handler、工作负载或断言。
-2. adapter 可以在内部调用固定版本的官方 CLI 或 API，例如 Wrangler、EdgeOne CLI/API 或 Deislet CLI；它只负责打包、部署、调用、读取结构化执行证据和清理。当前锁为 Wrangler 4.129.0、EdgeOne CLI 1.6.32，以及 Deislet source revision `54cbe6e44abbef48fa7e0efcbb0241b4d95d77d4`；锁本身不是 live evidence。
+2. adapter 可以在内部调用固定版本的官方 CLI 或 API，例如 Wrangler、EdgeOne CLI/API 或 Deislet CLI；它只负责打包、部署、调用、读取结构化执行证据和清理。当前锁为 Wrangler 4.129.0、EdgeOne CLI 1.6.32，以及 Deislet source revision `eeb9dc4bb186bef3b703da976ce3e5e9fee1b5c5`；锁本身不是 live evidence。
 3. adapter 输出符合 `schemas/conformance-observations.schema.json` 的原始观察，不能输出自行判定的 pass/fail。
 4. `oracle.mjs` 是唯一结果判定器。运行：
 
@@ -15,6 +15,19 @@
 
 5. `artifactSha256` 必须是 adapter 实际部署的 canonical artifact 摘要；`backend.standardVersion` 必须是 `edge-canon.next@<40 位 source commit>`，不接受浮动的 `next` 或 `latest`。`evidenceRefs` 指向构建、部署、调用或日志原件。
 6. adapter 无法读取 failure code、origin hit count 等观察时，该用例失败或保持未执行，不能用供应商错误页文本猜测，也不能省略字段后宣称通过。
+
+canonical artifact 必须用固定构建器从 exact commit 产生，例如：
+
+```bash
+node conformance/harness/web-fetch-events/canonical-artifact.mjs \
+  --repository "$PWD" \
+  --standard-version "edge-canon.next@$(git rev-parse HEAD)" \
+  --output /absolute/exclusive/canonical
+```
+
+构建器 stdout 返回 manifest 的绝对路径和摘要。把它们填入 adapter request 后，`prepare`
+会在 request 的 `workDirectory` 内生成并验证 provider 派生目录；相同输入可安全重入，不同
+内容不会被覆盖。
 
 T012 先在 adapter 所在执行机运行 `node conformance/harness/web-fetch-events/calibrate-cpu.mjs`，把输出的 iterations 注入 `CPU_ITERATIONS`；`measuredCpuMilliseconds` 必须来自后端自身 CPU 计量，adapter 还须保存校准工作负载摘要和 fresh execution environment 证据，wall time 不可代替。T013 固定为 48 个直接 fetch 加一个发生一次跳转的 fetch，即 49 次 API 调用、50 个计入预算的子请求。T014 的受控 origin 必须在放行响应头前保存已有连接数，不能从最终成功数倒推并发。T015 发送第 `i` 个 octet 为 `i % 251` 的 1,000,000-octet body，固定 SHA-256 为 `2c030d49ec131bfbbb446ad21e7a2f12cdb4f2f4f3fda3ac709dd2e68a4646c7`；请求不得携带 `Content-Encoding`，并必须声明准确的 `Content-Length: 1000000`。
 

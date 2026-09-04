@@ -22,12 +22,12 @@
       "additionalProperties": false,
       "required": ["path", "sha256"],
       "properties": {
-        "path": {"type": "string", "pattern": "^/"},
+        "path": {"type": "string", "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\[^\\\\/]+[\\\\/][^\\\\/]+)"},
         "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       }
     },
-    "workDirectory": {"type": "string", "pattern": "^/"},
-    "evidenceDirectory": {"type": "string", "pattern": "^/"},
+    "workDirectory": {"type": "string", "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\[^\\\\/]+[\\\\/][^\\\\/]+)"},
+    "evidenceDirectory": {"type": "string", "pattern": "^(?:/|[A-Za-z]:[\\\\/]|\\\\\\\\[^\\\\/]+[\\\\/][^\\\\/]+)"},
     "configuration": {"type": "object"}
   }
 }

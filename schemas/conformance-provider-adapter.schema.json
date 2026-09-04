@@ -53,9 +53,19 @@
       "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}
     },
     "requiredConfiguration": {
-      "type": "array",
-      "uniqueItems": true,
-      "items": {"type": "string", "pattern": "^[a-z][A-Za-z0-9]*$"}
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inspect", "preflight", "prepare", "deploy", "invoke", "collect", "cleanup", "run"],
+      "properties": {
+        "inspect": {"$ref": "#/$defs/configurationKeys"},
+        "preflight": {"$ref": "#/$defs/configurationKeys"},
+        "prepare": {"$ref": "#/$defs/configurationKeys"},
+        "deploy": {"$ref": "#/$defs/configurationKeys"},
+        "invoke": {"$ref": "#/$defs/configurationKeys"},
+        "collect": {"$ref": "#/$defs/configurationKeys"},
+        "cleanup": {"$ref": "#/$defs/configurationKeys"},
+        "run": {"$ref": "#/$defs/configurationKeys"}
+      }
     },
     "operations": {
       "type": "object",
@@ -109,6 +119,11 @@
     }
   },
   "$defs": {
+    "configurationKeys": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z][A-Za-z0-9]*$"}
+    },
     "operation": {
       "type": "object",
       "additionalProperties": false,
