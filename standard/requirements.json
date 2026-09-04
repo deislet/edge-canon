@@ -67,14 +67,19 @@
       "conformance": {"suiteId": "EC-STREAM", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "web-platform-apis", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
+      "id": "web-platform-apis", "definitionStatus": "draft", "draftPath": "standard/requirements/web-platform-apis.zh.md",
+      "evidencePaths": ["standard/evidence/web-platform-apis-baseline.zh.md"],
       "dimensions": {
-        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
-        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
-        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
-        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+        "api": {"status": "draft", "clauseIds": ["EC-WEBAPI-API-001", "EC-WEBAPI-API-002", "EC-WEBAPI-API-003", "EC-WEBAPI-API-004", "EC-WEBAPI-API-005", "EC-WEBAPI-API-006", "EC-WEBAPI-API-007", "EC-WEBAPI-API-008", "EC-WEBAPI-API-009", "EC-WEBAPI-API-010"]},
+        "errors": {"status": "draft", "clauseIds": ["EC-WEBAPI-ERR-001", "EC-WEBAPI-ERR-002", "EC-WEBAPI-ERR-003"]},
+        "concurrency-consistency-ordering": {"status": "draft", "clauseIds": ["EC-WEBAPI-CON-001", "EC-WEBAPI-CON-002", "EC-WEBAPI-CON-003"]},
+        "lifecycle": {"status": "draft", "clauseIds": ["EC-WEBAPI-LIFE-001", "EC-WEBAPI-LIFE-002"]},
+        "minimum-resource-guarantees": {"status": "draft", "clauseIds": ["EC-WEBAPI-LIMIT-001", "EC-WEBAPI-LIMIT-002", "EC-WEBAPI-LIMIT-003"]},
+        "security-isolation": {"status": "draft", "clauseIds": ["EC-WEBAPI-SEC-001", "EC-WEBAPI-SEC-002", "EC-WEBAPI-SEC-003"]},
+        "failure-recovery": {"status": "draft", "clauseIds": ["EC-WEBAPI-FAIL-001", "EC-WEBAPI-FAIL-002", "EC-WEBAPI-FAIL-003"]},
+        "upgrade-migration": {"status": "draft", "clauseIds": ["EC-WEBAPI-UPG-001", "EC-WEBAPI-UPG-002", "EC-WEBAPI-UPG-003"]}
       },
-      "conformance": {"suiteId": "EC-WEBAPI", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+      "conformance": {"suiteId": "EC-WEBAPI", "fixtureStatus": "draft", "oracleStatus": "draft", "harnessStatus": "draft"}
     },
     {
       "id": "node-npm-subset", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],

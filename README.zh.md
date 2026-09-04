@@ -10,8 +10,11 @@
 > Basic/Extended profile 的方向在 [Proposal 0001](proposals/0001-unified-platform-contract/README.zh.md)
 > 中制定；机器可读[契约](standard/contract.json)、[需求注册表](standard/requirements.json)、
 > [一致性测试包](conformance/kit.json)和[实现 registry](conformance/registry.json)
-> 当前均为 proposal，不构成已发布的兼容性声明。首个候选能力族是
-> [Web Fetch Events](standard/requirements/web-fetch-events.zh.md)。
+> 当前均为 proposal，不构成已发布的兼容性声明。已有候选能力族包括
+> [Web Fetch Events](standard/requirements/web-fetch-events.zh.md)、
+> [Routing 与 Static Assets](standard/requirements/routing-static-assets.zh.md)、
+> [Web Platform APIs](standard/requirements/web-platform-apis.zh.md)和
+> [Canonical Build Artifact](standard/requirements/canonical-build-artifact.zh.md)。
 
 ## 文档索引
 

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/web-platform-apis.schema.json",
+  "title": "Edge Canon Web Platform APIs capability lock",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "format", "standardVersion", "baselineDate", "apis", "limits", "providerExtensions"],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "format": {"const": "edge-canon.web-platform-apis/v1"},
+    "standardVersion": {"type": "string", "pattern": "^edge-canon\\.next@[0-9a-f]{40}$"},
+    "baselineDate": {"const": "2026-09-04"},
+    "apis": {
+      "type": "object", "additionalProperties": false,
+      "required": ["url", "headers", "request", "response", "encoding", "base64", "abort", "crypto", "fetch", "timers"],
+      "properties": {
+        "url": {"const": "whatwg-selected-subset"},
+        "headers": {"const": "fetch-sort-and-combine"},
+        "request": {"const": "fetch-selected-subset"},
+        "response": {"const": "fetch-selected-subset"},
+        "encoding": {"const": "utf-8"},
+        "base64": {"const": "html-binary-string"},
+        "abort": {"const": "controller-signal-event"},
+        "crypto": {"const": "random-uuid-sha256"},
+        "fetch": {"const": "http-https-fetch-redirect"},
+        "timers": {"const": "timeout-interval-basic"}
+      }
+    },
+    "limits": {
+      "type": "object", "additionalProperties": false,
+      "required": ["bodyReaderOctets", "headerNameAsciiCharacters", "headerValueAsciiCharacters", "randomValuesOctets"],
+      "properties": {
+        "bodyReaderOctets": {"const": 1000000},
+        "headerNameAsciiCharacters": {"const": 128},
+        "headerValueAsciiCharacters": {"const": 4095},
+        "randomValuesOctets": {"const": 65536}
+      }
+    },
+    "providerExtensions": {"const": "non-portable"}
+  }
+}

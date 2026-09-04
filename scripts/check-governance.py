@@ -78,6 +78,8 @@ def validate_schema_documents() -> None:
         "conformance/harness/canonical-build-artifact/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/cases/routing-static-assets.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/routing-static-assets/harness.json": "schemas/conformance-harness.schema.json",
+        "conformance/cases/web-platform-apis.json": "schemas/conformance-cases.schema.json",
+        "conformance/harness/web-platform-apis/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/routing-static-assets-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/harness/web-fetch-events/sample-pass.json": "schemas/conformance-observations.schema.json",

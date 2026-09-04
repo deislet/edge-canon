@@ -46,7 +46,7 @@
     {"id": "web-fetch-events", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "routing-static-assets", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "streams-websockets-background-work", "requirement": "mandatory", "definitionStatus": "pending"},
-    {"id": "web-platform-apis", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "web-platform-apis", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "node-npm-subset", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "ssr-streaming-ssr-isr", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "environment-secrets", "requirement": "mandatory", "definitionStatus": "pending"},

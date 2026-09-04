@@ -4,7 +4,7 @@
 
 [`kit.json`](kit.json) 是标准测试集索引。它把能力族连接到 provider-independent 用例；`EC-WEB` 已有覆盖 T001–T015 的统一 fixture、原始 observation 格式和可执行 oracle。三个一等后端已有受 schema 和治理约束的 Draft manifest，以及可执行的安全 `inspect`/`preflight`、确定性 `prepare`、碰撞保护的 `deploy` 和不可盲目重放的统一 `invoke`；Cloudflare 与 Deislet 另有身份绑定的 `collect`、`cleanup` 和可恢复 `run`。EdgeOne 的 `collect`、公开清理路径、`run` 及三个后端的真实账户证据仍未完成，完成 adapter 列表因此仍为空。
 
-`EC-ARTIFACT` 已有本地 reference builder、validator 和覆盖 T001–T008 的可执行 Draft，检查规范清单、确定性、原子发布、路径可移植性、secret canary、篡改和迁移。`EC-ROUTING` 已有本地 reference router、validator 和覆盖 T001–T011 的可执行 Draft，检查固定路由管线、静态文件、redirect/rewrite/header/fallback、安全路径、容量边界与原子版本视图。两套本地 harness 都在 Linux、macOS 与 Windows 执行，但还不是三个 provider packager 或真实框架 adapter 的通过证据。其余 12 个能力族尚未执行化。所有本地驱动和 oracle 自测都不能自行提高后端成熟度或认证状态。
+`EC-ARTIFACT` 已有本地 reference builder、validator 和覆盖 T001–T008 的可执行 Draft，检查规范清单、确定性、原子发布、路径可移植性、secret canary、篡改和迁移。`EC-ROUTING` 已有本地 reference router、validator 和覆盖 T001–T011 的可执行 Draft，检查固定路由管线、静态文件、redirect/rewrite/header/fallback、安全路径、容量边界与原子版本视图。`EC-WEBAPI` 已有 capability lock、reference runtime 和覆盖 T001–T014 的可执行 Draft，检查 URL、Headers、Request/Response、body reader、Encoding、base64、Abort、Web Crypto、Fetch redirect、timer、并发与共同容量边界。这三套本地 harness 都以 Linux、macOS 与 Windows 为目标，但还不是三个 provider runtime 或真实部署的通过证据。其余 11 个能力族尚未执行化。所有本地驱动和 oracle 自测都不能自行提高后端成熟度或认证状态。
 
 证据成熟度依次为：
 

@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../schemas/conformance-harness.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-WEBAPI",
+  "status": "draft",
+  "executionKind": "local-reference",
+  "fixturePath": "conformance/harness/web-platform-apis/fixture.mjs",
+  "fixtureDependencyPaths": [],
+  "calibrationPath": null,
+  "oraclePath": "conformance/harness/web-platform-apis/oracle.mjs",
+  "observationSchema": "schemas/conformance-observations.schema.json",
+  "contractSchema": "schemas/web-platform-apis.schema.json",
+  "validatorPath": "conformance/harness/web-platform-apis/reference-runtime.mjs",
+  "runnerPath": "conformance/harness/web-platform-apis/runner.mjs",
+  "platforms": ["linux", "macos", "windows"],
+  "coveredCaseIds": [
+    "EC-WEBAPI-T001", "EC-WEBAPI-T002", "EC-WEBAPI-T003", "EC-WEBAPI-T004",
+    "EC-WEBAPI-T005", "EC-WEBAPI-T006", "EC-WEBAPI-T007", "EC-WEBAPI-T008",
+    "EC-WEBAPI-T009", "EC-WEBAPI-T010", "EC-WEBAPI-T011", "EC-WEBAPI-T012",
+    "EC-WEBAPI-T013", "EC-WEBAPI-T014"
+  ]
+}
