@@ -4,6 +4,7 @@
   "standardId": "edge-canon.next",
   "suiteId": "EC-WEB",
   "status": "draft",
+  "executionKind": "provider-deployment",
   "fixturePath": "conformance/harness/web-fetch-events/fixture.mjs",
   "fixtureDependencyPaths": [
     "conformance/harness/web-fetch-events/cpu-workload.mjs"

@@ -1,0 +1,74 @@
+{
+  "$schema": "../../schemas/conformance-cases.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-ARTIFACT",
+  "status": "draft",
+  "executionModel": "provider-independent-oracle",
+  "cases": [
+    {
+      "id": "EC-ARTIFACT-T001",
+      "title": "完成态目录具有规范清单和传递完整性",
+      "kind": "normal",
+      "clauseIds": ["EC-ARTIFACT-API-001", "EC-ARTIFACT-API-002", "EC-ARTIFACT-API-003", "EC-ARTIFACT-API-004", "EC-ARTIFACT-LIFE-001"],
+      "fixture": {"scenario": "参考构建器生成包含入口、SBOM、provenance、验证报告与静态文件的完成态目录", "requirements": ["exact standard version", "canonical JSON manifest", "semantic document index", "content root"]},
+      "oracle": {"observations": ["manifest identity", "file inventory", "content root", "document kinds", "completion state"], "assertions": ["清单是唯一规范根并锁定精确版本", "全部普通文件被恰好列出且摘要一致", "四种必选文档被文件集合传递绑定", "只把原子发布后的目录识别为完成态"]}
+    },
+    {
+      "id": "EC-ARTIFACT-T002",
+      "title": "相同输入跨目录产生相同字节",
+      "kind": "normal",
+      "clauseIds": ["EC-ARTIFACT-CON-001"],
+      "fixture": {"scenario": "在两个不同绝对目录中以相同锁定输入构建", "requirements": ["two isolated output roots", "fixed source date epoch", "identical input digests"]},
+      "oracle": {"observations": ["artifact identities", "content roots", "per-file digests"], "assertions": ["两个清单字节与 identity 相同", "文件集合根与每个文件摘要相同", "绝对目录和 wall-clock time 未进入产物"]}
+    },
+    {
+      "id": "EC-ARTIFACT-T003",
+      "title": "并发 staging 不混合且原子发布",
+      "kind": "boundary",
+      "clauseIds": ["EC-ARTIFACT-CON-002"],
+      "fixture": {"scenario": "并发执行两个带不同公开输入标记的构建并分别原子发布", "requirements": ["parallel builders", "isolated staging roots", "distinct public input digests"]},
+      "oracle": {"observations": ["staging paths", "published roots", "file markers", "manifest validation"], "assertions": ["staging 路径不同", "两个完成态目录均独立通过验证", "每个目录只含自身输入标记"]}
+    },
+    {
+      "id": "EC-ARTIFACT-T004",
+      "title": "不安全和跨平台冲突路径被拒绝",
+      "kind": "security",
+      "clauseIds": ["EC-ARTIFACT-SEC-001", "EC-ARTIFACT-ERR-001"],
+      "fixture": {"scenario": "依次注入 traversal、反斜杠、保留设备名、大小写冲突和链接节点", "requirements": ["path mutation set", "filesystem link or junction", "structured failure capture"]},
+      "oracle": {"observations": ["failure codes", "sanitized messages", "host path leakage"], "assertions": ["全部变体在派生前以稳定代码失败", "错误不包含主机绝对路径或文件内容"]}
+    },
+    {
+      "id": "EC-ARTIFACT-T005",
+      "title": "供应商状态和 secret 不进入 canonical output",
+      "kind": "security",
+      "clauseIds": ["EC-ARTIFACT-SEC-002", "EC-ARTIFACT-SEC-003"],
+      "fixture": {"scenario": "向清单注入供应商字段，并分别向文件与错误路径注入唯一 secret canary", "requirements": ["provider-field mutation", "secret canary", "recursive byte scan"]},
+      "oracle": {"observations": ["provider mutation result", "secret scan result", "error text"], "assertions": ["供应商字段被 schema/validator 拒绝", "任一产物文件含 secret canary 时验证失败", "失败输出不回显 canary"]}
+    },
+    {
+      "id": "EC-ARTIFACT-T006",
+      "title": "文件集合损坏一律 fail closed",
+      "kind": "failure",
+      "clauseIds": ["EC-ARTIFACT-ERR-002", "EC-ARTIFACT-FAIL-002"],
+      "fixture": {"scenario": "分别修改、删除和添加文件，并改写文档引用与非规范清单字节", "requirements": ["tamper mutation set", "pre-derivation validation barrier"]},
+      "oracle": {"observations": ["mutation failure codes", "derivation attempts"], "assertions": ["每种损坏都在派生前失败", "没有损坏变体进入 provider packager", "验证器没有自动修补清单"]}
+    },
+    {
+      "id": "EC-ARTIFACT-T007",
+      "title": "构建失败不留下可部署完成态",
+      "kind": "failure",
+      "clauseIds": ["EC-ARTIFACT-FAIL-001"],
+      "fixture": {"scenario": "在文件写入后、清单写入后和发布前注入构建失败", "requirements": ["fault injection points", "isolated staging", "completion-state probe"]},
+      "oracle": {"observations": ["published root existence", "staging state", "artifact identity availability"], "assertions": ["所有失败点都没有完成态目标目录", "残留 staging 没有可用 identity 且不会被消费者发现"]}
+    },
+    {
+      "id": "EC-ARTIFACT-T008",
+      "title": "未知 major 与浮动版本拒绝并显式迁移",
+      "kind": "upgrade",
+      "clauseIds": ["EC-ARTIFACT-UPG-001", "EC-ARTIFACT-UPG-002"],
+      "fixture": {"scenario": "把格式改为 v2、把标准版本改为 next/短 commit，并从合法 v1 生成一个新 identity 的迁移副本", "requirements": ["version mutation set", "read-only source artifact", "migration lineage evidence"]},
+      "oracle": {"observations": ["version failure codes", "source identity", "migrated identity", "source mutation"], "assertions": ["未知 major 和非精确版本在读取语义文档前失败", "迁移不修改源产物", "迁移产物具有新 identity 并记录 lineage"]}
+    }
+  ]
+}

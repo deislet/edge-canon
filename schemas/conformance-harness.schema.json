@@ -5,14 +5,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schemaVersion", "standardId", "suiteId", "status", "fixturePath", "fixtureDependencyPaths",
-    "calibrationPath",
-    "oraclePath", "observationSchema", "providerProtocol", "providerAdapterSchema",
-    "providerAdapterRequestSchema", "providerAdapterResultSchema", "canonicalArtifactSchema",
-    "derivedArtifactSchema", "providerDeploymentStateSchema", "providerInvocationStateSchema",
-    "providerCollectionStateSchema",
-    "canonicalArtifactBuilder", "coveredCaseIds",
-    "providerAdapterPaths", "providerAdapters"
+    "schemaVersion", "standardId", "suiteId", "status", "executionKind",
+    "fixturePath", "fixtureDependencyPaths", "calibrationPath", "oraclePath",
+    "observationSchema", "coveredCaseIds"
   ],
   "properties": {
     "$schema": {"type": "string"},
@@ -20,6 +15,7 @@
     "standardId": {"type": "string", "minLength": 1},
     "suiteId": {"type": "string", "pattern": "^EC-[A-Z0-9-]+$"},
     "status": {"enum": ["draft", "complete"]},
+    "executionKind": {"enum": ["provider-deployment", "local-artifact"]},
     "fixturePath": {"type": "string", "minLength": 1},
     "fixtureDependencyPaths": {
       "type": "array", "uniqueItems": true,
@@ -38,6 +34,13 @@
     "providerInvocationStateSchema": {"type": "string", "minLength": 1},
     "providerCollectionStateSchema": {"type": "string", "minLength": 1},
     "canonicalArtifactBuilder": {"type": "string", "minLength": 1},
+    "artifactSchema": {"type": "string", "minLength": 1},
+    "validatorPath": {"type": "string", "minLength": 1},
+    "runnerPath": {"type": "string", "minLength": 1},
+    "platforms": {
+      "type": "array", "minItems": 3, "uniqueItems": true,
+      "items": {"enum": ["linux", "macos", "windows"]}
+    },
     "coveredCaseIds": {
       "type": "array", "minItems": 1, "uniqueItems": true,
       "items": {"type": "string", "pattern": "^EC-[A-Z0-9-]+-T[0-9]{3}$"}
@@ -50,5 +53,22 @@
       "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true,
       "items": {"type": "string", "minLength": 1}
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"executionKind": {"const": "provider-deployment"}}},
+      "then": {
+        "required": [
+          "providerProtocol", "providerAdapterSchema", "providerAdapterRequestSchema",
+          "providerAdapterResultSchema", "canonicalArtifactSchema", "derivedArtifactSchema",
+          "providerDeploymentStateSchema", "providerInvocationStateSchema",
+          "providerCollectionStateSchema", "canonicalArtifactBuilder",
+          "providerAdapterPaths", "providerAdapters"
+        ]
+      },
+      "else": {
+        "required": ["artifactSchema", "validatorPath", "runnerPath", "platforms"]
+      }
+    }
+  ]
 }

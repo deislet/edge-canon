@@ -1,0 +1,44 @@
+{
+  "$schema": "../../schemas/conformance-platform-evidence.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-ARTIFACT",
+  "status": "draft-non-certifying",
+  "observedAt": "2026-09-04T18:47:11+08:00",
+  "artifactSha256": "b2bae4403adb7d6a95f0d9bdb0cae13b6138482b012f00f4efbe0675f2c74d2a",
+  "referenceBuilderSha256": "32d58c81d483afdd3b3f5d558d67bd382ad75be6666b13419f4c7cc9f763c8ea",
+  "observations": [
+    {
+      "platform": "linux",
+      "osVersion": "Linux 6.8.0-124-generic",
+      "architecture": "x86_64",
+      "nodeVersion": "v22.21.1",
+      "outcome": "pass",
+      "caseCount": 8,
+      "artifactSha256": "b2bae4403adb7d6a95f0d9bdb0cae13b6138482b012f00f4efbe0675f2c74d2a"
+    },
+    {
+      "platform": "macos",
+      "osVersion": "26.6",
+      "architecture": "arm64",
+      "nodeVersion": "v26.0.0",
+      "outcome": "pass",
+      "caseCount": 8,
+      "artifactSha256": "b2bae4403adb7d6a95f0d9bdb0cae13b6138482b012f00f4efbe0675f2c74d2a"
+    },
+    {
+      "platform": "windows",
+      "osVersion": "10.0.26100.9168",
+      "architecture": "AMD64",
+      "nodeVersion": "v24.16.0",
+      "outcome": "pass",
+      "caseCount": 8,
+      "artifactSha256": "b2bae4403adb7d6a95f0d9bdb0cae13b6138482b012f00f4efbe0675f2c74d2a"
+    }
+  ],
+  "limitations": [
+    "This is reference-harness evidence, not provider conformance or certification evidence.",
+    "The exact standard pin is the prior proposal commit 6a8768559372fb749650c9ef355d80524d3590ff; the reference builder bytes are bound separately.",
+    "Real framework adapters and provider-derived artifacts have not yet run this suite."
+  ]
+}

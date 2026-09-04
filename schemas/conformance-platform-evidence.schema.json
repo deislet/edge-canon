@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/conformance-platform-evidence.schema.json",
+  "title": "Edge Canon non-certifying cross-platform harness evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "standardId", "suiteId", "status", "observedAt",
+    "artifactSha256", "referenceBuilderSha256", "observations", "limitations"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "standardId": {"const": "edge-canon.next"},
+    "suiteId": {"const": "EC-ARTIFACT"},
+    "status": {"const": "draft-non-certifying"},
+    "observedAt": {"type": "string", "format": "date-time"},
+    "artifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "referenceBuilderSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "observations": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["platform", "osVersion", "architecture", "nodeVersion", "outcome", "caseCount", "artifactSha256"],
+        "properties": {
+          "platform": {"enum": ["linux", "macos", "windows"]},
+          "osVersion": {"type": "string", "minLength": 1, "maxLength": 256},
+          "architecture": {"type": "string", "minLength": 1, "maxLength": 64},
+          "nodeVersion": {"type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"},
+          "outcome": {"const": "pass"},
+          "caseCount": {"const": 8},
+          "artifactSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

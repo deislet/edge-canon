@@ -23,4 +23,4 @@ jobs:
       - name: Validate contract, requirements, conformance kit, and registry
         run: python3 scripts/check-governance.py
       - name: Execute draft conformance oracles
-        run: node --test conformance/harness/web-fetch-events/*.test.mjs
+        run: node --test

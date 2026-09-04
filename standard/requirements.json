@@ -137,14 +137,24 @@
       "conformance": {"suiteId": "EC-BIND", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "canonical-build-artifact", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
+      "id": "canonical-build-artifact",
+      "definitionStatus": "draft",
+      "draftPath": "standard/requirements/canonical-build-artifact.zh.md",
+      "evidencePaths": [
+        "standard/evidence/canonical-build-artifact-baseline.zh.md",
+        "conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json"
+      ],
       "dimensions": {
-        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
-        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
-        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
-        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+        "api": {"status": "draft", "clauseIds": ["EC-ARTIFACT-API-001", "EC-ARTIFACT-API-002", "EC-ARTIFACT-API-003", "EC-ARTIFACT-API-004"]},
+        "errors": {"status": "draft", "clauseIds": ["EC-ARTIFACT-ERR-001", "EC-ARTIFACT-ERR-002"]},
+        "concurrency-consistency-ordering": {"status": "draft", "clauseIds": ["EC-ARTIFACT-CON-001", "EC-ARTIFACT-CON-002"]},
+        "lifecycle": {"status": "draft", "clauseIds": ["EC-ARTIFACT-LIFE-001"]},
+        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []},
+        "security-isolation": {"status": "draft", "clauseIds": ["EC-ARTIFACT-SEC-001", "EC-ARTIFACT-SEC-002", "EC-ARTIFACT-SEC-003"]},
+        "failure-recovery": {"status": "draft", "clauseIds": ["EC-ARTIFACT-FAIL-001", "EC-ARTIFACT-FAIL-002"]},
+        "upgrade-migration": {"status": "draft", "clauseIds": ["EC-ARTIFACT-UPG-001", "EC-ARTIFACT-UPG-002"]}
       },
-      "conformance": {"suiteId": "EC-ARTIFACT", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+      "conformance": {"suiteId": "EC-ARTIFACT", "fixtureStatus": "draft", "oracleStatus": "draft", "harnessStatus": "draft"}
     },
     {
       "id": "deployment-preview-rollback", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],

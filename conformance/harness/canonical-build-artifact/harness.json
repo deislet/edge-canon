@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../schemas/conformance-harness.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-ARTIFACT",
+  "status": "draft",
+  "executionKind": "local-artifact",
+  "fixturePath": "conformance/harness/canonical-build-artifact/fixture.mjs",
+  "fixtureDependencyPaths": [
+    "conformance/harness/canonical-build-artifact/canonical-json.mjs"
+  ],
+  "calibrationPath": null,
+  "oraclePath": "conformance/harness/canonical-build-artifact/oracle.mjs",
+  "observationSchema": "schemas/conformance-observations.schema.json",
+  "artifactSchema": "schemas/canonical-build-output.schema.json",
+  "validatorPath": "conformance/harness/canonical-build-artifact/validator.mjs",
+  "runnerPath": "conformance/harness/canonical-build-artifact/runner.mjs",
+  "platforms": ["linux", "macos", "windows"],
+  "coveredCaseIds": [
+    "EC-ARTIFACT-T001",
+    "EC-ARTIFACT-T002",
+    "EC-ARTIFACT-T003",
+    "EC-ARTIFACT-T004",
+    "EC-ARTIFACT-T005",
+    "EC-ARTIFACT-T006",
+    "EC-ARTIFACT-T007",
+    "EC-ARTIFACT-T008"
+  ]
+}

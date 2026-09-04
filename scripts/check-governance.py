@@ -73,6 +73,9 @@ def validate_schema_documents() -> None:
         "conformance/kit.json": "schemas/conformance-kit.schema.json",
         "conformance/cases/web-fetch-events.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/web-fetch-events/harness.json": "schemas/conformance-harness.schema.json",
+        "conformance/cases/canonical-build-artifact.json": "schemas/conformance-cases.schema.json",
+        "conformance/harness/canonical-build-artifact/harness.json": "schemas/conformance-harness.schema.json",
+        "conformance/evidence/canonical-build-artifact-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/harness/web-fetch-events/sample-pass.json": "schemas/conformance-observations.schema.json",
         "conformance/harness/web-fetch-events/provider-adapters/deislet/adapter.json": "schemas/conformance-provider-adapter.schema.json",
         "conformance/harness/web-fetch-events/provider-adapters/cloudflare-workers-pages/adapter.json": "schemas/conformance-provider-adapter.schema.json",
@@ -284,14 +287,18 @@ def validate_harness(
     require(manifest.get("standardId") == standard_id, f"{relative_path}: standardId mismatch")
     require(manifest.get("suiteId") == suite_id, f"{relative_path}: suiteId mismatch")
     require(manifest.get("status") == harness_status, f"{relative_path}: status differs from kit")
+    execution_kind = manifest.get("executionKind")
+    require(execution_kind in {"provider-deployment", "local-artifact"}, f"{relative_path}: invalid execution kind")
     require(
         manifest.get("observationSchema") == "schemas/conformance-observations.schema.json",
         f"{relative_path}: observation schema must be the shared schema",
     )
-    for key in (
-        "fixturePath",
-        "oraclePath",
-        "observationSchema",
+    for key in ("fixturePath", "oraclePath", "observationSchema"):
+        target = manifest.get(key)
+        require(isinstance(target, str) and target, f"{relative_path}: {key} is missing")
+        require((ROOT / target).is_file(), f"{relative_path}: {key} does not exist: {target}")
+
+    provider_paths = (
         "providerProtocol",
         "providerAdapterSchema",
         "providerAdapterRequestSchema",
@@ -299,8 +306,12 @@ def validate_harness(
         "canonicalArtifactSchema",
         "derivedArtifactSchema",
         "providerDeploymentStateSchema",
+        "providerInvocationStateSchema",
+        "providerCollectionStateSchema",
         "canonicalArtifactBuilder",
-    ):
+    )
+    artifact_paths = ("artifactSchema", "validatorPath", "runnerPath")
+    for key in provider_paths if execution_kind == "provider-deployment" else artifact_paths:
         target = manifest.get(key)
         require(isinstance(target, str) and target, f"{relative_path}: {key} is missing")
         require((ROOT / target).is_file(), f"{relative_path}: {key} does not exist: {target}")
@@ -320,6 +331,15 @@ def validate_harness(
     covered = manifest.get("coveredCaseIds", [])
     require(covered and len(covered) == len(set(covered)), f"{relative_path}: covered case IDs must be present and unique")
     require(set(covered) <= case_ids, f"{relative_path}: harness names an unknown case")
+    if execution_kind == "local-artifact":
+        require(
+            set(manifest.get("platforms", [])) == {"linux", "macos", "windows"},
+            f"{relative_path}: local artifact harness must cover Linux, macOS, and Windows",
+        )
+        if harness_status == "complete":
+            require(set(covered) == case_ids, f"{relative_path}: complete harness must cover every case")
+        return
+
     adapters = manifest.get("providerAdapters", [])
     require(len(adapters) == len(set(adapters)), f"{relative_path}: duplicate provider adapter")
     require(set(adapters) <= FIRST_CLASS, f"{relative_path}: unknown first-class provider adapter")

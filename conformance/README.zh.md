@@ -2,7 +2,9 @@
 
 [`registry.json`](registry.json) 是后端实现证据与认证状态的唯一机器可读入口。平台矩阵可以解释能力差异，但不能自行产生合规或支持声明。
 
-[`kit.json`](kit.json) 是标准测试集索引。它把能力族连接到 provider-independent 用例；当前只有 `EC-WEB` 存在草案用例，并已有覆盖 T001–T015 的统一 fixture、原始 observation 格式和可执行 oracle。三个一等后端已有受 schema 和治理约束的 Draft manifest，以及可执行的安全 `inspect`/`preflight`、确定性 `prepare`、碰撞保护的 `deploy` 和不可盲目重放的统一 `invoke`；Cloudflare 与 Deislet 另有身份绑定的 `collect`、`cleanup` 和可恢复 `run`。EdgeOne 的 `collect`、公开清理路径、`run` 及三个后端的真实账户证据仍未完成，完成 adapter 列表因此仍为空。其余 14 个能力族也尚未执行化，所以 harness 只是 `draft`。本地驱动和 oracle 自测不是后端执行证据，不能据此提高任何后端的成熟度或认证状态。
+[`kit.json`](kit.json) 是标准测试集索引。它把能力族连接到 provider-independent 用例；`EC-WEB` 已有覆盖 T001–T015 的统一 fixture、原始 observation 格式和可执行 oracle。三个一等后端已有受 schema 和治理约束的 Draft manifest，以及可执行的安全 `inspect`/`preflight`、确定性 `prepare`、碰撞保护的 `deploy` 和不可盲目重放的统一 `invoke`；Cloudflare 与 Deislet 另有身份绑定的 `collect`、`cleanup` 和可恢复 `run`。EdgeOne 的 `collect`、公开清理路径、`run` 及三个后端的真实账户证据仍未完成，完成 adapter 列表因此仍为空。
+
+`EC-ARTIFACT` 已有本地 reference builder、validator 和覆盖 T001–T008 的可执行 Draft，检查规范清单、确定性、原子发布、路径可移植性、secret canary、篡改和迁移；它还不是三个 provider packager 或真实框架 adapter 的通过证据。其余 13 个能力族尚未执行化。所有本地驱动和 oracle 自测都不能自行提高后端成熟度或认证状态。
 
 证据成熟度依次为：
 
@@ -19,7 +21,7 @@
 
 ```bash
 python3 scripts/check-governance.py
-node --test conformance/harness/web-fetch-events/*.test.mjs
+node --test
 ```
 
-治理校验使用固定版本的 JSON Schema validator，检查契约、逐条要求、测试集、harness、三个 adapter manifest 与实现 registry 的交叉约束；Node 测试执行当前 fixture/oracle 草案的正反自证和 adapter 子进程安全边界。JSON Schema 同时是 adapter request/result 和外部生成客户端使用的公开格式定义。
+治理校验使用固定版本的 JSON Schema validator，检查契约、逐条要求、测试集、harness、三个 adapter manifest 与实现 registry 的交叉约束；Node 测试执行当前 fixture/oracle 草案的正反自证、adapter 子进程安全边界和 canonical build output 完整性检查。JSON Schema 同时是 artifact、adapter request/result 和外部生成客户端使用的公开格式定义。

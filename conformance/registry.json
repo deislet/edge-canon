@@ -43,7 +43,7 @@
         "validUntil": null,
         "blockers": [
           "edge-canon.next is not a released standard",
-          "mandatory conformance kit is incomplete; EC-WEB has no complete provider adapter (the three draft adapters only implement inspect/preflight), and the other 14 suites are not executable",
+          "mandatory conformance kit is incomplete; EC-WEB has no complete provider adapter, EC-ARTIFACT is a local Draft harness awaiting real framework/provider integration, and the other 13 suites are not executable",
           "no signed complete-version conformance record"
         ]
       }
@@ -77,7 +77,7 @@
         "blockers": [
           "edge-canon.next is not a released standard",
           "no recorded deployment identity for an exact canonical artifact",
-          "mandatory conformance kit is incomplete; EC-WEB has no complete provider adapter (the three draft adapters only implement inspect/preflight), and the other 14 suites are not executable"
+          "mandatory conformance kit is incomplete; EC-WEB has no complete provider adapter, EC-ARTIFACT is a local Draft harness awaiting real framework/provider integration, and the other 13 suites are not executable"
         ]
       }
     },
@@ -110,7 +110,7 @@
         "blockers": [
           "edge-canon.next is not a released standard",
           "no official syntax-verification record for the exact artifact",
-          "mandatory conformance kit is incomplete; EC-WEB has no complete provider adapter (the three draft adapters only implement inspect/preflight), and the other 14 suites are not executable"
+          "mandatory conformance kit is incomplete; EC-WEB has no complete provider adapter, EC-ARTIFACT is a local Draft harness awaiting real framework/provider integration, and the other 13 suites are not executable"
         ]
       }
     },
@@ -143,7 +143,7 @@
         "blockers": [
           "experimental implementation",
           "edge-canon.next is not a released standard",
-          "mandatory conformance kit is incomplete; EC-WEB has no complete provider adapter (the three draft adapters only implement inspect/preflight), and the other 14 suites are not executable"
+          "mandatory conformance kit is incomplete; EC-WEB has no complete provider adapter, EC-ARTIFACT is a local Draft harness awaiting real framework/provider integration, and the other 13 suites are not executable"
         ]
       }
     }
