@@ -13,25 +13,34 @@
     "version": "4.129.0",
     "integrity": "sha512-PGPvs9UPoFrwxT0VogpESSZGvZIctAuTK3wGsLLPHtHsSgS85kNdvtpa2d14UzG8gwLWD64XUGFPGG9tOXG9VQ=="
   },
-  "credentialEnvironment": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
+  "credentialEnvironment": {
+    "inspect": [],
+    "preflight": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
+    "prepare": [],
+    "deploy": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
+    "invoke": [],
+    "collect": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
+    "cleanup": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"],
+    "run": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]
+  },
   "requiredConfiguration": {
     "inspect": [],
     "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName"],
     "prepare": ["derivedDirectory", "projectName", "compatibilityDate"],
-    "deploy": [],
+    "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate"],
     "invoke": [],
     "collect": [],
-    "cleanup": [],
+    "cleanup": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate"],
     "run": []
   },
   "operations": {
     "inspect": {"status": "implemented", "remoteSideEffects": false},
     "preflight": {"status": "implemented", "remoteSideEffects": false},
     "prepare": {"status": "implemented", "remoteSideEffects": false},
-    "deploy": {"status": "pending", "remoteSideEffects": true},
+    "deploy": {"status": "implemented", "remoteSideEffects": true},
     "invoke": {"status": "pending", "remoteSideEffects": true},
     "collect": {"status": "pending", "remoteSideEffects": false},
-    "cleanup": {"status": "pending", "remoteSideEffects": true},
+    "cleanup": {"status": "implemented", "remoteSideEffects": true},
     "run": {"status": "pending", "remoteSideEffects": true}
   },
   "caseCoverage": [
@@ -59,7 +68,7 @@
     "cleanupAfterRunFailure": true
   },
   "limitations": [
-    "Inspect, preflight and deterministic prepare are executable; this manifest is not deployment or conformance evidence.",
+    "Inspect, preflight, deterministic prepare, collision-checked deploy and identity-bound cleanup are executable; this manifest is not conformance evidence.",
     "No Cloudflare test account or exact deployment observation is recorded."
   ]
 }

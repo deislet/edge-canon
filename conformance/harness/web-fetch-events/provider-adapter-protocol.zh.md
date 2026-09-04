@@ -29,11 +29,11 @@ request 必须符合 `schemas/conformance-provider-adapter-request.schema.json`�
 
 每个 manifest 固定官方 CLI 的包名、精确版本和 registry integrity，或者固定 workspace binary 的版本与 40 位 source revision。adapter 必须直接执行绝对路径及参数数组，`shell=false`；不得从未知 `PATH` 接受同名工具。
 
-凭证只从 manifest 列出的环境变量传入。凭证值不得出现在 request、argv、artifact、stdout、stderr、result 或 evidence reference 中。子进程仅继承运行所需的最小环境；输出按字节限长，超时终止整个进程树，并在持久化前按全部凭证值脱敏。
+凭证按操作从 manifest 列出的环境变量传入。凭证值不得出现在 request、argv、artifact、stdout、stderr、result 或 evidence reference 中。子进程仅继承当前操作所需的最小环境；输出按字节限长，超时终止整个进程树，并在持久化前按全部凭证值脱敏。
 
-EdgeOne CLI 1.6.32 的 `makers deploy` 同时接受 `EDGEONE_PAGES_API_TOKEN` 环境变量和 `--json`，所以 CI adapter 不使用文档示例中的 `-t/--token` 参数。Cloudflare 使用 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 环境变量。Deislet 使用 `DEIS_TOKEN`，控制面 URL 是非秘密配置。
+EdgeOne CLI 1.6.32 的 `makers deploy` 同时接受 `EDGEONE_PAGES_API_TOKEN` 环境变量和 `--json`，所以 CI adapter 不使用文档示例中的 `-t/--token` 参数。Cloudflare 使用 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID` 环境变量。Deislet 将部署凭证和管理凭证分别固定为 `DEIS_DEPLOY_TOKEN` 与 `DEIS_ADMIN_TOKEN`：部署子进程只能获得前者映射出的 `DEIS_CONTROL_TOKEN`，删除及完整节点卸载核验只使用后者；控制面 URL 是非秘密配置。
 
-`requiredConfiguration` 按操作分别声明。`inspect` 不读取配置；`prepare` 只读取
+`requiredConfiguration` 和 `credentialEnvironment` 都按操作分别声明。`inspect` 不读取配置或凭证；`prepare` 只读取
 `derivedDirectory`、`projectName` 和 `compatibilityDate`；凭证与工具锁只在实际需要它们的
 操作读取。这样一次本地产物转换不会因为机器上没有部署凭证而失败，也不会把更大的权限
 传给不需要它的进程。
@@ -60,6 +60,27 @@ suite、入口文件，以及按路径排序的每个文件的字节数和 SHA-2
 `edge-functions/[[default]].js`；Deislet 生成标准 catch-all 路由 `functions/[[all]].js` 与
 `.config.json`。适配层把 `request`、`env`、`params` 和 `waitUntil` 组成同一个四键 context，
 `EVIDENCE.record` 只产生带固定前缀的结构化日志，供后续 `collect` 收集，不能参与 oracle 判定。
+
+## 部署身份和恢复
+
+每个部署名称只能由 `backendId + operationId` 确定性生成，格式为
+`edge-canon-{cf|eo|deis}-<16 位摘要>`；request 必须精确使用 `inspect` 返回的名称。adapter 在任何
+远端写入前，以供应商公开 API 查询同名资源并拒绝碰撞，不能覆盖既有项目。经过复核的派生产物
+会复制到本次 operation 独占的可变目录，因为供应商 CLI 可能写入当前目录；canonical 与 derived
+目录始终保持不可变。
+
+部署状态符合 `schemas/conformance-provider-deployment-state.schema.json`，以 `0600` 原子持久化并
+同时绑定 operation、标准 commit、canonical/derived 摘要、项目名及供应商 project、deployment、
+version 和 URL。调用供应商工具前必须先记录 `deploying`；超时、输出超限、异常退出或无法核验
+供应商身份时记录 `deploy-indeterminate`，相同 operation 之后只能进入显式核对或清理，不能再次
+执行部署命令。
+
+同一 operation 的部署与清理共用排他操作锁。活跃进程持锁时并发调用返回
+`EC_ADAPTER_OPERATION_BUSY`；同一主机进程已消失的锁可以安全回收。若崩溃发生在派生产物复制后、
+状态持久化前，只有当现有可变目录的完整树与已复核 derived 目录逐项一致时才能继续。清理先按
+持久化身份复查资源，再删除且再次验证不存在；结果不明确的清理同样不能盲目重放。Deislet 只有
+在 Control 删除回执确认全部节点卸载成功后才视为完成。EdgeOne CLI 1.6.32 和已确认的公开 API
+尚未提供非交互项目删除契约，因此其 cleanup 必须继续标为 pending，不能调用未公开接口冒充实现。
 
 ## 证据和完成条件
 

@@ -5,6 +5,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { AdapterError, runAdapter } from "./provider-adapter-cli.mjs";
+import { operationProjectName } from "./provider-deployment.mjs";
 import { AdapterProcessError, runProviderProcess } from "./provider-process.mjs";
 
 const cwd = process.cwd();
@@ -100,7 +101,7 @@ test("Cloudflare preflight verifies the package lock and keeps credentials out o
       toolEntrypoint: entrypoint,
       toolPackageJson: packageJson,
       toolLockPath: lockPath,
-      projectName: "edge-canon-preflight-test",
+      projectName: operationProjectName("cloudflare-workers-pages", "preflight-test"),
     },
   };
   const manifestPath = fileURLToPath(new URL(
@@ -121,7 +122,7 @@ test("Cloudflare preflight verifies the package lock and keeps credentials out o
   assert.deepEqual(result.data.credentialEnvironment, ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]);
   assert.doesNotMatch(JSON.stringify(result), /account-secret-canary|token-secret-canary/);
 
-  request.operation = "deploy";
+  request.operation = "invoke";
   await assert.rejects(
     runAdapter({ manifestPath, request, hostEnvironment: {} }),
     (error) => error instanceof AdapterError && error.code === "EC_ADAPTER_OPERATION_UNIMPLEMENTED",

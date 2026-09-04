@@ -352,3 +352,26 @@ export function prepareProviderArtifact({ request, manifest }) {
     idempotent,
   };
 }
+
+/**
+ * Revalidate a prepared provider tree immediately before any remote mutation.
+ * Deploy must not trust a digest returned by an earlier process: both the
+ * canonical input and every derived byte may have changed in between.
+ */
+export function validatePreparedProviderArtifact({ request, manifest }) {
+  const configuration = validatePrepareConfiguration(request);
+  const canonical = validateCanonicalArtifact(request);
+  fail(
+    !pathsOverlap(configuration.derivedDirectory, canonical.root),
+    "EC_ADAPTER_CONFIGURATION_INVALID",
+    "derivedDirectory and canonical artifact directory must not overlap",
+  );
+  const expected = buildExpected(request, manifest, canonical, configuration);
+  validateExisting(configuration.derivedDirectory, expected);
+  return {
+    canonicalArtifactSha256: request.canonicalArtifact.sha256,
+    derivedArtifactPath: path.join(configuration.derivedDirectory, DERIVED_MANIFEST),
+    derivedArtifactSha256: sha256(expected.manifestBytes),
+    entrypoint: expected.entrypoint,
+  };
+}

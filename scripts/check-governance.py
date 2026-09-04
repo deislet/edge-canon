@@ -298,6 +298,7 @@ def validate_harness(
         "providerAdapterResultSchema",
         "canonicalArtifactSchema",
         "derivedArtifactSchema",
+        "providerDeploymentStateSchema",
         "canonicalArtifactBuilder",
     ):
         target = manifest.get(key)

@@ -13,12 +13,21 @@
     "version": "1.6.32",
     "integrity": "sha512-rTogxIKXHd0CAQJD0ikNgP4CwfVafCXIDBqmKXoOkDCbX5FOzOsGcKKlDhcT1jXEi6f+TV+4kCSV/IouIeaXuA=="
   },
-  "credentialEnvironment": ["EDGEONE_PAGES_API_TOKEN"],
+  "credentialEnvironment": {
+    "inspect": [],
+    "preflight": ["EDGEONE_PAGES_API_TOKEN"],
+    "prepare": [],
+    "deploy": ["EDGEONE_PAGES_API_TOKEN"],
+    "invoke": [],
+    "collect": ["EDGEONE_PAGES_API_TOKEN"],
+    "cleanup": ["EDGEONE_PAGES_API_TOKEN"],
+    "run": ["EDGEONE_PAGES_API_TOKEN"]
+  },
   "requiredConfiguration": {
     "inspect": [],
-    "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName", "deploymentEnvironment", "area"],
+    "preflight": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "projectName", "deploymentEnvironment", "area", "apiRegion"],
     "prepare": ["derivedDirectory", "projectName", "compatibilityDate"],
-    "deploy": [],
+    "deploy": ["toolEntrypoint", "toolPackageJson", "toolLockPath", "derivedDirectory", "projectName", "compatibilityDate", "deploymentEnvironment", "area", "apiRegion"],
     "invoke": [],
     "collect": [],
     "cleanup": [],
@@ -28,7 +37,7 @@
     "inspect": {"status": "implemented", "remoteSideEffects": false},
     "preflight": {"status": "implemented", "remoteSideEffects": false},
     "prepare": {"status": "implemented", "remoteSideEffects": false},
-    "deploy": {"status": "pending", "remoteSideEffects": true},
+    "deploy": {"status": "implemented", "remoteSideEffects": true},
     "invoke": {"status": "pending", "remoteSideEffects": true},
     "collect": {"status": "pending", "remoteSideEffects": false},
     "cleanup": {"status": "pending", "remoteSideEffects": true},
@@ -59,7 +68,8 @@
     "cleanupAfterRunFailure": true
   },
   "limitations": [
-    "Inspect, preflight and deterministic prepare are executable; this manifest is not deployment or conformance evidence.",
+    "Inspect, preflight, deterministic prepare and collision-checked deploy are executable; this manifest is not conformance evidence.",
+    "EdgeOne CLI 1.6.32 publishes no non-interactive project deletion command, and no public deletion API contract has been identified; cleanup remains pending.",
     "No EdgeOne test account or exact deployment observation is recorded."
   ]
 }

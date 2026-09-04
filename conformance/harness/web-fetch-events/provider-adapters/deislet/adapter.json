@@ -13,25 +13,34 @@
     "version": "0.1.0",
     "sourceRevision": "eeb9dc4bb186bef3b703da976ce3e5e9fee1b5c5"
   },
-  "credentialEnvironment": ["DEIS_TOKEN"],
+  "credentialEnvironment": {
+    "inspect": [],
+    "preflight": ["DEIS_DEPLOY_TOKEN", "DEIS_ADMIN_TOKEN"],
+    "prepare": [],
+    "deploy": ["DEIS_DEPLOY_TOKEN"],
+    "invoke": [],
+    "collect": ["DEIS_ADMIN_TOKEN"],
+    "cleanup": ["DEIS_ADMIN_TOKEN"],
+    "run": ["DEIS_DEPLOY_TOKEN", "DEIS_ADMIN_TOKEN"]
+  },
   "requiredConfiguration": {
     "inspect": [],
-    "preflight": ["toolExecutable", "toolSourceRevision", "toolSha256", "controlUrl", "projectName"],
+    "preflight": ["toolExecutable", "toolSourceRevision", "toolSha256", "controlUrl", "runtimeUrl", "environmentName", "projectName"],
     "prepare": ["derivedDirectory", "projectName", "compatibilityDate"],
-    "deploy": [],
+    "deploy": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName"],
     "invoke": [],
     "collect": [],
-    "cleanup": [],
+    "cleanup": ["toolExecutable", "toolSourceRevision", "toolSha256", "derivedDirectory", "projectName", "compatibilityDate", "controlUrl", "runtimeUrl", "environmentName"],
     "run": []
   },
   "operations": {
     "inspect": {"status": "implemented", "remoteSideEffects": false},
     "preflight": {"status": "implemented", "remoteSideEffects": false},
     "prepare": {"status": "implemented", "remoteSideEffects": false},
-    "deploy": {"status": "pending", "remoteSideEffects": true},
+    "deploy": {"status": "implemented", "remoteSideEffects": true},
     "invoke": {"status": "pending", "remoteSideEffects": true},
     "collect": {"status": "pending", "remoteSideEffects": false},
-    "cleanup": {"status": "pending", "remoteSideEffects": true},
+    "cleanup": {"status": "implemented", "remoteSideEffects": true},
     "run": {"status": "pending", "remoteSideEffects": true}
   },
   "caseCoverage": [
@@ -59,7 +68,7 @@
     "cleanupAfterRunFailure": true
   },
   "limitations": [
-    "Inspect, preflight and deterministic prepare are executable; this manifest is not deployment or conformance evidence.",
+    "Inspect, preflight, deterministic prepare, collision-checked deploy and identity-bound cleanup are executable; this manifest is not conformance evidence.",
     "No Deislet test account or exact deployment observation is recorded."
   ]
 }

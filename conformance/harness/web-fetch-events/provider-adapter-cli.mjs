@@ -5,6 +5,13 @@ import { fileURLToPath } from "node:url";
 
 import { AdapterProcessError, runProviderProcess } from "./provider-process.mjs";
 import { prepareProviderArtifact, ProviderArtifactError } from "./provider-artifact.mjs";
+import {
+  cleanupProvider,
+  deployProvider,
+  operationProjectName,
+  ProviderDeploymentError,
+  validateDeploymentConfiguration,
+} from "./provider-deployment.mjs";
 
 const PROTOCOL_VERSION = "edge-canon.provider-adapter/v1";
 const OPERATIONS = new Set(["inspect", "preflight", "prepare", "deploy", "invoke", "collect", "cleanup", "run"]);
@@ -66,7 +73,7 @@ function validateRequest(request, manifest) {
   fail(request.configuration && typeof request.configuration === "object" && !Array.isArray(request.configuration), "EC_ADAPTER_REQUEST_INVALID", "configuration must be an object");
 }
 
-function safeEnvironment(hostEnvironment, credentialNames) {
+function safeEnvironment(hostEnvironment, credentialNames, includeCredentials = false) {
   const environment = {};
   for (const name of ["PATH", "TMPDIR", "TEMP", "TMP", "LANG", "LC_ALL", "SYSTEMROOT", "WINDIR", "CI", "NO_COLOR"]) {
     if (typeof hostEnvironment[name] === "string") environment[name] = hostEnvironment[name];
@@ -74,6 +81,7 @@ function safeEnvironment(hostEnvironment, credentialNames) {
   for (const name of credentialNames) {
     const value = hostEnvironment[name];
     fail(typeof value === "string" && value.length > 0, "EC_ADAPTER_CREDENTIAL_MISSING", `required credential environment ${name} is missing`);
+    if (includeCredentials) environment[name] = value;
   }
   environment.CI = "1";
   environment.NO_COLOR = "1";
@@ -104,7 +112,7 @@ function verifyNpmTool(manifest, configuration) {
   const locked = lock?.packages?.[relativePackageRoot];
   fail(locked?.version === manifest.tool.version, "EC_ADAPTER_TOOL_UNPINNED", "package lock version differs");
   fail(locked?.integrity === manifest.tool.integrity, "EC_ADAPTER_TOOL_UNPINNED", "package lock integrity differs");
-  return { executable: process.execPath, args: [entrypoint, "--version"] };
+  return { executable: process.execPath, baseArgs: [entrypoint] };
 }
 
 function verifyWorkspaceTool(manifest, configuration) {
@@ -116,7 +124,7 @@ function verifyWorkspaceTool(manifest, configuration) {
   fail(configuration.toolSourceRevision === manifest.tool.sourceRevision, "EC_ADAPTER_TOOL_UNPINNED", "workspace tool source revision differs");
   fail(SHA256.test(configuration.toolSha256), "EC_ADAPTER_TOOL_UNPINNED", "workspace tool digest is invalid");
   fail(sha256File(configuration.toolExecutable) === configuration.toolSha256, "EC_ADAPTER_TOOL_UNPINNED", "workspace tool digest differs");
-  return { executable: fs.realpathSync(configuration.toolExecutable), args: ["--version"] };
+  return { executable: fs.realpathSync(configuration.toolExecutable), baseArgs: [] };
 }
 
 function succeeded(request, manifest, data) {
@@ -147,6 +155,7 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
       entrypoint: manifest.entrypoint,
       protocolVersion: manifest.protocolVersion,
       tool: manifest.tool,
+      operationProjectName: operationProjectName(manifest.backendId, request.operationId),
     });
   }
 
@@ -156,6 +165,8 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
     fail(Object.hasOwn(request.configuration, key), "EC_ADAPTER_CONFIGURATION_MISSING", `required configuration ${key} is missing`);
   }
 
+  if (request.operation === "preflight") validateDeploymentConfiguration(request, manifest);
+
   if (request.operation === "prepare") {
     return succeeded(request, manifest, prepareProviderArtifact({ request, manifest }));
   }
@@ -164,13 +175,25 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
   fail(fs.statSync(request.evidenceDirectory, { throwIfNoEntry: false })?.isDirectory(), "EC_ADAPTER_REQUEST_INVALID", "evidenceDirectory is not a directory");
   fail(fs.statSync(request.canonicalArtifact.path, { throwIfNoEntry: false }) !== undefined, "EC_ADAPTER_REQUEST_INVALID", "canonical artifact does not exist");
 
-  const environment = safeEnvironment(hostEnvironment, manifest.credentialEnvironment);
+  const environment = safeEnvironment(
+    hostEnvironment,
+    manifest.credentialEnvironment[request.operation],
+    request.operation !== "preflight",
+  );
   const tool = manifest.tool.distribution === "npm"
     ? verifyNpmTool(manifest, request.configuration)
     : verifyWorkspaceTool(manifest, request.configuration);
+
+  if (request.operation === "deploy") {
+    return deployProvider({ request, manifest, tool, environment, hostEnvironment });
+  }
+  if (request.operation === "cleanup") {
+    return cleanupProvider({ request, manifest, tool, environment, hostEnvironment });
+  }
+
   const execution = await runProviderProcess({
     executable: tool.executable,
-    args: tool.args,
+    args: [...tool.baseArgs, "--version"],
     cwd: request.workDirectory,
     environment,
     credentialEnvironment: [],
@@ -187,7 +210,7 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
     "provider CLI did not report the pinned version",
   );
   return succeeded(request, manifest, {
-    credentialEnvironment: manifest.credentialEnvironment,
+    credentialEnvironment: manifest.credentialEnvironment[request.operation],
     toolDistribution: manifest.tool.distribution,
     toolName: manifest.tool.package ?? manifest.tool.binary,
     toolVersion: manifest.tool.version,
@@ -196,7 +219,7 @@ export async function runAdapter({ manifestPath, request, hostEnvironment = proc
 }
 
 function failureResult(request, manifest, error) {
-  const code = error instanceof AdapterError || error instanceof AdapterProcessError || error instanceof ProviderArtifactError
+  const code = error instanceof AdapterError || error instanceof AdapterProcessError || error instanceof ProviderArtifactError || error instanceof ProviderDeploymentError
     ? error.code
     : "EC_ADAPTER_INTERNAL";
   return {
