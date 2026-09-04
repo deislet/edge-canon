@@ -210,6 +210,7 @@ export async function runSuite(options = {}) {
   const processB = createProcessFacade({ TENANT: "B", SHARED: "initial" });
   processA.env.SHARED = "changed-a";
   const selectedPath = processA.getBuiltinModule("path");
+  const selectedUrl = processA.getBuiltinModule("node:url");
   cases.push(record(CASE_IDS[11], {
     version: processA.version,
     nodeVersion: processA.versions.node,
@@ -218,7 +219,14 @@ export async function runSuite(options = {}) {
     visibleFields: Object.keys(processA).sort(),
     builtin: {
       pathJoin: selectedPath.join("edge", "canon"),
-      fields: Object.keys(selectedPath).sort(),
+      pathResolve: selectedPath.resolve("edge", "canon"),
+      posixResolve: selectedPath.posix.resolve("edge", "canon"),
+      win32Resolve: selectedPath.win32.resolve("edge", "canon"),
+      pathFields: Object.keys(selectedPath).sort(),
+      relativeFileUrl: selectedUrl.pathToFileURL("asset #%.txt").href,
+      posixFilePath: selectedUrl.fileURLToPath("file:///asset%20space.txt"),
+      windowsFilePath: selectedUrl.fileURLToPath("file:///C:/asset%20space.txt", { windows: true }),
+      urlFields: Object.keys(selectedUrl).sort(),
       unsupportedIsUndefined: processA.getBuiltinModule("fs") === undefined,
     },
   }));

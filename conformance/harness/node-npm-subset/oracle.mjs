@@ -85,8 +85,10 @@ const VERIFIERS = {
     requireValue(data.version === "v24.20.0" && data.nodeVersion === "24.20.0" && data.platform === "linux", "T012 process normalization differs");
     requireValue(data.env.A.TENANT === "A" && data.env.A.SHARED === "changed-a" && data.env.B.TENANT === "B" && data.env.B.SHARED === "initial", "T012 env snapshots crossed invocations");
     requireValue(equal(data.visibleFields, ["env", "getBuiltinModule", "nextTick", "platform", "version", "versions"]), "T012 process facade leaks or misses fields");
-    exactKeys(data.builtin, ["pathJoin", "fields", "unsupportedIsUndefined"], "T012 builtin facade");
-    requireValue(data.builtin.pathJoin === "edge/canon" && equal(data.builtin.fields, BUILTIN_MODULES["node:path"].slice().sort()) && data.builtin.unsupportedIsUndefined === true, "T012 getBuiltinModule does not return the selected module facade");
+    exactKeys(data.builtin, ["pathJoin", "pathResolve", "posixResolve", "win32Resolve", "pathFields", "relativeFileUrl", "posixFilePath", "windowsFilePath", "urlFields", "unsupportedIsUndefined"], "T012 builtin facade");
+    requireValue(data.builtin.pathJoin === "edge/canon" && data.builtin.pathResolve === "/edge/canon" && data.builtin.posixResolve === "/edge/canon" && data.builtin.win32Resolve === "\\edge\\canon", "T012 path facade depends on the host");
+    requireValue(data.builtin.relativeFileUrl === "file:///asset%20%23%25.txt" && data.builtin.posixFilePath === "/asset space.txt" && data.builtin.windowsFilePath === "C:\\asset space.txt", "T012 URL file conversion depends on the host");
+    requireValue(equal(data.builtin.pathFields, BUILTIN_MODULES["node:path"].slice().sort()) && equal(data.builtin.urlFields, BUILTIN_MODULES["node:url"].slice().sort()) && data.builtin.unsupportedIsUndefined === true, "T012 getBuiltinModule does not return the selected module facade");
   },
   "EC-NODE-T013"(data) {
     exactKeys(data, ["sanitized", "credentialLeaked", "unsafe", "cache"], "T013 data");

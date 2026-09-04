@@ -173,6 +173,50 @@ export function cacheKey(packageRecord, transformerVersion = "ec-cjs-1") {
   return identity({ name: packageRecord.name, version: packageRecord.version, integrity: packageRecord.integrity, baseline: NODE_BASELINE, conditions: IMPORT_CONDITIONS, transformerVersion, policy: "edge-canon.node-npm/v1" });
 }
 
+function selectedPathModule(native) {
+  const nativePosix = native.posix;
+  const nativeWin32 = native.win32;
+  const hasDrive = (parts) => parts.some((part) => typeof part === "string" && /^[A-Za-z]:/.test(part));
+  const posixResolve = (...parts) => nativePosix.resolve("/", ...parts);
+  const win32Resolve = (...parts) => {
+    const explicitDrive = hasDrive(parts);
+    const resolved = nativeWin32.resolve("C:\\", ...parts);
+    return !explicitDrive && resolved.startsWith("C:\\") ? resolved.slice(2) : resolved;
+  };
+  const posix = Object.freeze(Object.assign(Object.create(null), nativePosix, { resolve: posixResolve }));
+  const win32 = Object.freeze(Object.assign(Object.create(null), nativeWin32, { resolve: win32Resolve }));
+  return {
+    basename: nativePosix.basename,
+    delimiter: nativePosix.delimiter,
+    dirname: nativePosix.dirname,
+    extname: nativePosix.extname,
+    format: nativePosix.format,
+    isAbsolute: nativePosix.isAbsolute,
+    join: nativePosix.join,
+    normalize: nativePosix.normalize,
+    parse: nativePosix.parse,
+    posix,
+    relative: nativePosix.relative,
+    resolve: posixResolve,
+    sep: nativePosix.sep,
+    toNamespacedPath: nativePosix.toNamespacedPath,
+    win32,
+  };
+}
+
+function selectedUrlModule(native, nativePath) {
+  const pathToFileURL = (value, options) => {
+    const windows = options?.windows === true;
+    const flavor = windows ? nativePath.win32 : nativePath.posix;
+    const root = windows ? "C:\\" : "/";
+    let absolute = flavor.resolve(root, value);
+    if (value.endsWith(flavor.sep) && !absolute.endsWith(flavor.sep)) absolute += flavor.sep;
+    return native.pathToFileURL(absolute, { windows });
+  };
+  const fileURLToPath = (value, options) => native.fileURLToPath(value, { windows: options?.windows === true });
+  return { ...native, fileURLToPath, pathToFileURL };
+}
+
 export function createProcessFacade(environment = {}) {
   const env = Object.assign(Object.create(null), environment);
   const selected = new Map();
@@ -186,8 +230,11 @@ export function createProcessFacade(environment = {}) {
     if (selected.has(canonicalName)) return selected.get(canonicalName);
     const native = process.getBuiltinModule(canonicalName);
     if (native === undefined) return undefined;
+    let source = native;
+    if (canonicalName === "node:path") source = selectedPathModule(native);
+    if (canonicalName === "node:url") source = selectedUrlModule(native, process.getBuiltinModule("node:path"));
     const module = Object.create(null);
-    for (const name of exports) Object.defineProperty(module, name, { value: native[name], enumerable: true });
+    for (const name of exports) Object.defineProperty(module, name, { value: source[name], enumerable: true });
     Object.freeze(module);
     selected.set(canonicalName, module);
     return module;
