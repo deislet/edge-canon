@@ -23,6 +23,8 @@ export function capabilityLock(standardVersion) {
     webSockets: {
       portability: "unavailable-in-reference-intersection",
       sourcePolicy: "reject-before-deploy",
+      excludedGlobals: ["WebSocket", "WebSocketPair", "WebSocketServer"],
+      globalIsolation: "sealed-undefined-before-module-evaluation",
     },
     limits: {
       streamedOctets: STREAMED_OCTETS,

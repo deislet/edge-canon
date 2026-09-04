@@ -36,10 +36,12 @@
     "webSockets": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["portability", "sourcePolicy"],
+      "required": ["portability", "sourcePolicy", "excludedGlobals", "globalIsolation"],
       "properties": {
         "portability": {"const": "unavailable-in-reference-intersection"},
-        "sourcePolicy": {"const": "reject-before-deploy"}
+        "sourcePolicy": {"const": "reject-before-deploy"},
+        "excludedGlobals": {"const": ["WebSocket", "WebSocketPair", "WebSocketServer"]},
+        "globalIsolation": {"const": "sealed-undefined-before-module-evaluation"}
       }
     },
     "limits": {

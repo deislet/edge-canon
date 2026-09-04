@@ -102,16 +102,20 @@ const VERIFIERS = {
     requireValue(data.maximumChunk === 4_096 && data.maximumOutstandingWrites === 1, "T010 chunk or outstanding write boundary differs");
   },
   "EC-STREAM-T011"(data) {
-    exactKeys(data, ["chunkFailures", "sourceFailures", "allowedSurface"], "T011 data");
+    exactKeys(data, ["chunkFailures", "sourceFailures", "allowedSurface", "isolatedGlobal"], "T011 data");
     requireValue(equal(data.chunkFailures.map((value) => value.variant), ["string", "object"]), "T011 chunk variants differ");
     for (const value of data.chunkFailures) settlement({ settlement: value.settlement, name: value.name, code: value.code }, "reject", "TypeError", "EC_STREAM_CHUNK_TYPE", `T011 ${value.variant}`);
     requireValue(equal(data.sourceFailures, [
       { variant: "websocket", code: "EC_STREAM_WEBSOCKET_NONPORTABLE" },
       { variant: "websocket-pair-dependency", code: "EC_STREAM_WEBSOCKET_NONPORTABLE" },
+      { variant: "websocket-server", code: "EC_STREAM_WEBSOCKET_NONPORTABLE" },
       { variant: "readable-constructor", code: "EC_STREAM_DIRECT_CONSTRUCTOR_NONPORTABLE" },
       { variant: "transformer", code: "EC_STREAM_TRANSFORMER_NONPORTABLE" },
     ]), "T011 source rejection codes differ");
     requireValue(equal(data.allowedSurface, { applicationGlobals: ["TransformStream"], providerGlobals: [] }), "T011 provider global entered the application surface");
+    requireValue(equal(data.isolatedGlobal, ["WebSocket", "WebSocketPair", "WebSocketServer"].map((name) => ({
+      name, type: "undefined", owned: true, writable: false, enumerable: false, configurable: false,
+    }))), "T011 provider global remains reflectively reachable");
   },
   "EC-STREAM-T012"(data) {
     exactKeys(data, ["attempts", "retries", "results", "lostTasks", "response", "abandonedState"], "T012 data");
@@ -127,12 +131,13 @@ const VERIFIERS = {
       ["floating-standard", "EC_STREAM_STANDARD_PIN_INVALID"],
       ["unknown-field", "EC_STREAM_DOCUMENT_INVALID"],
       ["websocket-enabled", "EC_STREAM_WEBSOCKET_POLICY_INVALID"],
+      ["websocket-global-exposed", "EC_STREAM_WEBSOCKET_POLICY_INVALID"],
     ]);
     requireValue(data.mutations.length === expectedCodes.size && data.mutations.every((value) => value.code === expectedCodes.get(value.variant) && value.applicationExecutions === 0), "T013 accepted a drifting lock");
     requireValue(equal(data.providers, [
-      { providerId: "cloudflare-workers-pages", transform: "identity-byte-shim", waitUntil: "context-bound-all-settled", webSocket: "reject-nonportable", nativeTransform: "IdentityTransformStream-or-compatible" },
-      { providerId: "tencent-edgeone-makers", transform: "identity-byte-shim", waitUntil: "context-bound-all-settled", webSocket: "reject-nonportable", nativeTransform: "TransformStream-no-arguments" },
-      { providerId: "deislet", transform: "identity-byte-shim", waitUntil: "context-bound-all-settled", webSocket: "reject-nonportable", nativeTransform: "edge-canon-runtime" },
+      { providerId: "cloudflare-workers-pages", transform: "identity-byte-shim", waitUntil: "context-bound-all-settled", webSocket: "reject-nonportable", providerGlobalIsolation: "sealed-undefined-before-module-evaluation", nativeTransform: "IdentityTransformStream-or-compatible" },
+      { providerId: "tencent-edgeone-makers", transform: "identity-byte-shim", waitUntil: "context-bound-all-settled", webSocket: "reject-nonportable", providerGlobalIsolation: "sealed-undefined-before-module-evaluation", nativeTransform: "TransformStream-no-arguments" },
+      { providerId: "deislet", transform: "identity-byte-shim", waitUntil: "context-bound-all-settled", webSocket: "reject-nonportable", providerGlobalIsolation: "sealed-undefined-before-module-evaluation", nativeTransform: "edge-canon-runtime" },
     ]), "T013 provider policies differ");
   },
 };

@@ -9,6 +9,7 @@ import {
   createIdentityTransform,
   createInvocationContext,
   deriveProviderConfiguration,
+  isolateProviderGlobals,
   validateApplicationSource,
   validateCapabilityLock,
 } from "./reference-runtime.mjs";
@@ -304,11 +305,14 @@ export async function runSuite(options = {}) {
   const sourceFailures = [
     { variant: "websocket", code: captureSourceFailure("const socket = new WebSocket(url);", [], { ...emptyAnalysis, providerGlobals: ["WebSocket"] }) },
     { variant: "websocket-pair-dependency", code: captureSourceFailure("export default handler", ["new WebSocketPair()"], { ...emptyAnalysis, providerGlobals: ["WebSocketPair"] }) },
+    { variant: "websocket-server", code: captureSourceFailure("self.WebSocketServer", [], { ...emptyAnalysis, providerGlobals: ["WebSocketServer"] }) },
     { variant: "readable-constructor", code: captureSourceFailure("new ReadableStream({ start() {} })", [], { ...emptyAnalysis, directStreamConstructors: ["ReadableStream"] }) },
     { variant: "transformer", code: captureSourceFailure("new TransformStream({ transform() {} })", [], { ...emptyAnalysis, transformersWithArguments: 1 }) },
   ];
   const allowedSurface = validateApplicationSource("const { readable, writable } = new TransformStream(); export { readable, writable };", [], emptyAnalysis);
-  cases.push(record(CASE_IDS[10], { chunkFailures, sourceFailures, allowedSurface }));
+  const providerPrototype = { WebSocket() {}, WebSocketPair() {}, WebSocketServer() {} };
+  const isolatedGlobal = isolateProviderGlobals(Object.create(providerPrototype));
+  cases.push(record(CASE_IDS[10], { chunkFailures, sourceFailures, allowedSurface, isolatedGlobal }));
 
   let attempts = 0;
   const noRetry = createInvocationContext();
@@ -329,6 +333,7 @@ export async function runSuite(options = {}) {
     ["floating-standard", (value) => { value.standardVersion = "edge-canon.next@main"; }],
     ["unknown-field", (value) => { value.vendor = "cloudflare"; }],
     ["websocket-enabled", (value) => { value.webSockets.portability = "required"; }],
+    ["websocket-global-exposed", (value) => { value.webSockets.globalIsolation = "provider-native"; }],
   ]) {
     const value = structuredClone(lock);
     mutate(value);

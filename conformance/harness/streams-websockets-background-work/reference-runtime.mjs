@@ -48,8 +48,11 @@ export function validateCapabilityLock(value, expectedStandardVersion) {
     if (value.backgroundWork[key] !== expected) reject("EC_STREAM_BACKGROUND_POLICY_INVALID", "unsupported background work policy");
   }
 
-  exactKeys(value.webSockets, ["portability", "sourcePolicy"], "EC_STREAM_DOCUMENT_INVALID");
-  if (value.webSockets.portability !== "unavailable-in-reference-intersection" || value.webSockets.sourcePolicy !== "reject-before-deploy") {
+  exactKeys(value.webSockets, ["portability", "sourcePolicy", "excludedGlobals", "globalIsolation"], "EC_STREAM_DOCUMENT_INVALID");
+  if (value.webSockets.portability !== "unavailable-in-reference-intersection"
+      || value.webSockets.sourcePolicy !== "reject-before-deploy"
+      || JSON.stringify(value.webSockets.excludedGlobals) !== JSON.stringify(["WebSocket", "WebSocketPair", "WebSocketServer"])
+      || value.webSockets.globalIsolation !== "sealed-undefined-before-module-evaluation") {
     reject("EC_STREAM_WEBSOCKET_POLICY_INVALID", "WebSocket portability policy differs");
   }
   exactKeys(value.limits, ["streamedOctets", "fixtureChunkOctets"], "EC_STREAM_DOCUMENT_INVALID");
@@ -65,6 +68,7 @@ export function deriveProviderConfiguration(lock, providerId) {
     transform: "identity-byte-shim",
     waitUntil: "context-bound-all-settled",
     webSocket: "reject-nonportable",
+    providerGlobalIsolation: "sealed-undefined-before-module-evaluation",
   };
   if (providerId === "cloudflare-workers-pages") return { ...common, nativeTransform: "IdentityTransformStream-or-compatible" };
   if (providerId === "tencent-edgeone-makers") return { ...common, nativeTransform: "TransformStream-no-arguments" };
@@ -90,7 +94,7 @@ export function validateApplicationSource(source, dependencySources = [], analys
     reject("EC_STREAM_SOURCE_INVALID", "source and dependencies must be strings");
   }
   exactKeys(analysis, ["providerGlobals", "directStreamConstructors", "transformersWithArguments"], "EC_STREAM_SOURCE_INVALID");
-  if (!Array.isArray(analysis.providerGlobals) || analysis.providerGlobals.some((name) => !["WebSocket", "WebSocketPair"].includes(name))) {
+  if (!Array.isArray(analysis.providerGlobals) || analysis.providerGlobals.some((name) => !["WebSocket", "WebSocketPair", "WebSocketServer"].includes(name))) {
     reject("EC_STREAM_SOURCE_INVALID", "providerGlobals must contain only scope-resolved WebSocket global names");
   }
   if (!Array.isArray(analysis.directStreamConstructors) || analysis.directStreamConstructors.some((name) => !["ReadableStream", "WritableStream"].includes(name))) {
@@ -103,6 +107,35 @@ export function validateApplicationSource(source, dependencySources = [], analys
   if (analysis.directStreamConstructors.length > 0) reject("EC_STREAM_DIRECT_CONSTRUCTOR_NONPORTABLE", "direct stream constructors are not portable in v1");
   if (analysis.transformersWithArguments > 0) reject("EC_STREAM_TRANSFORMER_NONPORTABLE", "TransformStream arguments are not portable in v1");
   return { applicationGlobals: ["TransformStream"], providerGlobals: [] };
+}
+
+export function isolateProviderGlobals(target) {
+  if ((typeof target !== "object" || target === null) && typeof target !== "function") {
+    reject("EC_STREAM_PROVIDER_GLOBAL_EXPOSED", "provider global target must be an object");
+  }
+  for (const name of ["WebSocket", "WebSocketPair", "WebSocketServer"]) {
+    try {
+      Object.defineProperty(target, name, {
+        value: undefined,
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      });
+    } catch {
+      reject("EC_STREAM_PROVIDER_GLOBAL_EXPOSED", `provider global ${name} could not be isolated`);
+    }
+  }
+  return ["WebSocket", "WebSocketPair", "WebSocketServer"].map((name) => {
+    const descriptor = Object.getOwnPropertyDescriptor(target, name);
+    return {
+      name,
+      type: typeof target[name],
+      owned: descriptor !== undefined,
+      writable: descriptor?.writable,
+      enumerable: descriptor?.enumerable,
+      configurable: descriptor?.configurable,
+    };
+  });
 }
 
 function waitUntilError(code, message) {

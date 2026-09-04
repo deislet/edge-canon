@@ -7,6 +7,7 @@ import {
   captureSourceFailure,
   createInvocationContext,
   deriveProviderConfiguration,
+  isolateProviderGlobals,
   validateCapabilityLock,
 } from "./reference-runtime.mjs";
 import { runSuite } from "./runner.mjs";
@@ -48,7 +49,18 @@ test("EC-STREAM source policy rejects provider-only surfaces", () => {
   const empty = { providerGlobals: [], directStreamConstructors: [], transformersWithArguments: 0 };
   assert.equal(captureSourceFailure("new WebSocket('wss://example.com')", [], { ...empty, providerGlobals: ["WebSocket"] }), "EC_STREAM_WEBSOCKET_NONPORTABLE");
   assert.equal(captureSourceFailure("export default handler", ["new WebSocketPair()"], { ...empty, providerGlobals: ["WebSocketPair"] }), "EC_STREAM_WEBSOCKET_NONPORTABLE");
+  assert.equal(captureSourceFailure("self.WebSocketServer", [], { ...empty, providerGlobals: ["WebSocketServer"] }), "EC_STREAM_WEBSOCKET_NONPORTABLE");
   assert.equal(captureSourceFailure("new TransformStream({ transform() {} })", [], { ...empty, transformersWithArguments: 1 }), "EC_STREAM_TRANSFORMER_NONPORTABLE");
+});
+
+test("EC-STREAM seals provider WebSocket globals before application evaluation", () => {
+  const inherited = { WebSocket() {}, WebSocketPair() {}, WebSocketServer() {} };
+  const target = Object.create(inherited);
+  const observations = isolateProviderGlobals(target);
+  assert.deepEqual(observations, ["WebSocket", "WebSocketPair", "WebSocketServer"].map((name) => ({
+    name, type: "undefined", owned: true, writable: false, enumerable: false, configurable: false,
+  })));
+  assert.throws(() => { target.WebSocket = inherited.WebSocket; }, TypeError);
 });
 
 test("EC-STREAM source policy consumes semantic analysis instead of identifier text", () => {
