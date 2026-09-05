@@ -84,6 +84,7 @@ def validate_schema_documents() -> None:
         "conformance/harness/node-npm-subset/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/cases/environment-secrets.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/environment-secrets/harness.json": "schemas/conformance-harness.schema.json",
+        "conformance/evidence/environment-secrets-platforms-2026-09-05.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/node-npm-subset-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/cases/web-platform-apis.json": "schemas/conformance-cases.schema.json",

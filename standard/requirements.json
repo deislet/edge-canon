@@ -120,7 +120,7 @@
     {
       "id": "environment-secrets", "definitionStatus": "draft",
       "draftPath": "standard/requirements/environment-secrets.zh.md",
-      "evidencePaths": ["standard/evidence/environment-secrets-baseline.zh.md"],
+      "evidencePaths": ["standard/evidence/environment-secrets-baseline.zh.md", "conformance/evidence/environment-secrets-platforms-2026-09-05.json"],
       "dimensions": {
         "api": {"status": "draft", "clauseIds": ["EC-ENV-API-001", "EC-ENV-API-002", "EC-ENV-API-003", "EC-ENV-API-004", "EC-ENV-API-005", "EC-ENV-API-006"]},
         "errors": {"status": "draft", "clauseIds": ["EC-ENV-ERR-001", "EC-ENV-ERR-002", "EC-ENV-ERR-003"]},
