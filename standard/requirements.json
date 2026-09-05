@@ -118,14 +118,20 @@
       "conformance": {"suiteId": "EC-SSR", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
     },
     {
-      "id": "environment-secrets", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
+      "id": "environment-secrets", "definitionStatus": "draft",
+      "draftPath": "standard/requirements/environment-secrets.zh.md",
+      "evidencePaths": ["standard/evidence/environment-secrets-baseline.zh.md"],
       "dimensions": {
-        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
-        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
-        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
-        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+        "api": {"status": "draft", "clauseIds": ["EC-ENV-API-001", "EC-ENV-API-002", "EC-ENV-API-003", "EC-ENV-API-004", "EC-ENV-API-005", "EC-ENV-API-006"]},
+        "errors": {"status": "draft", "clauseIds": ["EC-ENV-ERR-001", "EC-ENV-ERR-002", "EC-ENV-ERR-003"]},
+        "concurrency-consistency-ordering": {"status": "draft", "clauseIds": ["EC-ENV-CON-001", "EC-ENV-CON-002", "EC-ENV-CON-003"]},
+        "lifecycle": {"status": "draft", "clauseIds": ["EC-ENV-LIFE-001", "EC-ENV-LIFE-002", "EC-ENV-LIFE-003", "EC-ENV-LIFE-004"]},
+        "minimum-resource-guarantees": {"status": "draft", "clauseIds": ["EC-ENV-LIMIT-001", "EC-ENV-LIMIT-002"]},
+        "security-isolation": {"status": "draft", "clauseIds": ["EC-ENV-SEC-001", "EC-ENV-SEC-002", "EC-ENV-SEC-003", "EC-ENV-SEC-004", "EC-ENV-SEC-005"]},
+        "failure-recovery": {"status": "draft", "clauseIds": ["EC-ENV-FAIL-001", "EC-ENV-FAIL-002", "EC-ENV-FAIL-003"]},
+        "upgrade-migration": {"status": "draft", "clauseIds": ["EC-ENV-UPG-001", "EC-ENV-UPG-002", "EC-ENV-UPG-003"]}
       },
-      "conformance": {"suiteId": "EC-ENV", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+      "conformance": {"suiteId": "EC-ENV", "fixtureStatus": "draft", "oracleStatus": "draft", "harnessStatus": "draft"}
     },
     {
       "id": "kv-cache-sql-blob", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],

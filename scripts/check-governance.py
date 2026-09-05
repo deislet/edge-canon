@@ -82,6 +82,8 @@ def validate_schema_documents() -> None:
         "conformance/harness/streams-websockets-background-work/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/cases/node-npm-subset.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/node-npm-subset/harness.json": "schemas/conformance-harness.schema.json",
+        "conformance/cases/environment-secrets.json": "schemas/conformance-cases.schema.json",
+        "conformance/harness/environment-secrets/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/evidence/node-npm-subset-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/cases/web-platform-apis.json": "schemas/conformance-cases.schema.json",
@@ -107,6 +109,58 @@ def validate_schema_documents() -> None:
         except jsonschema.ValidationError as error:
             location = "/".join(str(part) for part in error.absolute_path) or "<root>"
             raise ValidationError(f"{relative}/{location}: {error.message}") from error
+
+    standard_version = "edge-canon.next@" + "0" * 40
+    declarations = {
+        "schemaVersion": 1,
+        "format": "edge-canon.environment-secrets/v1",
+        "standardVersion": standard_version,
+        "access": {"surface": "context.env", "extraProviderBindings": "excluded"},
+        "limits": {"bindingCount": 64, "valueBytes": 5120, "measurement": "utf-8"},
+        "declarations": [
+            {"name": "MODE", "kind": "config", "valueType": "string", "required": True},
+            {"name": "SETTINGS", "kind": "config", "valueType": "json", "required": True},
+            {"name": "TOKEN", "kind": "secret", "valueType": "string", "required": True},
+        ],
+    }
+    declaration_schema = load_json("schemas/environment-secrets.schema.json")
+    snapshot_schema = load_json("schemas/environment-binding-snapshot.schema.json")
+    snapshot = {
+        "schemaVersion": 1,
+        "format": "edge-canon.environment-binding-snapshot/v1",
+        "standardVersion": standard_version,
+        "deploymentVersionId": "deployment-1",
+        "environmentId": "production",
+        "declarationsSha256": "0" * 64,
+        "activation": {
+            "mode": "version-bound-atomic",
+            "missingRequired": "reject",
+            "unavailableSecretRevision": "reject",
+        },
+        "bindings": [
+            {"name": "MODE", "kind": "config", "valueType": "string", "revision": "ab8e18ef4ebebeddc0b3152ce9c9006e14fc05242e3fc9ce32246ea6a9543074", "value": "production"},
+            {"name": "SETTINGS", "kind": "config", "valueType": "json", "revision": "13f513fe32a8991557ebf28941b75597641e94717c08569b7723d998c7428423", "value": {"safe": True}},
+            {"name": "TOKEN", "kind": "secret", "valueType": "string", "revision": "token-1"},
+        ],
+    }
+    jsonschema.validate(declarations, declaration_schema)
+    jsonschema.validate(snapshot, snapshot_schema)
+    secret_with_plaintext = json.loads(json.dumps(snapshot))
+    secret_with_plaintext["bindings"][2]["value"] = "must-not-be-accepted"
+    try:
+        jsonschema.validate(secret_with_plaintext, snapshot_schema)
+    except jsonschema.ValidationError:
+        pass
+    else:
+        raise ValidationError("environment snapshot schema accepted a plaintext secret")
+    secret_json = json.loads(json.dumps(declarations))
+    secret_json["declarations"][2]["valueType"] = "json"
+    try:
+        jsonschema.validate(secret_json, declaration_schema)
+    except jsonschema.ValidationError:
+        pass
+    else:
+        raise ValidationError("environment declaration schema accepted secret/json")
 
 
 def validate_contract(contract: dict) -> None:

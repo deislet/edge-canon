@@ -1,0 +1,22 @@
+{
+  "$schema": "../../../schemas/conformance-harness.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-ENV",
+  "status": "draft",
+  "executionKind": "local-reference",
+  "fixturePath": "conformance/harness/environment-secrets/fixture.mjs",
+  "fixtureDependencyPaths": [],
+  "calibrationPath": null,
+  "oraclePath": "conformance/harness/environment-secrets/oracle.mjs",
+  "observationSchema": "schemas/conformance-observations.schema.json",
+  "contractSchema": "schemas/environment-secrets.schema.json",
+  "validatorPath": "conformance/harness/environment-secrets/reference-runtime.mjs",
+  "runnerPath": "conformance/harness/environment-secrets/runner.mjs",
+  "platforms": ["linux", "macos", "windows"],
+  "coveredCaseIds": [
+    "EC-ENV-T001", "EC-ENV-T002", "EC-ENV-T003", "EC-ENV-T004",
+    "EC-ENV-T005", "EC-ENV-T006", "EC-ENV-T007", "EC-ENV-T008",
+    "EC-ENV-T009", "EC-ENV-T010", "EC-ENV-T011", "EC-ENV-T012"
+  ]
+}

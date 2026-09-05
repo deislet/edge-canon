@@ -50,7 +50,7 @@
 
 - **EC-NODE-SEC-001**：registry token、basic auth、私有 URL credential 和 npm 配置 secret 只能进入受控 fetch；不得写入 artifact、source map、cache key、错误、日志或 provenance。发布 provenance 只记录无 credential 的 registry origin、package identity 与 integrity。
 - **EC-NODE-SEC-002**：构建必须拒绝 absolute/traversal package path、逃出 package root 的 exports/imports target、symlink/hardlink 逃逸、case/Unicode 冲突、archive bomb 和特殊设备文件；package 不得读取其他 tenant 的工作区或缓存。
-- **EC-NODE-SEC-003**：`process.env` 是当前 invocation 的受控快照；写入只影响当前快照，不修改宿主或其他 invocation。宿主 PID、argv、cwd、用户、网络接口、CPU 拓扑和真实平台版本不属于 Node v1 应用面。
+- **EC-NODE-SEC-003**：`process.env` 是 EC-ENV 为当前 invocation 生成的受控 compatibility projection，只包含声明为 `config/string` 的值；JSON、secret、provider/system variable 和宿主环境不进入该对象。写入只影响当前 projection，不修改 `context.env`、宿主或其他 invocation。宿主 PID、argv、cwd、用户、网络接口、CPU 拓扑和真实平台版本不属于 Node v1 应用面。
 - **EC-NODE-SEC-004**：`child_process`、`cluster`、`worker_threads`、FFI/native addon、任意宿主文件系统、任意端口监听以及 import-only stub 初始排除；provider 内部可用这些机制实现标准，但不能把句柄或探测面暴露给应用。
 
 ## 7. 失败与恢复

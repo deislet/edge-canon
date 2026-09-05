@@ -49,7 +49,7 @@
     {"id": "web-platform-apis", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "node-npm-subset", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "ssr-streaming-ssr-isr", "requirement": "mandatory", "definitionStatus": "pending"},
-    {"id": "environment-secrets", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "environment-secrets", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "kv-cache-sql-blob", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "queue-schedule-service-binding", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "stateful-objects", "requirement": "mandatory", "definitionStatus": "pending"},

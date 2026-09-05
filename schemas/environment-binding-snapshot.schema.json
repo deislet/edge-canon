@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/environment-binding-snapshot.schema.json",
+  "title": "Edge Canon version-bound environment binding snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "format",
+    "standardVersion",
+    "deploymentVersionId",
+    "environmentId",
+    "declarationsSha256",
+    "activation",
+    "bindings"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "format": {"const": "edge-canon.environment-binding-snapshot/v1"},
+    "standardVersion": {
+      "type": "string",
+      "pattern": "^edge-canon\\.next@[0-9a-f]{40}$"
+    },
+    "deploymentVersionId": {"$ref": "#/$defs/identity"},
+    "environmentId": {"$ref": "#/$defs/identity"},
+    "declarationsSha256": {"$ref": "#/$defs/sha256"},
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "missingRequired", "unavailableSecretRevision"],
+      "properties": {
+        "mode": {"const": "version-bound-atomic"},
+        "missingRequired": {"const": "reject"},
+        "unavailableSecretRevision": {"const": "reject"}
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "oneOf": [
+          {"$ref": "#/$defs/configBinding"},
+          {"$ref": "#/$defs/secretBinding"}
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]*$"
+    },
+    "name": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{0,63}$"},
+    "revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]*$"
+    },
+    "configBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "valueType", "revision", "value"],
+      "properties": {
+        "name": {"$ref": "#/$defs/name"},
+        "kind": {"const": "config"},
+        "valueType": {"enum": ["string", "json"]},
+        "revision": {"$ref": "#/$defs/sha256"},
+        "value": {}
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": ["valueType"],
+            "properties": {"valueType": {"const": "string"}}
+          },
+          "then": {"properties": {"value": {"type": "string"}}},
+          "else": {
+            "properties": {
+              "value": {
+                "type": ["object", "array", "number", "boolean", "null"]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "secretBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "kind", "valueType", "revision"],
+      "properties": {
+        "name": {"$ref": "#/$defs/name"},
+        "kind": {"const": "secret"},
+        "valueType": {"const": "string"},
+        "revision": {"$ref": "#/$defs/revision"}
+      }
+    }
+  }
+}
