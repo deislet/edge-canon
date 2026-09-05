@@ -27,7 +27,8 @@ deployment，怎样提供 version preview、严格全量与两版本渐进发布
   basis-point weight、routing generation、affinity/override、expected-current 与 activation policy。
 - **EC-DEPLOY-API-003**：每个 plan 的状态使用 `edge-canon.deployment-status/v1`，引用 plan SHA-256，
   同时返回 desired state、observed routing generation、逐 target/proxy observation、gate evaluation、
-  failure code 和时间。`active` 只在 desired/observed 满足 plan 保证后成立。
+  failure code 和时间；有 trigger 的 plan 还逐项返回 trigger kind/state、candidate/previous 完整 identity、
+  observed owner、admission 与 queue outstanding lease。`active` 只在 desired/observed 满足 plan 保证后成立。
 - **EC-DEPLOY-API-004**：标准状态机至少表达 `created → preparing → prepared → verifying → ready →
   activating → active`，以及 `failed`、`degraded`、`reconciling`、`paused`、`progressing`、`aborting`
   和 `rolled-back`。状态改变使用 expected-current state/revision 或等价 CAS。
@@ -54,6 +55,10 @@ deployment，怎样提供 version preview、严格全量与两版本渐进发布
 - **EC-DEPLOY-ERR-004**：普通 rollback 若历史 snapshot/revision/resource 不可用或 data schema 不兼容，
   必须在 production selector 改变前失败；禁止用当前同名 binding 重建旧 snapshot，或声称 application data
   已随代码回滚。
+- **EC-DEPLOY-ERR-005**：trigger barrier 尚未满足时，提前提交 production selector/binding head、在
+  `prepared` 期间接受新的 queue pull、在 proxy observation 齐备前启动 candidate queue/cron/runtime，或用
+  已过期 lease 完成 ack/nack，必须 fail closed 并返回稳定 `EC_DEPLOY_*` code。过期 lease 的 settle 是
+  stale operation，不得删除、重排或重新隐藏当前 message。
 
 ## 并发、一致性与顺序
 
@@ -71,6 +76,14 @@ deployment，怎样提供 version preview、严格全量与两版本渐进发布
 - **EC-DEPLOY-CON-005**：并发 activate/step/abort/rollback 以 expected-current deployment/state CAS；
   最多一个变更推进 selector。审计 sequence、routing generation 和 operator 可见历史必须与真实提交
   顺序一致，失败重试先重新读取 observed state。
+- **EC-DEPLOY-CON-006**：HTTP、queue 与 cron 共享一个 deployment activation barrier。candidate identity
+  是精确 `(deployment identity, routing generation)`，previous owner 是精确
+  `(expected-current deployment identity, expected-current routing generation)`；prepare、production commit、
+  observe、activate 与 abort 的比较和幂等键必须绑定完整二元组，不得只比较 generation 或只比较
+  deployment identity。bootstrap 时 previous owner 两项必须同时为空，非 bootstrap 时必须同时存在。
+- **EC-DEPLOY-CON-007**：同一 environment 的 production selector 与其 immutable binding head 必须用
+  previous owner CAS 作为一个不可分割的 logical commit。queue drain、target prepare 或 candidate trigger
+  prepare 只产生 observation，不能提前移动其中任一 head；CAS 失败时两者都保持 previous owner。
 
 ## 生命周期
 
@@ -88,6 +101,15 @@ deployment，怎样提供 version preview、严格全量与两版本渐进发布
   queue message 不因 rollout 被计划外双投递。
 - **EC-DEPLOY-LIFE-006**：abort/rollback/完成后 affinity 与 override 在其 scope/TTL 结束时失效；旧 version、
   snapshot 和 staging resource 只在 rollback/drain/preview retention 结束且引用为零后清理，清理结果可重试。
+- **EC-DEPLOY-LIFE-007**：严格 activation 依次执行：所有 runtime target prepare；queue admission 关闭并
+  drain previous owner 的全部未过期 lease，同时 cron candidate 进入 prepared 且不 dispatch；确认 queue
+  outstanding lease 为零；原子提交 production selector/binding head；观察冻结的全部 HTTP edge/proxy 已采用
+  candidate generation；最后才开放 candidate queue admission、cron dispatch 与 runtime activation。
+  `prepared` 是关闭新 queue pull 的持久 barrier，不是 candidate active 的别名。
+- **EC-DEPLOY-LIFE-008**：一个旧 queue lease 在 barrier 前已取得时可在有效期内完成；barrier 必须等待它
+  settle 或过期。lease 一旦过期，之后的 ack/nack 永远返回 stale，即使 candidate 已 activation；cron 在
+  freeze window 到期的 tick 必须按 plan 固定的 catch-up/drop policy 处理且至多投递一次，不能向 previous 与
+  candidate 双投递。
 
 ## 最低资源保证
 
@@ -125,6 +147,11 @@ deployment，怎样提供 version preview、严格全量与两版本渐进发布
   后盲重放非幂等 activate，也不得把未观察到错误当成功。无法确定时保持 `reconciling` 并阻止冲突 mutation。
 - **EC-DEPLOY-FAIL-005**：activation 后的健康退化按 plan 执行 pause/abort/rollback；自动决定保存输入证据。
   Emergency rollback 可以优先恢复安全，但目标 artifact、必要 binding 与 routing authority 仍须验证。
+- **EC-DEPLOY-FAIL-006**：控制面在 barrier 任一点崩溃后必须从 durable plan、完整 candidate/previous owner、
+  selector/binding commit record 与 target/proxy/trigger observations 恢复。相同完整 identity 的 prepare、
+  observe、activate 或 abort 可安全重复且不产生第二次 side effect；任一 identity 分量不同的调用必须 CAS
+  conflict，不能被当作幂等成功。production commit 前 abort 重新开放 previous queue/cron owner；commit 后的
+  未知结果必须 reconcile，不能反向猜测或盲目 abort 已提交 generation。
 
 ## 升级与迁移
 
@@ -140,6 +167,7 @@ deployment，怎样提供 version preview、严格全量与两版本渐进发布
 1. plan/status schema、reference state machine、fixture、oracle 和三平台 identity evidence 固定；
 2. 与 EC-ARTIFACT、EC-ROUTING、EC-ENV、EC-STREAM、EC-ASYNC、EC-BIND、EC-STATE、EC-OBS 一致；
 3. Cloudflare、EdgeOne、Deislet 真实账户完成 upload/prepare/preview/activate/observe/abort/rollback/cleanup；
-4. atomic 部分失败、proxy ack 丢失、provider timeout、重启恢复与 CAS fault injection 全绿；
+4. atomic 部分失败、proxy ack 丢失、provider timeout、重启恢复、完整 owner CAS 与 trigger barrier fault injection 全绿；
 5. 0/1/9999/10000 basis points、第三 version、3-version retention 与稳定 affinity 边界全绿；
-6. stream/WebSocket、queue/cron、service binding 和 binding/data rollback 交叉用例全绿。
+6. stream/WebSocket、queue/cron、service binding 和 binding/data rollback 交叉用例全绿，包括 precommit
+   drain 不移动 selector/binding、prepared admission close、过期 lease stale 与 post-proxy trigger activation。

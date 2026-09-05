@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const CASE_IDS = Array.from({ length: 12 }, (_, index) => `EC-DEPLOY-T${String(index + 1).padStart(3, "0")}`);
+const CASE_IDS = Array.from({ length: 14 }, (_, index) => `EC-DEPLOY-T${String(index + 1).padStart(3, "0")}`);
 const SHA256 = /^[0-9a-f]{64}$/;
 const EXACT_STANDARD = /^edge-canon\.next@[0-9a-f]{40}$/;
 function requireValue(condition, message) { if (!condition) throw new Error(message); }
@@ -40,7 +40,7 @@ const VERIFY = {
   "EC-DEPLOY-T005"(data) {
     exactKeys(data, ["acceptedWeights", "invalidCodes", "providerMutationCount", "normalizedInvalidPlans"], "T005 data");
     requireValue(same(data.acceptedWeights, [0, 1, 9999, 10000]), "T005 basis-point boundaries differ");
-    requireValue(same(data.invalidCodes, ["EC_DEPLOY_WEIGHT_INVALID", "EC_DEPLOY_WEIGHT_INVALID", "EC_DEPLOY_ROLE_INVALID", "EC_DEPLOY_VERSION_COUNT_INVALID", "EC_DEPLOY_STANDARD_PIN_INVALID"]), "T005 invalid plan codes differ");
+    requireValue(same(data.invalidCodes, ["EC_DEPLOY_WEIGHT_INVALID", "EC_DEPLOY_WEIGHT_INVALID", "EC_DEPLOY_ROLE_INVALID", "EC_DEPLOY_VERSION_COUNT_INVALID", "EC_DEPLOY_STANDARD_PIN_INVALID", "EC_DEPLOY_ACTIVATION_POLICY_INVALID"]), "T005 invalid plan codes differ");
     requireValue(data.providerMutationCount === 0 && data.normalizedInvalidPlans === 0, "T005 mutated provider or normalized invalid input");
   },
   "EC-DEPLOY-T006"(data) {
@@ -85,6 +85,32 @@ const VERIFY = {
     requireValue(SHA256.test(data.sourceDigest) && SHA256.test(data.migratedDigest) && data.sourceDigest !== data.migratedDigest && !data.sourceMutated, "T012 migration mutated/reused source identity");
     requireValue(same(data.behaviorDiff, { mapping: "v1-to-next", deploymentIdChanged: true }) && !data.writerSwitchBeforeAgreement && data.generationFencingRetained, "T012 writer migration fencing differs");
   },
+  "EC-DEPLOY-T013"(data) {
+    exactKeys(data, ["drainingQueueState", "selectorBeforeDrain", "bindingBeforeDrain", "preparedQueueState", "preparedOutstandingLeases", "pullWhilePreparedCode", "selectorWhilePrepared", "bindingWhilePrepared", "selectorAfterCommit", "bindingAfterCommit", "preObservationActivationCode", "partialObservationActivationCode", "finalQueueState", "finalCronState", "finalRuntimeState", "expiredSettleCodes", "messageStatesAfterStaleSettle", "triggerObservations", "transitionOrder"], "T013 data");
+    const oldOwner = { deploymentId: "deployment-old", generation: "generation-old" };
+    requireValue(data.drainingQueueState === "draining" && data.preparedQueueState === "prepared" && data.preparedOutstandingLeases === 0, "T013 queue drain phases differ");
+    requireValue(same(data.selectorBeforeDrain, oldOwner) && same(data.selectorWhilePrepared, oldOwner), "T013 moved selector before trigger barrier");
+    requireValue(data.bindingBeforeDrain.deploymentId === "deployment-old" && data.bindingBeforeDrain.generation === "generation-old" && same(data.bindingBeforeDrain, data.bindingWhilePrepared), "T013 moved binding head before trigger barrier");
+    requireValue(data.pullWhilePreparedCode === "EC_DEPLOY_QUEUE_PULL_FENCED", "T013 PREPARED accepted a new queue pull");
+    requireValue(same(data.selectorAfterCommit, { deploymentId: "deployment-new", generation: "generation-new" }) && data.bindingAfterCommit.deploymentId === "deployment-new" && data.bindingAfterCommit.generation === "generation-new" && data.bindingAfterCommit.snapshotId === "snapshot-new", "T013 selector/binding commit differs");
+    requireValue(data.preObservationActivationCode === "EC_DEPLOY_PROXY_OBSERVATION_INCOMPLETE" && data.partialObservationActivationCode === "EC_DEPLOY_PROXY_OBSERVATION_INCOMPLETE", "T013 activated triggers before every proxy observation");
+    requireValue(data.finalQueueState === "active" && data.finalCronState === "active" && data.finalRuntimeState === "active", "T013 did not activate all trigger/runtime classes");
+    requireValue(same(data.expiredSettleCodes, ["EC_DEPLOY_QUEUE_LEASE_STALE", "EC_DEPLOY_QUEUE_LEASE_STALE"]) && same(data.messageStatesAfterStaleSettle, { ack: "available", nack: "available" }), "T013 expired lease changed the message");
+    requireValue(Array.isArray(data.triggerObservations) && same(data.triggerObservations.map((item) => item.kind), ["http", "queue", "cron"]), "T013 trigger observation kinds differ");
+    requireValue(data.triggerObservations.every((item) => item.state === "active" && item.workAdmissionOpen && same(item.candidate, { deploymentId: "deployment-new", routingGeneration: "generation-new" }) && same(item.previousOwner, { deploymentId: "deployment-old", routingGeneration: "generation-old" }) && same(item.observedOwner, { deploymentId: "deployment-new", routingGeneration: "generation-new" })), "T013 final trigger observations differ");
+    requireValue(same(data.transitionOrder, ["trigger-prepare", "production-commit", "proxy-observed", "trigger-activate"]), "T013 strict activation order differs");
+  },
+  "EC-DEPLOY-T014"(data) {
+    exactKeys(data, ["retryPrepareState", "prepareEffects", "mismatchCodes", "commitResults", "selectorCommitEffects", "bindingCommitEffects", "activationResults", "activationEffects", "completedIdentityConflict", "abortResults", "abortEffects", "abortMismatchCode", "finalOwner", "transitionOrder"], "T014 data");
+    requireValue(data.retryPrepareState === "prepared" && data.prepareEffects === 1, "T014 repeated prepare was not idempotent after recovery");
+    requireValue(same(data.mismatchCodes, ["EC_DEPLOY_ACTIVATION_CONFLICT", "EC_DEPLOY_ACTIVATION_CONFLICT"]), "T014 accepted a mismatched previous/candidate owner");
+    requireValue(same(data.commitResults, [true, false]) && data.selectorCommitEffects === 1 && data.bindingCommitEffects === 1, "T014 repeated production commit duplicated side effects");
+    requireValue(same(data.activationResults, [true, false, false]) && data.activationEffects === 1, "T014 repeated activation duplicated side effects");
+    requireValue(data.completedIdentityConflict === "EC_DEPLOY_ACTIVATION_CONFLICT", "T014 treated a partial completed identity as idempotent");
+    requireValue(same(data.abortResults, [true, false]) && data.abortEffects === 1 && data.abortMismatchCode === "EC_DEPLOY_ABORT_CONFLICT", "T014 abort recovery identity/idempotence differs");
+    requireValue(same(data.finalOwner, { deploymentId: "deployment-new", generation: "generation-new" }), "T014 final owner differs");
+    requireValue(same(data.transitionOrder, ["trigger-prepare", "production-commit", "proxy-observed", "trigger-activate"]), "T014 recovered transition journal differs");
+  },
 };
 
 export function verifyDocument(document) {
@@ -101,7 +127,7 @@ export function verifyDocument(document) {
     requireValue(Array.isArray(item.evidenceRefs) && item.evidenceRefs.length > 0 && new Set(item.evidenceRefs).size === item.evidenceRefs.length, "case evidence references are invalid");
     byId.set(item.id, item);
   }
-  requireValue(byId.size === CASE_IDS.length && CASE_IDS.every((id) => byId.has(id)), "draft harness requires exactly twelve deployment cases");
+  requireValue(byId.size === CASE_IDS.length && CASE_IDS.every((id) => byId.has(id)), "draft harness requires exactly fourteen deployment cases");
   for (const id of CASE_IDS) VERIFY[id](byId.get(id).data);
   return { suiteId: "EC-DEPLOY", status: "pass", caseIds: [...CASE_IDS] };
 }

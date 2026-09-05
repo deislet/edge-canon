@@ -15,6 +15,7 @@
     "observedRoutingGeneration",
     "targets",
     "proxies",
+    "triggers",
     "gateEvaluations",
     "failureCode",
     "createdAt",
@@ -48,6 +49,10 @@
     "proxies": {
       "type": "array",
       "items": {"$ref": "#/$defs/proxyObservation"}
+    },
+    "triggers": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/triggerObservation"}
     },
     "gateEvaluations": {
       "type": "array",
@@ -102,6 +107,53 @@
           "oneOf": [{"type": "null"}, {"type": "string", "pattern": "^EC_DEPLOY_[A-Z0-9_]+$"}]
         }
       }
+    },
+    "triggerObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "triggerId", "kind", "state", "candidate", "previousOwner", "observedOwner", "workAdmissionOpen",
+        "outstandingLeases", "observedAt", "failureCode"
+      ],
+      "properties": {
+        "triggerId": {"$ref": "#/$defs/identity"},
+        "kind": {"enum": ["http", "queue", "cron"]},
+        "state": {"enum": ["pending", "preparing", "draining", "prepared", "active", "aborting", "aborted", "failed"]},
+        "candidate": {"$ref": "#/$defs/owner"},
+        "previousOwner": {"$ref": "#/$defs/nullableOwner"},
+        "observedOwner": {"$ref": "#/$defs/nullableOwner"},
+        "workAdmissionOpen": {"type": "boolean"},
+        "outstandingLeases": {
+          "oneOf": [{"type": "null"}, {"type": "integer", "minimum": 0}]
+        },
+        "observedAt": {"type": "string", "format": "date-time"},
+        "failureCode": {
+          "oneOf": [{"type": "null"}, {"type": "string", "pattern": "^EC_DEPLOY_[A-Z0-9_]+$"}]
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"kind": {"const": "queue"}}},
+          "then": {"properties": {"outstandingLeases": {"type": "integer", "minimum": 0}}},
+          "else": {"properties": {"outstandingLeases": {"type": "null"}}}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "queue"}, "state": {"const": "prepared"}}},
+          "then": {"properties": {"workAdmissionOpen": {"const": false}, "outstandingLeases": {"const": 0}}}
+        }
+      ]
+    },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deploymentId", "routingGeneration"],
+      "properties": {
+        "deploymentId": {"$ref": "#/$defs/identity"},
+        "routingGeneration": {"$ref": "#/$defs/identity"}
+      }
+    },
+    "nullableOwner": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/owner"}]
     },
     "gateEvaluation": {
       "type": "object",

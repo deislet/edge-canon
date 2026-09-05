@@ -3,6 +3,7 @@ import { deploymentPlan, planIdentity, sha256 } from "./fixture.mjs";
 import {
   DeploymentController,
   PlanStore,
+  TriggerActivationBarrier,
   captureCode,
   evaluateGate,
   issueOverride,
@@ -11,7 +12,7 @@ import {
   verifyOverride,
 } from "./reference-runtime.mjs";
 
-const CASE_IDS = Array.from({ length: 12 }, (_, index) => `EC-DEPLOY-T${String(index + 1).padStart(3, "0")}`);
+const CASE_IDS = Array.from({ length: 14 }, (_, index) => `EC-DEPLOY-T${String(index + 1).padStart(3, "0")}`);
 function resolveStandardVersion(explicit) {
   if (explicit) return explicit;
   if (process.env.EDGE_CANON_STANDARD_VERSION) return process.env.EDGE_CANON_STANDARD_VERSION;
@@ -109,7 +110,8 @@ export async function runSuite(options = {}) {
   const duplicateRole = clone(gradual); duplicateRole.versions[1].role = "baseline";
   const third = clone(gradual); third.versions.push({ ...third.versions[1], versionId: "version-third" });
   const floating = clone(gradual); floating.standardVersion = "edge-canon.next";
-  for (const plan of [nonInteger, badSum, duplicateRole, third, floating]) invalidPlans.push(code(() => validatePlan(plan, standardVersion)));
+  const partialPreviousOwner = clone(gradual); partialPreviousOwner.activation.expectedCurrentRoutingGeneration = null;
+  for (const plan of [nonInteger, badSum, duplicateRole, third, floating, partialPreviousOwner]) invalidPlans.push(code(() => validatePlan(plan, standardVersion)));
   cases.push(record(CASE_IDS[4], { acceptedWeights, invalidCodes: invalidPlans, providerMutationCount: 0, normalizedInvalidPlans: 0 }));
 
   const assignments = new Map();
@@ -150,7 +152,7 @@ export async function runSuite(options = {}) {
   }));
 
   const dataBefore = sha256({ rows: [1, 2, 3], generation: "after-write" });
-  const rollback = deploymentPlan(standardVersion, { deploymentId: "deployment-rollback", generation: "generation-rollback", candidate: "version-old", snapshot: "snapshot-old", expectedCurrentDeploymentId: "deployment-new" });
+  const rollback = deploymentPlan(standardVersion, { deploymentId: "deployment-rollback", generation: "generation-rollback", candidate: "version-old", snapshot: "snapshot-old", expectedCurrentDeploymentId: "deployment-new", expectedCurrentRoutingGeneration: "generation-new" });
   cases.push(record(CASE_IDS[8], {
     rollbackIsNewRevision: rollback.deploymentId !== "deployment-old",
     rollbackVersionId: rollback.versions[0].versionId,
@@ -164,9 +166,10 @@ export async function runSuite(options = {}) {
   const recovery = new DeploymentController({ targets: ["target-a"], proxies: ["proxy-a"] });
   let providerMutationCount = 0;
   const providerOperation = () => { providerMutationCount += 1; return { operationId: "provider-op-1", outcome: "committed", generation: "generation-new" }; };
-  const firstResult = recovery.mutate("deployment-old", "idem-1", providerOperation);
-  const retryResult = recovery.mutate("deployment-old", "idem-1", providerOperation);
-  const competingCode = code(() => recovery.mutate("different-current", "idem-2", providerOperation));
+  const firstResult = recovery.mutate(atomic, "idem-1", providerOperation);
+  const retryResult = recovery.mutate(atomic, "idem-1", providerOperation);
+  const competing = deploymentPlan(standardVersion, { expectedCurrentDeploymentId: "different-current" });
+  const competingCode = code(() => recovery.mutate(competing, "idem-2", providerOperation));
   cases.push(record(CASE_IDS[9], {
     firstOperationId: firstResult.operationId,
     retryOperationId: retryResult.operationId,
@@ -205,12 +208,108 @@ export async function runSuite(options = {}) {
     generationFencingRetained: true,
   }));
 
+  const barrier = new TriggerActivationBarrier();
+  barrier.enqueue("message-ack");
+  barrier.enqueue("message-nack");
+  barrier.pull("message-ack", "lease-ack", 100, 10);
+  barrier.pull("message-nack", "lease-nack", 100, 10);
+  const draining = barrier.prepare(atomic, 101);
+  const selectorBeforeDrain = { ...barrier.selector };
+  const bindingBeforeDrain = { ...barrier.bindingHead };
+  const preparedQueue = barrier.prepare(atomic, 111);
+  const pullWhilePreparedCode = code(() => barrier.pull("message-ack", "lease-new", 111, 10));
+  const selectorWhilePrepared = { ...barrier.selector };
+  const bindingWhilePrepared = { ...barrier.bindingHead };
+  const expiredSettleCodes = [
+    code(() => barrier.settle("lease-ack", 111, "ack")),
+    code(() => barrier.settle("lease-nack", 111, "nack")),
+  ];
+  const messageStatesAfterStaleSettle = {
+    ack: barrier.messages.get("message-ack").state,
+    nack: barrier.messages.get("message-nack").state,
+  };
+  barrier.commit(atomic, 111);
+  const preObservationActivationCode = code(() => barrier.activate(atomic));
+  barrier.observeProxies(atomic, ["proxy-a"]);
+  const partialObservationActivationCode = code(() => barrier.activate(atomic));
+  barrier.observeProxies(atomic, ["proxy-b"]);
+  barrier.activate(atomic);
+  cases.push(record(CASE_IDS[12], {
+    drainingQueueState: draining.state,
+    selectorBeforeDrain,
+    bindingBeforeDrain,
+    preparedQueueState: preparedQueue.state,
+    preparedOutstandingLeases: preparedQueue.outstandingLeases,
+    pullWhilePreparedCode,
+    selectorWhilePrepared,
+    bindingWhilePrepared,
+    selectorAfterCommit: { ...barrier.selector },
+    bindingAfterCommit: { ...barrier.bindingHead },
+    preObservationActivationCode,
+    partialObservationActivationCode,
+    finalQueueState: barrier.queue.state,
+    finalCronState: barrier.cron.state,
+    finalRuntimeState: barrier.runtime.state,
+    expiredSettleCodes,
+    messageStatesAfterStaleSettle,
+    triggerObservations: barrier.triggerObservations(112),
+    transitionOrder: [...barrier.journal],
+  }));
+
+  const recoverable = new TriggerActivationBarrier();
+  recoverable.prepare(atomic, 200);
+  const afterPrepareCrash = new TriggerActivationBarrier({ durable: recoverable.durableState() });
+  const retryPrepareState = afterPrepareCrash.prepare(atomic, 200).state;
+  const wrongPreviousGeneration = deploymentPlan(standardVersion, { expectedCurrentRoutingGeneration: "generation-other" });
+  const sameGenerationDifferentDeployment = deploymentPlan(standardVersion, { deploymentId: "deployment-other", generation: atomic.routing.generation });
+  const mismatchCodes = [
+    code(() => afterPrepareCrash.prepare(wrongPreviousGeneration, 200)),
+    code(() => afterPrepareCrash.prepare(sameGenerationDifferentDeployment, 200)),
+  ];
+  const commitResults = [afterPrepareCrash.commit(atomic, 200), afterPrepareCrash.commit(atomic, 200)];
+  const afterCommitCrash = new TriggerActivationBarrier({ durable: afterPrepareCrash.durableState() });
+  afterCommitCrash.observeProxies(atomic, ["proxy-a", "proxy-b"]);
+  const activationResults = [afterCommitCrash.activate(atomic), afterCommitCrash.activate(atomic)];
+  const afterActivationCrash = new TriggerActivationBarrier({ durable: afterCommitCrash.durableState() });
+  activationResults.push(afterActivationCrash.activate(atomic));
+  const completedIdentityConflict = code(() => afterActivationCrash.activate(deploymentPlan(standardVersion, {
+    deploymentId: atomic.deploymentId,
+    generation: atomic.routing.generation,
+    expectedCurrentDeploymentId: atomic.activation.expectedCurrentDeploymentId,
+    expectedCurrentRoutingGeneration: "generation-other",
+  })));
+  const abortablePlan = deploymentPlan(standardVersion, { deploymentId: "deployment-aborted", generation: "generation-aborted" });
+  const abortable = new TriggerActivationBarrier();
+  abortable.prepare(abortablePlan, 300);
+  const abortRecovery = new TriggerActivationBarrier({ durable: abortable.durableState() });
+  const abortResults = [abortRecovery.abort(abortablePlan), abortRecovery.abort(abortablePlan)];
+  const abortMismatchCode = code(() => abortRecovery.abort(deploymentPlan(standardVersion, {
+    deploymentId: "deployment-other-abort",
+    generation: "generation-aborted",
+  })));
+  cases.push(record(CASE_IDS[13], {
+    retryPrepareState,
+    prepareEffects: afterPrepareCrash.effects.prepares,
+    mismatchCodes,
+    commitResults,
+    selectorCommitEffects: afterCommitCrash.effects.selectorCommits,
+    bindingCommitEffects: afterCommitCrash.effects.bindingCommits,
+    activationResults,
+    activationEffects: afterActivationCrash.effects.activations,
+    completedIdentityConflict,
+    abortResults,
+    abortEffects: abortRecovery.effects.aborts,
+    abortMismatchCode,
+    finalOwner: { ...afterActivationCrash.active },
+    transitionOrder: [...afterActivationCrash.journal],
+  }));
+
   return {
     schemaVersion: 1,
     standardId: "edge-canon.next",
     suiteId: "EC-DEPLOY",
     backend: { id: "edge-canon-reference-deployment", implementationVersion: "edge-canon-reference-deployment/1", standardVersion },
-    artifactSha256: sha256({ planSchema: "deployment-plan/v1", statusSchema: "deployment-status/v1", caseIds: CASE_IDS }),
+    artifactSha256: sha256({ planSchema: "deployment-plan/v1", statusSchema: "deployment-status/v1", triggerBarrier: "strict/v1", caseIds: CASE_IDS }),
     cases,
   };
 }

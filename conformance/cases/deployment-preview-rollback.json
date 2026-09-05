@@ -33,7 +33,7 @@
     {
       "id": "EC-DEPLOY-T005", "title": "双版本 basis-point 权重边界与文档错误 fail closed", "kind": "boundary",
       "clauseIds": ["EC-DEPLOY-API-002", "EC-DEPLOY-API-006", "EC-DEPLOY-ERR-001", "EC-DEPLOY-LIMIT-001"],
-      "fixture": {"scenario": "验证 0/1/9999/10000 权重、非整数、总和错误、重复 role、第三 version 和浮动 standard", "requirements": ["plan validator", "provider mutation counter", "basis-point rollout"]},
+      "fixture": {"scenario": "验证 0/1/9999/10000 权重、非整数、总和错误、重复 role、第三 version、浮动 standard 和不完整 previous owner", "requirements": ["plan validator", "provider mutation counter", "basis-point rollout"]},
       "oracle": {"observations": ["accepted boundaries", "stable error codes", "provider mutation count", "normalized weights"], "assertions": ["合法边界精确保留", "非法 plan 在 provider 前拒绝", "不自动归一化也不猜 baseline"]}
     },
     {
@@ -77,6 +77,18 @@
       "clauseIds": ["EC-DEPLOY-UPG-001", "EC-DEPLOY-UPG-002", "EC-DEPLOY-UPG-003"],
       "fixture": {"scenario": "提交未知 major/字段后执行 v1→新 mapping 双读与 writer 切换", "requirements": ["version-pinned validators", "immutable migration source", "generation fencing"]},
       "oracle": {"observations": ["early error codes", "source/migrated digests", "behavior diff", "writer observations"], "assertions": ["未知输入在资源解析前拒绝", "迁移不改历史 identity", "新旧组件 identity 一致后才切 writer"]}
+    },
+    {
+      "id": "EC-DEPLOY-T013", "title": "HTTP、queue、cron 按严格 barrier 顺序切换", "kind": "failure",
+      "clauseIds": ["EC-DEPLOY-ERR-005", "EC-DEPLOY-CON-006", "EC-DEPLOY-CON-007", "EC-DEPLOY-LIFE-007", "EC-DEPLOY-LIFE-008"],
+      "fixture": {"scenario": "previous queue lease 存续时 prepare candidate，等待 lease 过期后提交 selector/binding，延迟一个 proxy observation 再 activation", "requirements": ["durable trigger observations", "queue lease clock", "atomic selector and binding head", "frozen proxy inventory"]},
+      "oracle": {"observations": ["queue drain and prepared state", "selector and binding heads", "queue admission", "proxy observations", "trigger activation order", "expired lease result"], "assertions": ["drain 与 prepared 不移动 selector/binding head", "prepared 持续拒绝新 pull", "全部 proxy observation 前 queue/cron/runtime 不 active", "过期 lease settle 是 stale 且不改变 message", "HTTP、queue、cron 最终绑定同一完整 owner"]}
+    },
+    {
+      "id": "EC-DEPLOY-T014", "title": "barrier 崩溃恢复与重复调用按完整 owner 幂等", "kind": "failure",
+      "clauseIds": ["EC-DEPLOY-CON-005", "EC-DEPLOY-CON-006", "EC-DEPLOY-CON-007", "EC-DEPLOY-FAIL-003", "EC-DEPLOY-FAIL-004", "EC-DEPLOY-FAIL-006"],
+      "fixture": {"scenario": "分别在 trigger prepare、production commit 与 activation 后重启，并重复相同调用及注入 generation/deployment 分量冲突", "requirements": ["durable barrier state", "complete candidate/previous owner", "idempotent side-effect counters", "CAS conflict injection"]},
+      "oracle": {"observations": ["recovered states", "prepare/commit/activation results", "side-effect counters", "identity conflict codes", "transition journal"], "assertions": ["相同完整 identity 的重试不重复 side effect", "candidate 或 previous owner 任一分量不同都 conflict", "selector 与 binding 只共同提交一次", "重启后顺序和最终 owner 不变"]}
     }
   ]
 }

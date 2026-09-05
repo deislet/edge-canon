@@ -89,15 +89,30 @@
     "activation": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["expectedCurrentDeploymentId", "servingPolicy", "drainSeconds", "emergency"],
+      "required": ["expectedCurrentDeploymentId", "expectedCurrentRoutingGeneration", "servingPolicy", "drainSeconds", "emergency"],
       "properties": {
         "expectedCurrentDeploymentId": {
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/identity"}]
+        },
+        "expectedCurrentRoutingGeneration": {
           "oneOf": [{"type": "null"}, {"$ref": "#/$defs/identity"}]
         },
         "servingPolicy": {"const": "all-configured-targets-ready"},
         "drainSeconds": {"type": "integer", "minimum": 0, "maximum": 86400},
         "emergency": {"type": "boolean"}
-      }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"expectedCurrentDeploymentId": {"type": "null"}}},
+          "then": {"properties": {"expectedCurrentRoutingGeneration": {"type": "null"}}},
+          "else": {"properties": {"expectedCurrentRoutingGeneration": {"$ref": "#/$defs/identity"}}}
+        },
+        {
+          "if": {"properties": {"expectedCurrentRoutingGeneration": {"type": "null"}}},
+          "then": {"properties": {"expectedCurrentDeploymentId": {"type": "null"}}},
+          "else": {"properties": {"expectedCurrentDeploymentId": {"$ref": "#/$defs/identity"}}}
+        }
+      ]
     }
   },
   "$defs": {

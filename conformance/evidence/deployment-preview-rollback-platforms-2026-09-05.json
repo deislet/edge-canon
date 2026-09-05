@@ -6,7 +6,7 @@
   "status": "draft-non-certifying",
   "observedAt": "2026-09-05T07:01:05Z",
   "artifactSha256": "44c5a6c1e73b16adf5be539518e793fd8771d99d62b1a2de239a13c2dbec59cf",
-  "referenceImplementationPath": "conformance/harness/deployment-preview-rollback/reference-runtime.mjs",
+  "referenceImplementationPath": "conformance/evidence/reference-implementations/deployment-preview-rollback-2026-09-05-reference-runtime.mjs",
   "referenceImplementationSha256": "ea3c2b8feb22724f63077433eda57d41b52d8793cb4f2770bacd9d43b6811681",
   "observations": [
     {

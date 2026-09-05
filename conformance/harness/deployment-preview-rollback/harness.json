@@ -6,7 +6,7 @@
   "status": "draft",
   "executionKind": "local-reference",
   "fixturePath": "conformance/harness/deployment-preview-rollback/fixture.mjs",
-  "fixtureDependencyPaths": ["schemas/deployment-status.schema.json"],
+  "fixtureDependencyPaths": ["schemas/deployment-plan.schema.json", "schemas/deployment-status.schema.json"],
   "calibrationPath": null,
   "oraclePath": "conformance/harness/deployment-preview-rollback/oracle.mjs",
   "observationSchema": "schemas/conformance-observations.schema.json",
@@ -17,6 +17,7 @@
   "coveredCaseIds": [
     "EC-DEPLOY-T001", "EC-DEPLOY-T002", "EC-DEPLOY-T003", "EC-DEPLOY-T004",
     "EC-DEPLOY-T005", "EC-DEPLOY-T006", "EC-DEPLOY-T007", "EC-DEPLOY-T008",
-    "EC-DEPLOY-T009", "EC-DEPLOY-T010", "EC-DEPLOY-T011", "EC-DEPLOY-T012"
+    "EC-DEPLOY-T009", "EC-DEPLOY-T010", "EC-DEPLOY-T011", "EC-DEPLOY-T012",
+    "EC-DEPLOY-T013", "EC-DEPLOY-T014"
   ]
 }

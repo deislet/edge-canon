@@ -35,3 +35,9 @@ front routing layer 补齐，不能把该后端降为另一套应用 profile。
 `prepare → verify → activate → observed active` 是 Edge Canon 为解决 provider propagation、自建多节点和
 真实状态报告而增加的 provider-neutral 生命周期。它不宣称 Cloudflare 或 EdgeOne 使用同名内部步骤；driver
 必须把原生 operation/preview/deployment status 映射为相同可观察保证，并在无法证明时保持 Draft/阻断状态。
+
+HTTP、queue、cron 的严格 activation barrier 是上述生命周期在多 trigger 应用上的一致性补全，不是对任一
+provider 内部 API 或 RPC 的照抄。既然标准允许同一 immutable version 同时声明这三类入口，production
+selector、binding snapshot、queue admission 与 cron dispatch 就不能各自成为互不相关的“当前版本”。因此
+标准以完整 candidate/previous owner、持久 observation 和 CAS 定义可观察顺序；provider 可使用原生 deployment
+primitive、受控 routing layer 或两者组合实现，但不得暴露较弱的应用语义。

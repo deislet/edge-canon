@@ -69,8 +69,11 @@ export function validatePlan(plan, expectedStandardVersion, counters = {}) {
   }
   const candidate = plan.versions.find((item) => item.role === "candidate");
   if (candidate.weightBasisPoints !== plan.rollout.steps[plan.rollout.currentStep].candidateBasisPoints) fail("EC_DEPLOY_WEIGHT_INVALID");
-  exactKeys(plan.activation, ["expectedCurrentDeploymentId", "servingPolicy", "drainSeconds", "emergency"], ["expectedCurrentDeploymentId", "servingPolicy", "drainSeconds", "emergency"]);
-  if (!(plan.activation.expectedCurrentDeploymentId === null || identity(plan.activation.expectedCurrentDeploymentId)) || plan.activation.servingPolicy !== "all-configured-targets-ready" || !Number.isInteger(plan.activation.drainSeconds) || plan.activation.drainSeconds < 0 || plan.activation.drainSeconds > 86400 || typeof plan.activation.emergency !== "boolean") fail("EC_DEPLOY_ACTIVATION_POLICY_INVALID");
+  exactKeys(plan.activation, ["expectedCurrentDeploymentId", "expectedCurrentRoutingGeneration", "servingPolicy", "drainSeconds", "emergency"], ["expectedCurrentDeploymentId", "expectedCurrentRoutingGeneration", "servingPolicy", "drainSeconds", "emergency"]);
+  const previousIdentityValid = plan.activation.expectedCurrentDeploymentId === null
+    ? plan.activation.expectedCurrentRoutingGeneration === null
+    : identity(plan.activation.expectedCurrentDeploymentId) && identity(plan.activation.expectedCurrentRoutingGeneration);
+  if (!previousIdentityValid || plan.activation.servingPolicy !== "all-configured-targets-ready" || !Number.isInteger(plan.activation.drainSeconds) || plan.activation.drainSeconds < 0 || plan.activation.drainSeconds > 86400 || typeof plan.activation.emergency !== "boolean") fail("EC_DEPLOY_ACTIVATION_POLICY_INVALID");
   return Object.freeze(structuredClone(plan));
 }
 
@@ -120,7 +123,7 @@ export class DeploymentController {
   activate(plan, acknowledgedProxies = []) {
     const generation = plan.routing.generation;
     if (this.status !== "ready" || this.targets.some((target) => this.targetStates.get(target) !== `routable:${generation}`)) fail("EC_DEPLOY_NOT_ROUTABLE");
-    if (this.active.deploymentId !== plan.activation.expectedCurrentDeploymentId) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
+    if (this.active.deploymentId !== plan.activation.expectedCurrentDeploymentId || this.active.generation !== plan.activation.expectedCurrentRoutingGeneration) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
     this.transition("ready", "activating");
     this.active = { deploymentId: plan.deploymentId, generation }; this.selectorMutations += 1;
     for (const proxy of acknowledgedProxies) if (this.proxyStates.has(proxy)) this.proxyStates.set(proxy, `active:${generation}`);
@@ -140,11 +143,287 @@ export class DeploymentController {
     if (eligible.length === 0) fail("EC_DEPLOY_NO_TARGET_FOR_GENERATION");
     return { target: eligible[0], generation: this.active.generation };
   }
-  mutate(expectedDeploymentId, idempotencyKey, providerOperation) {
-    if (this.active.deploymentId !== expectedDeploymentId) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
-    if (this.providerOperations.has(idempotencyKey)) return this.providerOperations.get(idempotencyKey);
-    const result = providerOperation(); this.providerOperations.set(idempotencyKey, result); return result;
+  mutate(plan, idempotencyKey, providerOperation) {
+    const operationIdentity = JSON.stringify({
+      deploymentId: plan.deploymentId,
+      generation: plan.routing.generation,
+      previousDeploymentId: plan.activation.expectedCurrentDeploymentId,
+      previousGeneration: plan.activation.expectedCurrentRoutingGeneration,
+    });
+    if (this.active.deploymentId !== plan.activation.expectedCurrentDeploymentId || this.active.generation !== plan.activation.expectedCurrentRoutingGeneration) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
+    if (this.providerOperations.has(idempotencyKey)) {
+      const stored = this.providerOperations.get(idempotencyKey);
+      if (stored.operationIdentity !== operationIdentity) fail("EC_DEPLOY_IDEMPOTENCY_CONFLICT");
+      return stored.result;
+    }
+    const result = providerOperation(); this.providerOperations.set(idempotencyKey, { operationIdentity, result }); return result;
   }
+}
+
+function planOwner(plan) {
+  return { deploymentId: plan.deploymentId, generation: plan.routing.generation };
+}
+function previousOwner(plan) {
+  return {
+    deploymentId: plan.activation.expectedCurrentDeploymentId,
+    generation: plan.activation.expectedCurrentRoutingGeneration,
+  };
+}
+function sameOwner(left, right) {
+  return left?.deploymentId === right?.deploymentId && left?.generation === right?.generation;
+}
+function candidateSnapshot(plan) {
+  return plan.versions.find((version) => version.role === "candidate").snapshotId;
+}
+
+export class TriggerActivationBarrier {
+  constructor({
+    activeDeploymentId = "deployment-old",
+    activeGeneration = "generation-old",
+    activeSnapshotId = "snapshot-old",
+    proxies = ["proxy-a", "proxy-b"],
+    durable = null,
+  } = {}) {
+    if (durable) {
+      this.active = cloneRecord(durable.active);
+      this.selector = cloneRecord(durable.selector);
+      this.bindingHead = cloneRecord(durable.bindingHead);
+      this.pending = cloneRecord(durable.pending);
+      this.lastPrevious = cloneRecord(durable.lastPrevious);
+      this.completed = cloneRecord(durable.completed);
+      this.lastAborted = cloneRecord(durable.lastAborted);
+      this.proxyObservationRecordedFor = cloneRecord(durable.proxyObservationRecordedFor);
+      this.queue = cloneRecord(durable.queue);
+      this.cron = cloneRecord(durable.cron);
+      this.runtime = cloneRecord(durable.runtime);
+      this.proxyStates = new Map(durable.proxyStates);
+      this.messages = new Map(durable.messages);
+      this.leases = new Map(durable.leases);
+      this.journal = structuredClone(durable.journal);
+      this.effects = cloneRecord(durable.effects);
+      return;
+    }
+    this.active = { deploymentId: activeDeploymentId, generation: activeGeneration };
+    this.selector = { ...this.active };
+    this.bindingHead = { ...this.active, snapshotId: activeSnapshotId };
+    this.pending = null;
+    this.lastPrevious = null;
+    this.completed = null;
+    this.lastAborted = null;
+    this.proxyObservationRecordedFor = null;
+    this.queue = { state: "active", owner: { ...this.active }, workAdmissionOpen: true, outstandingLeases: 0 };
+    this.cron = { state: "active", owner: { ...this.active }, workAdmissionOpen: true };
+    this.runtime = { state: "active", owner: { ...this.active }, workAdmissionOpen: true };
+    this.proxyStates = new Map(proxies.map((proxyId) => [proxyId, { deploymentId: activeDeploymentId, generation: activeGeneration }]));
+    this.messages = new Map();
+    this.leases = new Map();
+    this.journal = [];
+    this.effects = { prepares: 0, selectorCommits: 0, bindingCommits: 0, activations: 0, aborts: 0, settlements: 0 };
+  }
+
+  durableState() {
+    return structuredClone({
+      active: this.active,
+      selector: this.selector,
+      bindingHead: this.bindingHead,
+      pending: this.pending,
+      lastPrevious: this.lastPrevious,
+      completed: this.completed,
+      lastAborted: this.lastAborted,
+      proxyObservationRecordedFor: this.proxyObservationRecordedFor,
+      queue: this.queue,
+      cron: this.cron,
+      runtime: this.runtime,
+      proxyStates: [...this.proxyStates],
+      messages: [...this.messages],
+      leases: [...this.leases],
+      journal: this.journal,
+      effects: this.effects,
+    });
+  }
+
+  enqueue(messageId) {
+    if (!identity(messageId) || this.messages.has(messageId)) fail("EC_DEPLOY_QUEUE_MESSAGE_INVALID");
+    this.messages.set(messageId, { state: "available" });
+  }
+
+  pull(messageId, leaseId, now, leaseSeconds) {
+    this.#refreshExpired(now);
+    if (!this.queue.workAdmissionOpen) fail("EC_DEPLOY_QUEUE_PULL_FENCED");
+    if (!Number.isFinite(now) || !Number.isInteger(leaseSeconds) || leaseSeconds < 1 || !identity(leaseId)) fail("EC_DEPLOY_QUEUE_LEASE_INVALID");
+    const message = this.messages.get(messageId);
+    if (!message || message.state !== "available") fail("EC_DEPLOY_QUEUE_MESSAGE_UNAVAILABLE");
+    const lease = { messageId, owner: { ...this.queue.owner }, expiresAt: now + leaseSeconds, state: "leased" };
+    this.leases.set(leaseId, lease);
+    this.messages.set(messageId, { state: "leased", leaseId });
+    return leaseId;
+  }
+
+  settle(leaseId, now, disposition) {
+    if (!new Set(["ack", "nack"]).has(disposition)) fail("EC_DEPLOY_QUEUE_SETTLEMENT_INVALID");
+    this.#refreshExpired(now);
+    const lease = this.leases.get(leaseId);
+    if (!lease || lease.state !== "leased" || lease.expiresAt <= now) fail("EC_DEPLOY_QUEUE_LEASE_STALE");
+    const message = this.messages.get(lease.messageId);
+    if (!message || message.state !== "leased" || message.leaseId !== leaseId) fail("EC_DEPLOY_QUEUE_LEASE_STALE");
+    this.leases.set(leaseId, { ...lease, state: "settled" });
+    this.messages.delete(lease.messageId);
+    this.effects.settlements += 1;
+    this.#refreshQueueState(now);
+    return true;
+  }
+
+  prepare(plan, now) {
+    const candidate = planOwner(plan);
+    const previous = previousOwner(plan);
+    if (sameOwner(this.active, candidate) && this.completed) {
+      if (!sameOwner(this.completed.candidate, candidate) || !sameOwner(this.completed.previous, previous)) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
+      return this.queueObservation();
+    }
+    if (!sameOwner(this.active, previous) || !sameOwner(this.selector, previous) || !sameOwner(this.bindingHead, previous)) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
+    if (this.pending) {
+      if (!sameOwner(this.pending.candidate, candidate) || !sameOwner(this.pending.previous, previous)) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
+      this.#refreshQueueState(now);
+      return this.queueObservation();
+    }
+    this.pending = { candidate, previous, snapshotId: candidateSnapshot(plan), committed: false };
+    this.lastPrevious = { ...previous };
+    this.queue = { state: "draining", owner: { ...previous }, workAdmissionOpen: false, outstandingLeases: 0 };
+    this.cron = { state: "prepared", owner: { ...candidate }, workAdmissionOpen: false };
+    this.runtime = { state: "prepared", owner: { ...candidate }, workAdmissionOpen: false };
+    this.effects.prepares += 1;
+    this.journal.push("trigger-prepare");
+    this.#refreshQueueState(now);
+    return this.queueObservation();
+  }
+
+  commit(plan, now) {
+    const candidate = planOwner(plan);
+    const previous = previousOwner(plan);
+    this.#refreshQueueState(now);
+    if (sameOwner(this.selector, candidate) && sameOwner(this.bindingHead, candidate) && this.bindingHead.snapshotId === candidateSnapshot(plan)) {
+      const operation = this.pending ?? this.completed;
+      if (!operation || !sameOwner(operation.candidate, candidate) || !sameOwner(operation.previous, previous)) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
+      return false;
+    }
+    if (!this.pending || !sameOwner(this.pending.candidate, candidate) || !sameOwner(this.pending.previous, previous)) fail("EC_DEPLOY_TRIGGER_NOT_PREPARED");
+    if (this.queue.state !== "prepared" || this.queue.outstandingLeases !== 0 || this.queue.workAdmissionOpen) fail("EC_DEPLOY_QUEUE_DRAIN_INCOMPLETE");
+    if (!sameOwner(this.selector, previous) || !sameOwner(this.bindingHead, previous)) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
+    this.selector = { ...candidate };
+    this.bindingHead = { ...candidate, snapshotId: this.pending.snapshotId };
+    this.pending.committed = true;
+    this.effects.selectorCommits += 1;
+    this.effects.bindingCommits += 1;
+    this.journal.push("production-commit");
+    return true;
+  }
+
+  observeProxies(plan, proxyIds) {
+    const candidate = planOwner(plan);
+    if (!sameOwner(this.selector, candidate)) fail("EC_DEPLOY_PRODUCTION_NOT_COMMITTED");
+    for (const proxyId of proxyIds) {
+      if (!this.proxyStates.has(proxyId)) fail("EC_DEPLOY_PROXY_UNKNOWN");
+      this.proxyStates.set(proxyId, { ...candidate });
+    }
+    if (this.proxiesObserved(plan) && !sameOwner(this.proxyObservationRecordedFor, candidate)) {
+      this.proxyObservationRecordedFor = { ...candidate };
+      this.journal.push("proxy-observed");
+    }
+    return this.proxiesObserved(plan);
+  }
+
+  proxiesObserved(plan) {
+    const candidate = planOwner(plan);
+    return [...this.proxyStates.values()].every((owner) => sameOwner(owner, candidate));
+  }
+
+  activate(plan) {
+    const candidate = planOwner(plan);
+    const previous = previousOwner(plan);
+    if (sameOwner(this.active, candidate) && sameOwner(this.queue.owner, candidate) && this.queue.state === "active") {
+      if (!this.completed || !sameOwner(this.completed.candidate, candidate) || !sameOwner(this.completed.previous, previous)) fail("EC_DEPLOY_ACTIVATION_CONFLICT");
+      return false;
+    }
+    if (!this.pending || !this.pending.committed || !sameOwner(this.pending.candidate, candidate) || !sameOwner(this.pending.previous, previous)) fail("EC_DEPLOY_TRIGGER_NOT_PREPARED");
+    if (!sameOwner(this.selector, candidate) || !sameOwner(this.bindingHead, candidate)) fail("EC_DEPLOY_PRODUCTION_NOT_COMMITTED");
+    if (!this.proxiesObserved(plan)) fail("EC_DEPLOY_PROXY_OBSERVATION_INCOMPLETE");
+    this.queue = { state: "active", owner: { ...candidate }, workAdmissionOpen: true, outstandingLeases: 0 };
+    this.cron = { state: "active", owner: { ...candidate }, workAdmissionOpen: true };
+    this.runtime = { state: "active", owner: { ...candidate }, workAdmissionOpen: true };
+    this.active = { ...candidate };
+    this.completed = structuredClone(this.pending);
+    this.pending = null;
+    this.effects.activations += 1;
+    this.journal.push("trigger-activate");
+    return true;
+  }
+
+  abort(plan) {
+    const candidate = planOwner(plan);
+    const previous = previousOwner(plan);
+    if (!this.pending) {
+      if (this.lastAborted && sameOwner(this.lastAborted.candidate, candidate) && sameOwner(this.lastAborted.previous, previous)) return false;
+      fail("EC_DEPLOY_ABORT_CONFLICT");
+    }
+    if (!sameOwner(this.pending.candidate, candidate) || !sameOwner(this.pending.previous, previous)) fail("EC_DEPLOY_ABORT_CONFLICT");
+    if (this.pending.committed) fail("EC_DEPLOY_RECONCILE_REQUIRED");
+    this.queue = { state: "active", owner: { ...previous }, workAdmissionOpen: true, outstandingLeases: this.queue.outstandingLeases };
+    this.cron = { state: "active", owner: { ...previous }, workAdmissionOpen: true };
+    this.runtime = { state: "active", owner: { ...previous }, workAdmissionOpen: true };
+    this.lastAborted = structuredClone(this.pending);
+    this.pending = null;
+    this.effects.aborts += 1;
+    this.journal.push("trigger-abort");
+    return true;
+  }
+
+  queueObservation() {
+    return structuredClone(this.queue);
+  }
+
+  triggerObservations(now = 0) {
+    const previous = this.pending?.previous ?? this.lastPrevious;
+    const candidate = this.pending?.candidate ?? this.completed?.candidate ?? this.active;
+    const observation = (triggerId, kind, trigger) => ({
+      triggerId,
+      kind,
+      state: trigger.state,
+      candidate: candidate ? { deploymentId: candidate.deploymentId, routingGeneration: candidate.generation } : null,
+      previousOwner: previous ? { deploymentId: previous.deploymentId, routingGeneration: previous.generation } : null,
+      observedOwner: trigger.owner ? { deploymentId: trigger.owner.deploymentId, routingGeneration: trigger.owner.generation } : null,
+      workAdmissionOpen: trigger.workAdmissionOpen,
+      outstandingLeases: kind === "queue" ? trigger.outstandingLeases : null,
+      observedAt: new Date(now * 1000).toISOString(),
+      failureCode: null,
+    });
+    return [
+      observation("production-http", "http", this.runtime),
+      observation("production-queue", "queue", this.queue),
+      observation("production-cron", "cron", this.cron),
+    ];
+  }
+
+  #refreshExpired(now) {
+    for (const [leaseId, lease] of this.leases) {
+      if (lease.state !== "leased" || lease.expiresAt > now) continue;
+      const message = this.messages.get(lease.messageId);
+      if (message?.state === "leased" && message.leaseId === leaseId) this.messages.set(lease.messageId, { state: "available" });
+      this.leases.set(leaseId, { ...lease, state: "expired" });
+    }
+  }
+
+  #refreshQueueState(now) {
+    this.#refreshExpired(now);
+    if (!this.pending) return;
+    const previous = this.pending.previous;
+    const outstandingLeases = [...this.leases.values()].filter((lease) => lease.state === "leased" && sameOwner(lease.owner, previous)).length;
+    this.queue.outstandingLeases = outstandingLeases;
+    this.queue.state = outstandingLeases === 0 ? "prepared" : "draining";
+  }
+}
+
+function cloneRecord(value) {
+  return value === null || value === undefined ? value : structuredClone(value);
 }
 
 function tokenBody(scope) { return Buffer.from(JSON.stringify(scope)).toString("base64url"); }
