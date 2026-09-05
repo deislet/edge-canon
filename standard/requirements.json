@@ -197,7 +197,10 @@
       "id": "deployment-preview-rollback",
       "definitionStatus": "draft",
       "draftPath": "standard/requirements/deployment-preview-rollback.zh.md",
-      "evidencePaths": ["standard/evidence/deployment-preview-rollback-baseline.zh.md"],
+      "evidencePaths": [
+        "standard/evidence/deployment-preview-rollback-baseline.zh.md",
+        "conformance/evidence/deployment-preview-rollback-platforms-2026-09-05.json"
+      ],
       "dimensions": {
         "api": {"status": "draft", "clauseIds": ["EC-DEPLOY-API-001", "EC-DEPLOY-API-002", "EC-DEPLOY-API-003", "EC-DEPLOY-API-004", "EC-DEPLOY-API-005", "EC-DEPLOY-API-006", "EC-DEPLOY-API-007"]},
         "errors": {"status": "draft", "clauseIds": ["EC-DEPLOY-ERR-001", "EC-DEPLOY-ERR-002", "EC-DEPLOY-ERR-003", "EC-DEPLOY-ERR-004"]},

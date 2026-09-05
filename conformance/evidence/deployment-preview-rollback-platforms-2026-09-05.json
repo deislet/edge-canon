@@ -1,0 +1,47 @@
+{
+  "$schema": "../../schemas/conformance-platform-evidence.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-DEPLOY",
+  "status": "draft-non-certifying",
+  "observedAt": "2026-09-05T07:01:05Z",
+  "artifactSha256": "44c5a6c1e73b16adf5be539518e793fd8771d99d62b1a2de239a13c2dbec59cf",
+  "referenceImplementationPath": "conformance/harness/deployment-preview-rollback/reference-runtime.mjs",
+  "referenceImplementationSha256": "ea3c2b8feb22724f63077433eda57d41b52d8793cb4f2770bacd9d43b6811681",
+  "observations": [
+    {
+      "platform": "linux",
+      "osVersion": "Linux 6.8.0-124-generic",
+      "architecture": "x86_64",
+      "nodeVersion": "v24.20.0",
+      "outcome": "pass",
+      "caseCount": 12,
+      "artifactSha256": "44c5a6c1e73b16adf5be539518e793fd8771d99d62b1a2de239a13c2dbec59cf"
+    },
+    {
+      "platform": "macos",
+      "osVersion": "macOS 26.6 (Darwin 25.6.0)",
+      "architecture": "arm64",
+      "nodeVersion": "v26.0.0",
+      "outcome": "pass",
+      "caseCount": 12,
+      "artifactSha256": "44c5a6c1e73b16adf5be539518e793fd8771d99d62b1a2de239a13c2dbec59cf"
+    },
+    {
+      "platform": "windows",
+      "osVersion": "Microsoft Windows 11 Pro 10.0.26100",
+      "architecture": "AMD64",
+      "nodeVersion": "v24.16.0",
+      "outcome": "pass",
+      "caseCount": 12,
+      "artifactSha256": "44c5a6c1e73b16adf5be539518e793fd8771d99d62b1a2de239a13c2dbec59cf"
+    }
+  ],
+  "limitations": [
+    "This is reference-harness evidence, not provider conformance or certification evidence.",
+    "The exact standard pin is 4f926427f78bb22673ce8138b113af401089a5f6; the source archive SHA-256 is 37e1f5898d2237f374a72f418ca2bb678a11bced1b6d3ac35aa0123f081ac2dc.",
+    "Raw Linux, macOS, and Windows observation SHA-256 values are 8e3e04d155891b35a2ce295c749eb0afe211389836d0cb99dc5c27a26b34c9d2, f2bfb364313d9d2ed305d31c2ab465e8384c2b71614faec842cf3788fcbaa630, and 9f5af6b486316ceddc6c3cbc098e8bcb83d2a79491f937677c8a3f82be8c0f02. Removing only per-case timestamps and serializing with sorted keys yields the same SHA-256 c015df30699bbd639667d093f142ef74044547da89d6212ec6f25a3e5e4b90a9 on all three systems.",
+    "The harness models immutable plans, atomic target preparation, generation-addressed activation, stable affinity, signed override, gate evidence, drain, rollback, retention, CAS, and unknown-result reconciliation locally.",
+    "Cloudflare, EdgeOne, and Deislet still require live upload, prepare, preview, activate, observe, step, pause, abort, rollback, drain, cleanup, and fault-injection evidence. No provider account or management credential was used."
+  ]
+}

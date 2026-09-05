@@ -87,6 +87,7 @@ def validate_schema_documents() -> None:
         "conformance/cases/deployment-preview-rollback.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/deployment-preview-rollback/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/evidence/environment-secrets-platforms-2026-09-05.json": "schemas/conformance-platform-evidence.schema.json",
+        "conformance/evidence/deployment-preview-rollback-platforms-2026-09-05.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/node-npm-subset-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/cases/web-platform-apis.json": "schemas/conformance-cases.schema.json",
@@ -664,6 +665,7 @@ def main() -> int:
         validate_platform_evidence("conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json", kit)
         validate_platform_evidence("conformance/evidence/node-npm-subset-platforms-2026-09-04.json", kit)
         validate_platform_evidence("conformance/evidence/web-platform-apis-platforms-2026-09-04.json", kit)
+        validate_platform_evidence("conformance/evidence/deployment-preview-rollback-platforms-2026-09-05.json", kit)
     except (KeyError, TypeError, ValidationError) as error:
         print(f"governance validation failed: {error}", file=sys.stderr)
         return 1
