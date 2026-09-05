@@ -55,7 +55,7 @@
     {"id": "stateful-objects", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "logical-resource-bindings", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "canonical-build-artifact", "requirement": "mandatory", "definitionStatus": "draft"},
-    {"id": "deployment-preview-rollback", "requirement": "mandatory", "definitionStatus": "pending"},
+    {"id": "deployment-preview-rollback", "requirement": "mandatory", "definitionStatus": "draft"},
     {"id": "observability", "requirement": "mandatory", "definitionStatus": "pending"},
     {"id": "data-export-deletion", "requirement": "mandatory", "definitionStatus": "pending"}
   ],

@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/deployment-status.schema.json",
+  "title": "Edge Canon desired and observed deployment status",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "format",
+    "standardVersion",
+    "deploymentId",
+    "planSha256",
+    "state",
+    "desiredRoutingGeneration",
+    "observedRoutingGeneration",
+    "targets",
+    "proxies",
+    "gateEvaluations",
+    "failureCode",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "format": {"const": "edge-canon.deployment-status/v1"},
+    "standardVersion": {
+      "type": "string",
+      "pattern": "^edge-canon\\.next@[0-9a-f]{40}$"
+    },
+    "deploymentId": {"$ref": "#/$defs/identity"},
+    "planSha256": {"$ref": "#/$defs/sha256"},
+    "state": {
+      "enum": [
+        "created", "preparing", "prepared", "verifying", "ready", "activating",
+        "active", "paused", "progressing", "aborting", "rolled-back", "failed",
+        "degraded", "reconciling"
+      ]
+    },
+    "desiredRoutingGeneration": {"$ref": "#/$defs/identity"},
+    "observedRoutingGeneration": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/identity"}]
+    },
+    "targets": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/targetObservation"}
+    },
+    "proxies": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/proxyObservation"}
+    },
+    "gateEvaluations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/gateEvaluation"}
+    },
+    "failureCode": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^EC_DEPLOY_[A-Z0-9_]+$"}
+      ]
+    },
+    "createdAt": {"type": "string", "format": "date-time"},
+    "updatedAt": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]*$"
+    },
+    "nullableIdentity": {
+      "oneOf": [{"type": "null"}, {"$ref": "#/$defs/identity"}]
+    },
+    "targetObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetId", "state", "versionId", "snapshotId", "routingGeneration", "observedAt", "failureCode"],
+      "properties": {
+        "targetId": {"$ref": "#/$defs/identity"},
+        "state": {"enum": ["pending", "preparing", "prepared", "verified", "routable", "active", "draining", "failed"]},
+        "versionId": {"$ref": "#/$defs/nullableIdentity"},
+        "snapshotId": {"$ref": "#/$defs/nullableIdentity"},
+        "routingGeneration": {"$ref": "#/$defs/nullableIdentity"},
+        "observedAt": {"type": "string", "format": "date-time"},
+        "failureCode": {
+          "oneOf": [{"type": "null"}, {"type": "string", "pattern": "^EC_DEPLOY_[A-Z0-9_]+$"}]
+        }
+      }
+    },
+    "proxyObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["proxyId", "state", "routingGeneration", "observedAt", "failureCode"],
+      "properties": {
+        "proxyId": {"$ref": "#/$defs/identity"},
+        "state": {"enum": ["pending", "prepared", "active", "failed"]},
+        "routingGeneration": {"$ref": "#/$defs/nullableIdentity"},
+        "observedAt": {"type": "string", "format": "date-time"},
+        "failureCode": {
+          "oneOf": [{"type": "null"}, {"type": "string", "pattern": "^EC_DEPLOY_[A-Z0-9_]+$"}]
+        }
+      }
+    },
+    "gateEvaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gateId", "outcome", "windowStartedAt", "windowEndedAt", "sampleCount", "reasonCode"],
+      "properties": {
+        "gateId": {"$ref": "#/$defs/identity"},
+        "outcome": {"enum": ["pass", "fail", "insufficient-data"]},
+        "windowStartedAt": {"type": "string", "format": "date-time"},
+        "windowEndedAt": {"type": "string", "format": "date-time"},
+        "sampleCount": {"type": "integer", "minimum": 0},
+        "reasonCode": {"type": "string", "pattern": "^EC_DEPLOY_[A-Z0-9_]+$"}
+      }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "../../schemas/conformance-cases.schema.json",
+  "schemaVersion": 1,
+  "standardId": "edge-canon.next",
+  "suiteId": "EC-DEPLOY",
+  "status": "draft",
+  "executionModel": "provider-independent-oracle",
+  "cases": [
+    {
+      "id": "EC-DEPLOY-T001", "title": "version、plan 与 observed status identity 分离且不可变", "kind": "normal",
+      "clauseIds": ["EC-DEPLOY-API-001", "EC-DEPLOY-API-002", "EC-DEPLOY-API-003", "EC-DEPLOY-API-004"],
+      "fixture": {"scenario": "上传两个相同内容 version，创建两个 plan revision 并推进一份 observed status", "requirements": ["canonical identity", "immutable plan store", "CAS status journal"]},
+      "oracle": {"observations": ["version digests", "plan digests", "production generation", "status transitions"], "assertions": ["upload 不改变 production", "plan revision 不原地改写", "status 仅按合法 CAS transition 推进"]}
+    },
+    {
+      "id": "EC-DEPLOY-T002", "title": "atomic prepare 任一 target 失败时旧 deployment 全局保持", "kind": "failure",
+      "clauseIds": ["EC-DEPLOY-ERR-002", "EC-DEPLOY-CON-001", "EC-DEPLOY-LIFE-001", "EC-DEPLOY-FAIL-001"],
+      "fixture": {"scenario": "三个 configured serving target 中一个 digest/readiness 失败", "requirements": ["old active deployment", "three target inventory", "prepare failure injection"]},
+      "oracle": {"observations": ["target states", "production generation", "candidate traffic", "cleanup operation"], "assertions": ["production generation 不变", "candidate production traffic 为零", "失败 staging 被清理或保留可重试 identity"]}
+    },
+    {
+      "id": "EC-DEPLOY-T003", "title": "preview 与 0% override 仅在签名、时限和完整 scope 下有效", "kind": "security",
+      "clauseIds": ["EC-DEPLOY-API-005", "EC-DEPLOY-ERR-003", "EC-DEPLOY-LIFE-002", "EC-DEPLOY-SEC-001", "EC-DEPLOY-SEC-002", "EC-DEPLOY-SEC-003"],
+      "fixture": {"scenario": "对 private preview 使用有效、过期、伪造、跨环境及历史 version token", "requirements": ["0% candidate", "signed override authority", "private access policy"]},
+      "oracle": {"observations": ["selected versions", "stable reason codes", "management attempts", "log projection"], "assertions": ["仅有效 scope 选择 candidate", "外部同名 header 无效", "token/subject 不进入日志且 runtime credential 无管理权"]}
+    },
+    {
+      "id": "EC-DEPLOY-T004", "title": "routable target 与 proxy generation ack 后才观察为 active", "kind": "failure",
+      "clauseIds": ["EC-DEPLOY-CON-002", "EC-DEPLOY-LIFE-003", "EC-DEPLOY-FAIL-002"],
+      "fixture": {"scenario": "全部 target routable，提交 selector 后延迟一个 proxy ack", "requirements": ["generation-addressed target", "proxy observation inventory", "production selector"]},
+      "oracle": {"observations": ["transition order", "proxy generations", "request generations", "final status"], "assertions": ["提交前无 candidate production traffic", "ack 未齐不是 active", "普通请求不静默回退旧 generation"]}
+    },
+    {
+      "id": "EC-DEPLOY-T005", "title": "双版本 basis-point 权重边界与文档错误 fail closed", "kind": "boundary",
+      "clauseIds": ["EC-DEPLOY-API-002", "EC-DEPLOY-API-006", "EC-DEPLOY-ERR-001", "EC-DEPLOY-LIMIT-001"],
+      "fixture": {"scenario": "验证 0/1/9999/10000 权重、非整数、总和错误、重复 role、第三 version 和浮动 standard", "requirements": ["plan validator", "provider mutation counter", "basis-point rollout"]},
+      "oracle": {"observations": ["accepted boundaries", "stable error codes", "provider mutation count", "normalized weights"], "assertions": ["合法边界精确保留", "非法 plan 在 provider 前拒绝", "不自动归一化也不猜 baseline"]}
+    },
+    {
+      "id": "EC-DEPLOY-T006", "title": "rollout stable affinity 固定 invocation 与同源请求链", "kind": "boundary",
+      "clauseIds": ["EC-DEPLOY-CON-003", "EC-DEPLOY-CON-004", "EC-DEPLOY-SEC-002"],
+      "fixture": {"scenario": "在权重变化前后请求 HTML/assets/API，并尝试伪造 affinity/version header", "requirements": ["trusted affinity subject", "deterministic selector", "in-flight barrier"]},
+      "oracle": {"observations": ["subject assignments", "request-chain versions", "in-flight version", "forged selection"], "assertions": ["已有 subject rollout 内稳定", "每条请求链固定版本", "伪造 header/cookie 不能选择 version"]}
+    },
+    {
+      "id": "EC-DEPLOY-T007", "title": "渐进 gate 证据完整，缺少数据默认 pause", "kind": "failure",
+      "clauseIds": ["EC-DEPLOY-API-006", "EC-DEPLOY-LIFE-004", "EC-DEPLOY-FAIL-005"],
+      "fixture": {"scenario": "step soak 后分别提供 pass、fail 和 insufficient-data metrics，再执行 resume/abort", "requirements": ["metric window", "gate journal", "automatic decision engine"]},
+      "oracle": {"observations": ["step states", "gate inputs", "decision reasons", "weights"], "assertions": ["缺数据 pause 且权重不变", "resume 重新验证", "automatic advance 保存可复算证据"]}
+    },
+    {
+      "id": "EC-DEPLOY-T008", "title": "drain 固定 stream/WebSocket/background 与 service-binding context", "kind": "boundary",
+      "clauseIds": ["EC-DEPLOY-CON-003", "EC-DEPLOY-LIFE-005", "EC-DEPLOY-SEC-004"],
+      "fixture": {"scenario": "切换期间保持 stream/WebSocket，投递 queue/cron，并调用有版本约束的 service binding", "requirements": ["drain leases", "trigger deduplication", "service contract preflight"]},
+      "oracle": {"observations": ["in-flight versions", "trigger deliveries", "service contexts", "preflight result"], "assertions": ["已有工作不中途迁移", "queue/cron 不计划外双投递", "不兼容 callee 阻止 activation"]}
+    },
+    {
+      "id": "EC-DEPLOY-T009", "title": "rollback 创建新 revision 并精确恢复 binding snapshot", "kind": "upgrade",
+      "clauseIds": ["EC-DEPLOY-API-007", "EC-DEPLOY-ERR-004"],
+      "fixture": {"scenario": "轮换 binding 并修改 data 后回滚旧代码；再销毁历史 snapshot 重试", "requirements": ["immutable historical snapshot", "data sentinel", "resource compatibility check"]},
+      "oracle": {"observations": ["rollback identity", "snapshot identity", "data digest", "unavailable error", "selector"], "assertions": ["回滚是新 plan", "精确旧 snapshot 且 data 不回滚", "snapshot 不可用时 selector 不变"]}
+    },
+    {
+      "id": "EC-DEPLOY-T010", "title": "并发 mutation、重试与未知 provider 结果可恢复", "kind": "failure",
+      "clauseIds": ["EC-DEPLOY-CON-005", "EC-DEPLOY-FAIL-003", "EC-DEPLOY-FAIL-004"],
+      "fixture": {"scenario": "activate/abort 并发，provider 提交后断连，再以相同 idempotency key 重启", "requirements": ["expected-current CAS", "durable transition journal", "provider inspect operation"]},
+      "oracle": {"observations": ["winning mutation", "audit sequence", "provider mutation count", "reconciled generation"], "assertions": ["只有一个 selector mutation", "重试不重复 provider mutation", "未知结果先 inspect 再决定"]}
+    },
+    {
+      "id": "EC-DEPLOY-T011", "title": "保留最近三版本且 atomic serving set 不随可达性缩水", "kind": "boundary",
+      "clauseIds": ["EC-DEPLOY-LIFE-006", "EC-DEPLOY-LIMIT-002", "EC-DEPLOY-LIMIT-003"],
+      "fixture": {"scenario": "连续四次成功部署，一 target 不可达并存在 preview/rollback/drain 引用", "requirements": ["configured target inventory", "reference-counted retention", "cleanup retry"]},
+      "oracle": {"observations": ["retained metadata", "artifact references", "serving set", "cleanup state"], "assertions": ["最近三版本 metadata 可用", "仍有引用不清理", "不可达 target 不从 atomic 集合静默删除"]}
+    },
+    {
+      "id": "EC-DEPLOY-T012", "title": "major、mapping 与 writer 升级生成新 identity 并保留 fencing", "kind": "upgrade",
+      "clauseIds": ["EC-DEPLOY-UPG-001", "EC-DEPLOY-UPG-002", "EC-DEPLOY-UPG-003"],
+      "fixture": {"scenario": "提交未知 major/字段后执行 v1→新 mapping 双读与 writer 切换", "requirements": ["version-pinned validators", "immutable migration source", "generation fencing"]},
+      "oracle": {"observations": ["early error codes", "source/migrated digests", "behavior diff", "writer observations"], "assertions": ["未知输入在资源解析前拒绝", "迁移不改历史 identity", "新旧组件 identity 一致后才切 writer"]}
+    }
+  ]
+}

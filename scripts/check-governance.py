@@ -84,6 +84,8 @@ def validate_schema_documents() -> None:
         "conformance/harness/node-npm-subset/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/cases/environment-secrets.json": "schemas/conformance-cases.schema.json",
         "conformance/harness/environment-secrets/harness.json": "schemas/conformance-harness.schema.json",
+        "conformance/cases/deployment-preview-rollback.json": "schemas/conformance-cases.schema.json",
+        "conformance/harness/deployment-preview-rollback/harness.json": "schemas/conformance-harness.schema.json",
         "conformance/evidence/environment-secrets-platforms-2026-09-05.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/node-npm-subset-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
         "conformance/evidence/streams-websockets-background-work-platforms-2026-09-04.json": "schemas/conformance-platform-evidence.schema.json",
@@ -162,6 +164,75 @@ def validate_schema_documents() -> None:
         pass
     else:
         raise ValidationError("environment declaration schema accepted secret/json")
+
+    deployment_plan_schema = load_json("schemas/deployment-plan.schema.json")
+    deployment_status_schema = load_json("schemas/deployment-status.schema.json")
+    deployment_plan = {
+        "schemaVersion": 1,
+        "format": "edge-canon.deployment-plan/v1",
+        "standardVersion": standard_version,
+        "deploymentId": "deployment-1",
+        "environmentId": "production",
+        "mode": "atomic",
+        "versions": [{
+            "role": "candidate",
+            "versionId": "version-1",
+            "artifactSha256": "1" * 64,
+            "snapshotId": "snapshot-1",
+            "weightBasisPoints": 10000,
+        }],
+        "routing": {
+            "generation": "generation-1",
+            "affinity": {"mode": "rollout-stable", "saltSha256": "2" * 64, "weightChange": "sticky"},
+            "override": {"mode": "signed-expiring-scope-restricted", "maximumTtlSeconds": 900},
+        },
+        "rollout": {
+            "currentStep": 0,
+            "steps": [{"candidateBasisPoints": 10000, "soakSeconds": 0, "gateIds": []}],
+        },
+        "activation": {
+            "expectedCurrentDeploymentId": "deployment-0",
+            "servingPolicy": "all-configured-targets-ready",
+            "drainSeconds": 30,
+            "emergency": False,
+        },
+    }
+    deployment_status = {
+        "schemaVersion": 1,
+        "format": "edge-canon.deployment-status/v1",
+        "standardVersion": standard_version,
+        "deploymentId": "deployment-1",
+        "planSha256": "3" * 64,
+        "state": "activating",
+        "desiredRoutingGeneration": "generation-1",
+        "observedRoutingGeneration": None,
+        "targets": [{
+            "targetId": "target-1", "state": "routable", "versionId": "version-1",
+            "snapshotId": "snapshot-1", "routingGeneration": "generation-1",
+            "observedAt": "2026-09-05T00:00:00Z", "failureCode": None,
+        }],
+        "proxies": [{
+            "proxyId": "proxy-1", "state": "prepared", "routingGeneration": "generation-1",
+            "observedAt": "2026-09-05T00:00:00Z", "failureCode": None,
+        }],
+        "gateEvaluations": [],
+        "failureCode": None,
+        "createdAt": "2026-09-05T00:00:00Z",
+        "updatedAt": "2026-09-05T00:00:01Z",
+    }
+    jsonschema.validate(deployment_plan, deployment_plan_schema, format_checker=jsonschema.FormatChecker())
+    jsonschema.validate(deployment_status, deployment_status_schema, format_checker=jsonschema.FormatChecker())
+    invalid_third_version = json.loads(json.dumps(deployment_plan))
+    invalid_third_version["versions"].extend([
+        {**invalid_third_version["versions"][0], "role": "baseline", "versionId": "version-0"},
+        {**invalid_third_version["versions"][0], "versionId": "version-2"},
+    ])
+    try:
+        jsonschema.validate(invalid_third_version, deployment_plan_schema)
+    except jsonschema.ValidationError:
+        pass
+    else:
+        raise ValidationError("deployment plan schema accepted three active versions")
 
 
 def validate_contract(contract: dict) -> None:

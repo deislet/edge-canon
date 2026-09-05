@@ -194,14 +194,21 @@
       "conformance": {"suiteId": "EC-ARTIFACT", "fixtureStatus": "draft", "oracleStatus": "draft", "harnessStatus": "draft"}
     },
     {
-      "id": "deployment-preview-rollback", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],
+      "id": "deployment-preview-rollback",
+      "definitionStatus": "draft",
+      "draftPath": "standard/requirements/deployment-preview-rollback.zh.md",
+      "evidencePaths": ["standard/evidence/deployment-preview-rollback-baseline.zh.md"],
       "dimensions": {
-        "api": {"status": "pending", "clauseIds": []}, "errors": {"status": "pending", "clauseIds": []},
-        "concurrency-consistency-ordering": {"status": "pending", "clauseIds": []}, "lifecycle": {"status": "pending", "clauseIds": []},
-        "minimum-resource-guarantees": {"status": "pending", "clauseIds": []}, "security-isolation": {"status": "pending", "clauseIds": []},
-        "failure-recovery": {"status": "pending", "clauseIds": []}, "upgrade-migration": {"status": "pending", "clauseIds": []}
+        "api": {"status": "draft", "clauseIds": ["EC-DEPLOY-API-001", "EC-DEPLOY-API-002", "EC-DEPLOY-API-003", "EC-DEPLOY-API-004", "EC-DEPLOY-API-005", "EC-DEPLOY-API-006", "EC-DEPLOY-API-007"]},
+        "errors": {"status": "draft", "clauseIds": ["EC-DEPLOY-ERR-001", "EC-DEPLOY-ERR-002", "EC-DEPLOY-ERR-003", "EC-DEPLOY-ERR-004"]},
+        "concurrency-consistency-ordering": {"status": "draft", "clauseIds": ["EC-DEPLOY-CON-001", "EC-DEPLOY-CON-002", "EC-DEPLOY-CON-003", "EC-DEPLOY-CON-004", "EC-DEPLOY-CON-005"]},
+        "lifecycle": {"status": "draft", "clauseIds": ["EC-DEPLOY-LIFE-001", "EC-DEPLOY-LIFE-002", "EC-DEPLOY-LIFE-003", "EC-DEPLOY-LIFE-004", "EC-DEPLOY-LIFE-005", "EC-DEPLOY-LIFE-006"]},
+        "minimum-resource-guarantees": {"status": "draft", "clauseIds": ["EC-DEPLOY-LIMIT-001", "EC-DEPLOY-LIMIT-002", "EC-DEPLOY-LIMIT-003"]},
+        "security-isolation": {"status": "draft", "clauseIds": ["EC-DEPLOY-SEC-001", "EC-DEPLOY-SEC-002", "EC-DEPLOY-SEC-003", "EC-DEPLOY-SEC-004"]},
+        "failure-recovery": {"status": "draft", "clauseIds": ["EC-DEPLOY-FAIL-001", "EC-DEPLOY-FAIL-002", "EC-DEPLOY-FAIL-003", "EC-DEPLOY-FAIL-004", "EC-DEPLOY-FAIL-005"]},
+        "upgrade-migration": {"status": "draft", "clauseIds": ["EC-DEPLOY-UPG-001", "EC-DEPLOY-UPG-002", "EC-DEPLOY-UPG-003"]}
       },
-      "conformance": {"suiteId": "EC-DEPLOY", "fixtureStatus": "planned", "oracleStatus": "planned", "harnessStatus": "planned"}
+      "conformance": {"suiteId": "EC-DEPLOY", "fixtureStatus": "draft", "oracleStatus": "draft", "harnessStatus": "draft"}
     },
     {
       "id": "observability", "definitionStatus": "pending", "draftPath": null, "evidencePaths": [],

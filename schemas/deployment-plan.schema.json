@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/deislet/edge-canon/schemas/deployment-plan.schema.json",
+  "title": "Edge Canon immutable deployment plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "format",
+    "standardVersion",
+    "deploymentId",
+    "environmentId",
+    "mode",
+    "versions",
+    "routing",
+    "rollout",
+    "activation"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "format": {"const": "edge-canon.deployment-plan/v1"},
+    "standardVersion": {
+      "type": "string",
+      "pattern": "^edge-canon\\.next@[0-9a-f]{40}$"
+    },
+    "deploymentId": {"$ref": "#/$defs/identity"},
+    "environmentId": {"$ref": "#/$defs/identity"},
+    "mode": {"enum": ["atomic", "gradual"]},
+    "versions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {"$ref": "#/$defs/version"}
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["generation", "affinity", "override"],
+      "properties": {
+        "generation": {"$ref": "#/$defs/identity"},
+        "affinity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "saltSha256", "weightChange"],
+          "properties": {
+            "mode": {"const": "rollout-stable"},
+            "saltSha256": {"$ref": "#/$defs/sha256"},
+            "weightChange": {"enum": ["sticky", "re-evaluate"]}
+          }
+        },
+        "override": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "maximumTtlSeconds"],
+          "properties": {
+            "mode": {"const": "signed-expiring-scope-restricted"},
+            "maximumTtlSeconds": {"type": "integer", "minimum": 1, "maximum": 86400}
+          }
+        }
+      }
+    },
+    "rollout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["currentStep", "steps"],
+      "properties": {
+        "currentStep": {"type": "integer", "minimum": 0},
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["candidateBasisPoints", "soakSeconds", "gateIds"],
+            "properties": {
+              "candidateBasisPoints": {"type": "integer", "minimum": 0, "maximum": 10000},
+              "soakSeconds": {"type": "integer", "minimum": 0},
+              "gateIds": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {"$ref": "#/$defs/identity"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expectedCurrentDeploymentId", "servingPolicy", "drainSeconds", "emergency"],
+      "properties": {
+        "expectedCurrentDeploymentId": {
+          "oneOf": [{"type": "null"}, {"$ref": "#/$defs/identity"}]
+        },
+        "servingPolicy": {"const": "all-configured-targets-ready"},
+        "drainSeconds": {"type": "integer", "minimum": 0, "maximum": 86400},
+        "emergency": {"type": "boolean"}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@/-]*$"
+    },
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "versionId", "artifactSha256", "snapshotId", "weightBasisPoints"],
+      "properties": {
+        "role": {"enum": ["baseline", "candidate"]},
+        "versionId": {"$ref": "#/$defs/identity"},
+        "artifactSha256": {"$ref": "#/$defs/sha256"},
+        "snapshotId": {"$ref": "#/$defs/identity"},
+        "weightBasisPoints": {"type": "integer", "minimum": 0, "maximum": 10000}
+      }
+    }
+  }
+}
